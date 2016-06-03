@@ -1,0 +1,4 @@
+{
+    "projects" : [ "src", "src/BEPU", "ext/veldrid/src", "ext/imgui.net/src" ]
+
+}

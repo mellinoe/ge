@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <ProjectGuid>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BEPUUtilities</RootNamespace>
+    <AssemblyName>BEPUUtilities</AssemblyName>
+    <NuGetTargetMoniker>.NETStandard,Version=v1.3</NuGetTargetMoniker>
+  </PropertyGroup>
+  <!-- Default configurations to help VS understand the configurations -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <ItemGroup>
+    <Compile Include="ContainmentType.cs" />
+    <Compile Include="ConvexHullHelper.cs" />
+    <Compile Include="ConvexHullHelper.Pruning.cs" />
+    <Compile Include="DataStructures\QuickDictionary.cs" />
+    <Compile Include="DataStructures\QuickList.cs" />
+    <Compile Include="DataStructures\QuickQueue.cs" />
+    <Compile Include="DataStructures\QuickSet.cs" />
+    <Compile Include="Int2.cs" />
+    <Compile Include="NotFiniteNumberException.cs" />
+    <Compile Include="PermutationMapper.cs" />
+    <Compile Include="ResourceManagement\BufferPool.cs" />
+    <Compile Include="ResourceManagement\BufferPools.cs" />
+    <Compile Include="ResourceManagement\LockingBufferPool.cs" />
+    <Compile Include="Threading\IParallelLooper.cs" />
+    <Compile Include="Threading\ParallelLooper.cs" />
+    <Compile Include="Threading\ParallelLoopWorker.cs" />
+    <Compile Include="Vector4.cs" />
+    <Compile Include="DataStructures\ConcurrentDeque.cs" />
+    <Compile Include="AffineTransform.cs" />
+    <Compile Include="BoundingBox.cs" />
+    <Compile Include="BoundingSphere.cs" />
+    <Compile Include="MathChecker.cs" />
+    <Compile Include="MathHelper.cs" />
+    <Compile Include="Matrix.cs" />
+    <Compile Include="Matrix2x2.cs" />
+    <Compile Include="Matrix2x3.cs" />
+    <Compile Include="Matrix3x2.cs" />
+    <Compile Include="Matrix3x3.cs" />
+    <Compile Include="Plane.cs" />
+    <Compile Include="Quaternion.cs" />
+    <Compile Include="Ray.cs" />
+    <Compile Include="RayHit.cs" />
+    <Compile Include="RigidTransform.cs" />
+    <Compile Include="TriangleSidedness.cs" />
+    <Compile Include="Vector2.cs" />
+    <Compile Include="Vector3.cs" />
+    <Compile Include="DataStructures\ObservableDictionary.cs" />
+    <Compile Include="DataStructures\ObservableList.cs" />
+    <Compile Include="VoronoiRegion.cs" />
+    <Compile Include="DataStructures\RawList.cs" />
+    <Compile Include="DataStructures\RawValueList.cs" />
+    <Compile Include="DataStructures\ReadOnlyDictionary.cs" />
+    <Compile Include="DataStructures\ReadOnlyEnumerable.cs" />
+    <Compile Include="DataStructures\ReadOnlyList.cs" />
+    <Compile Include="DataStructures\TinyList.cs" />
+    <Compile Include="DataStructures\TinyStructList.cs" />
+    <Compile Include="ResourceManagement\LockingResourcePool.cs" />
+    <Compile Include="ResourceManagement\ResourcePool.cs" />
+    <Compile Include="ResourceManagement\UnsafeResourcePool.cs" />
+    <Compile Include="ResourceManagement\CommonResources.cs" />
+    <Compile Include="SpinLock.cs" />
+    <Compile Include="Toolbox.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="project.json" />
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>
