@@ -22,10 +22,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
-    <ProjectReference Include="$(ProjectDir)/ext/veldrid/src/Veldrid/Veldrid.csproj" />
-    <ProjectReference Include="$(ProjectDir)/ext/veldrid/src/Veldrid.Assets/Veldrid.Assets.csproj" />
-    <ProjectReference Include="$(SourceDir)/BEPU/BEPUphysics/BEPUphysics.csproj" />
-    <ProjectReference Include="$(SourceDir)/BEPU/BEPUutilities/BEPUutilities.csproj" />
+    <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj" />
+    <ProjectReference Include="..\..\ext\veldrid\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\..\ext\veldrid\src\Veldrid.Assets\Veldrid.Assets.csproj" />
+    <ProjectReference Include="..\BEPU\BEPUphysics\BEPUphysics.csproj" />
+    <ProjectReference Include="..\BEPU\BEPUutilities\BEPUutilities.csproj" />
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
