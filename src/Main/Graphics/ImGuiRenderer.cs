@@ -90,7 +90,7 @@ namespace Ge.Graphics
 
         public unsafe void Render(RenderContext rc, string pipelineStage)
         {
-            ImGui.Button("YEAH!");
+            ImGui.Text("ge.Main demo game");
 
             UpdateFinished();
             RenderImDrawData(ImGui.GetDrawData(), rc);
