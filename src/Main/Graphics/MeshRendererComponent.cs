@@ -20,9 +20,6 @@ namespace Ge.Graphics
         private IndexBuffer _ib;
         private Material _material;
 
-        public Vector3 Position { get; internal set; }
-        public Vector3 Scale { get; internal set; } = new Vector3(1f);
-
         public MeshRendererComponent(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
@@ -45,10 +42,7 @@ namespace Ge.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            float rotationAmount = (float)DateTime.Now.TimeOfDay.TotalMilliseconds / 1000;
-            _worldProvider.Data =
-                Matrix4x4.CreateScale(Scale)
-                * Matrix4x4.CreateTranslation(Position);
+            _worldProvider.Data = GameObject.Transform.GetWorldMatrix();
 
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
