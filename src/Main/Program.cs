@@ -1,7 +1,6 @@
-using System;
-using System.Linq;
-using Veldrid.Graphics;
-using Veldrid.Graphics.OpenGL;
+using Ge.Behaviors;
+using Ge.Graphics;
+using System.Runtime.InteropServices;
 using Veldrid.Platform;
 
 namespace Ge
@@ -10,25 +9,39 @@ namespace Ge
     {
         public static void Main(string[] args)
         {
-            SameThreadWindow window = new SameThreadWindow();
+            OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
             window.Title = "ge.Main";
             window.Visible = true;
-            OpenGLRenderContext rc = new OpenGLRenderContext(window);
-            while (window.Visible && window.Exists)
+            Game game = new Game();
+            GraphicsSystem gs = new GraphicsSystem(window);
+            game.SystemRegistry.Register(gs);
+            ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow);
+            gs.AddRenderItem(imGuiRenderer);
+
+            InputSystem inputSystem = new InputSystem(window);
+            inputSystem.RegisterCallback((input) =>
             {
-                var snapshot = window.GetInputSnapshot();
-                if (snapshot.KeyEvents.Any(ke => ke.Modifiers == ModifierKeys.Alt && ke.Key == OpenTK.Input.Key.F4))
+                if (input.GetKeyDown(OpenTK.Input.Key.F4) && (input.GetKey(OpenTK.Input.Key.AltLeft) || input.GetKey(OpenTK.Input.Key.AltRight)))
                 {
-                    window.Close();
+                    game.Exit();
                 }
-                float tickCount = (float)Environment.TickCount / 10.0f;
-                float r = 0.5f + (0.5f * (float)Math.Sin(tickCount / 300f));
-                float g = 0.5f + (0.5f * (float)Math.Sin(tickCount / 750f));
-                float b = 0.5f + (0.5f * (float)Math.Sin(tickCount / 50f));
-                rc.ClearColor = new RgbaFloat(r, g, b, 1.0f);
-                rc.ClearBuffer();
-                rc.SwapBuffers();
-            }
+                if (input.GetKeyDown(OpenTK.Input.Key.F11))
+                {
+                    window.WindowState = window.WindowState == WindowState.Normal ? WindowState.FullScreen : WindowState.Normal;
+                }
+
+                imGuiRenderer.UpdateImGuiInput(window, input.CurrentSnapshot);
+            });
+
+            game.SystemRegistry.Register(inputSystem);
+
+            BehaviorUpdateSystem bus = new BehaviorUpdateSystem();
+            game.SystemRegistry.Register(bus);
+            bus.Register(imGuiRenderer);
+
+            window.Closed += game.Exit;
+
+            game.RunMainLoop();
         }
     }
 }

@@ -5,6 +5,6 @@ namespace Ge
         ///
         /// <summary>Performs a one-tick update of the GameSystem.</summary>
         ///
-        public abstract void Update();
+        public abstract void Update(float deltaSeconds);
     }
 }

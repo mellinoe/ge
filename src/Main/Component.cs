@@ -4,11 +4,15 @@ namespace Ge
     {
         private GameObject _attachedGO;
 
-        internal void AttachToGameObject(GameObject go)
+        public GameObject GameObject => _attachedGO;
+
+        internal void AttachToGameObject(GameObject go, SystemRegistry registry)
         {
             _attachedGO = go;
+            Attached(registry);
         }
 
-        protected abstract void Initialize(SystemRegistry registry);
+        public abstract void Attached(SystemRegistry registry);
+        public abstract void Removed(SystemRegistry registry);
     }
 }

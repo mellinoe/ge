@@ -22,5 +22,10 @@ namespace Ge
         {
             _systems.Add(typeof(T), system);
         }
+
+        public IReadOnlyCollection<KeyValuePair<Type, GameSystem>> GetSystems()
+        {
+            return _systems;
+        }
     }
 }
