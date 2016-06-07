@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Veldrid.Graphics;
 using Veldrid.Graphics.OpenGL;
 using Veldrid.Platform;
@@ -15,7 +16,11 @@ namespace Ge
             OpenGLRenderContext rc = new OpenGLRenderContext(window);
             while (window.Visible && window.Exists)
             {
-                window.GetInputSnapshot();
+                var snapshot = window.GetInputSnapshot();
+                if (snapshot.KeyEvents.Any(ke => ke.Modifiers == ModifierKeys.Alt && ke.Key == OpenTK.Input.Key.F4))
+                {
+                    window.Close();
+                }
                 float tickCount = (float)Environment.TickCount / 10.0f;
                 float r = 0.5f + (0.5f * (float)Math.Sin(tickCount / 300f));
                 float g = 0.5f + (0.5f * (float)Math.Sin(tickCount / 750f));

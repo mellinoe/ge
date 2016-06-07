@@ -23,6 +23,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
     <ProjectReference Include="$(ProjectDir)/ext/veldrid/src/Veldrid/Veldrid.csproj" />
+    <ProjectReference Include="$(ProjectDir)/ext/veldrid/src/Veldrid.Assets/Veldrid.Assets.csproj" />
     <ProjectReference Include="$(SourceDir)/BEPU/BEPUphysics/BEPUphysics.csproj" />
     <ProjectReference Include="$(SourceDir)/BEPU/BEPUutilities/BEPUutilities.csproj" />
     <None Include="project.json" />
