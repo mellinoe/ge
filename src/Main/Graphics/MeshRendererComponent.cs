@@ -44,6 +44,8 @@ namespace Ge.Graphics
         {
             _worldProvider.Data = GameObject.Transform.GetWorldMatrix();
 
+            rc.SetRasterizerState(rc.ResourceFactory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false));
+
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
@@ -97,7 +99,7 @@ namespace Ge.Graphics
                 new MaterialPerObjectInputElement[]
                 {
                     new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("inverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
                 });
 
             MaterialTextureInputs textureInputs = new MaterialTextureInputs(

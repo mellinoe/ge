@@ -9,16 +9,21 @@ namespace Ge
         private readonly MultiValueDictionary<Type, object> _components = new MultiValueDictionary<Type, object>();
         private SystemRegistry _registry;
 
+        public string Name { get; set; }
+
         public Transform Transform { get; }
 
         internal static event Action<GameObject> GameObjectConstructed;
 
-        public GameObject()
+        public GameObject() : this(Guid.NewGuid().ToString())
+        { }
+
+        public GameObject(string name)
         {
             Transform t = new Transform();
             AddComponent(t);
             Transform = t;
-
+            Name = name;
             GameObjectConstructed?.Invoke(this);
         }
 

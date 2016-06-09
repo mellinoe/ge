@@ -104,17 +104,17 @@ namespace Ge.Graphics
 
         public void Update(float deltaSeconds)
         {
-            SetPerFrameImGuiData(_rc, deltaSeconds * 1000.0f);
+            SetPerFrameImGuiData(_rc, deltaSeconds);
         }
 
-        public unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaMilliseconds)
+        public unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaSeconds)
         {
             IO io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(
                 rc.Window.Width,
                 rc.Window.Height);
             io.DisplayFramebufferScale = rc.Window.ScaleFactor;
-            io.DeltaTime = deltaMilliseconds / 1000; // DeltaTime is in seconds.
+            io.DeltaTime = deltaSeconds / 1000; // DeltaTime is in seconds.
         }
 
         public unsafe void UpdateImGuiInput(OpenTKWindow window, InputSnapshot snapshot)

@@ -16,28 +16,35 @@ namespace Ge.Graphics
         public override void Attached(SystemRegistry registry)
         {
             GameObject.Transform.TransformChanged += SetViewMatrix;
+            SetViewMatrix(GameObject.Transform);
 
             _gs = registry.GetSystem<GraphicsSystem>();
-            _gs.Context.DataProviders.Add("ViewMatrixBuffer", _viewProvider);
-            _gs.Context.DataProviders.Add("ProjectionMatrixBuffer", _projectionProvider);
+            _gs.Context.DataProviders.Add("ViewMatrix", _viewProvider);
+            _gs.Context.DataProviders.Add("ProjectionMatrix", _projectionProvider);
+
+            _gs.Context.WindowResized += SetProjectionMatrix;
+            SetProjectionMatrix();
         }
 
         public override void Removed(SystemRegistry registry)
         {
-            _gs.Context.DataProviders.Remove("ViewMatrixBuffer");
-            _gs.Context.DataProviders.Remove("ProjectionMatrixBuffer");
+            _gs.Context.DataProviders.Remove("ViewMatrix");
+            _gs.Context.DataProviders.Remove("ProjectionMatrix");
         }
 
         private void SetViewMatrix(Transform t)
         {
-            _viewProvider.Data = Matrix4x4.CreateLookAt(t.Position, t.Position + t.Forward, t.Up);
+            _viewProvider.Data = Matrix4x4.CreateLookAt(
+                GameObject.Transform.Position,
+                GameObject.Transform.Position + GameObject.Transform.Forward,
+                GameObject.Transform.Up);
         }
 
         private void SetProjectionMatrix()
         {
             _projectionProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
                 _fieldOfView,
-                _gs.Context.Window.Width / _gs.Context.Window.Height,
+                (float)_gs.Context.Window.Width / _gs.Context.Window.Height,
                 _nearPlane,
                 _farPlane);
         }

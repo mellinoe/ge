@@ -6,6 +6,7 @@
     "System.Collections.Generic.MultiValueDictionary": "0.1.0-e160604-1",
     "BEPUphysics": { "target": "project" },
     "BEPUutilities": { "target": "project" },
+    "ImGui.NET": { "target": "project" },
     "Veldrid": { "target": "project" },
     "Veldrid.Assets": { "target": "project" }
   },

@@ -251,3 +251,6 @@ Session.vim
 
 # VS Code
 .vscode
+
+# ImGui
+imgui.ini
