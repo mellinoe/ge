@@ -8,7 +8,7 @@ namespace Ge
     public class Game
     {
         private bool _running;
-        private bool _limitFrameRate = true;
+        public bool LimitFrameRate { get; set; } = true;
         private List<GameObject> _gameObjects = new List<GameObject>();
         private List<GameObject> _destroyList = new List<GameObject>();
 
@@ -46,7 +46,7 @@ namespace Ge
                 long currentFrameTicks = sw.ElapsedTicks;
                 double deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
 
-                while (_limitFrameRate && deltaMilliseconds < desiredFrameTime)
+                while (LimitFrameRate && deltaMilliseconds < desiredFrameTime)
                 {
                     Thread.Sleep(0);
                     currentFrameTicks = sw.ElapsedTicks;

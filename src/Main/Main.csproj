@@ -56,6 +56,9 @@
     <ProjectReference Include="..\..\ext\veldrid\src\Veldrid.Assets\Veldrid.Assets.csproj" />
     <ProjectReference Include="..\BEPU\BEPUphysics\BEPUphysics.csproj" />
     <ProjectReference Include="..\BEPU\BEPUutilities\BEPUutilities.csproj" />
+    <None Include="Models\Sphere.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup />
@@ -82,6 +85,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="HLSL\textured-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Textures\Stone.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\Wood.png">

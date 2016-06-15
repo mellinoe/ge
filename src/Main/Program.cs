@@ -37,6 +37,11 @@ namespace Ge
                 }
 
                 imGuiRenderer.UpdateImGuiInput(window, input.CurrentSnapshot);
+                bool limitFramerate = game.LimitFrameRate;
+                if (ImGui.Checkbox("Limit Framerate", ref limitFramerate))
+                {
+                    game.LimitFrameRate = limitFramerate;
+                }
             });
 
             game.SystemRegistry.Register(inputSystem);
@@ -95,11 +100,19 @@ namespace Ge
             bc = new BoxCollider(1f, 1f, 1f);
             cube2.AddComponent(bc);
 
+            GameObject sphere = new GameObject("Sphere");
+            var stoneTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png"));
+            var omi = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+            sphere.AddComponent(new MeshRenderer(omi.Vertices, omi.Indices, stoneTexture));
+            sphere.Transform.Position = new Vector3(0, 4f, 0f);
+            sphere.Transform.Scale = new Vector3(2f, 2f, 2f);
+            sphere.AddComponent(new SphereCollider(2.0f));
+
             GameObject plane = new GameObject("Plane");
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
             plane.Transform.Scale = new Vector3(30f);
-            var texture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png"));
-            plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, texture));
+            var woodTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png"));
+            plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
             plane.AddComponent(new BoxCollider(30.0f, 0.1f, 30.0f, -1.0f));
 
             float elapsed = 0f;
