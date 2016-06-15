@@ -12,7 +12,7 @@ namespace Ge
             GameSystem gs;
             if (!_systems.TryGetValue(typeof(T), out gs))
             {
-                return null;
+                throw new InvalidOperationException($"No system of type {typeof(T).Name} was found.");
             }
             
             return (T)gs;

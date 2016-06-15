@@ -6,7 +6,7 @@ namespace Ge
 {
     public class GameObject
     {
-        private readonly MultiValueDictionary<Type, object> _components = new MultiValueDictionary<Type, object>();
+        private readonly MultiValueDictionary<Type, Component> _components = new MultiValueDictionary<Type, Component>();
         private SystemRegistry _registry;
 
         public string Name { get; set; }
@@ -14,6 +14,9 @@ namespace Ge
         public Transform Transform { get; }
 
         internal static event Action<GameObject> GameObjectConstructed;
+        internal static event Action<GameObject> GameObjectDestroyed;
+
+        public event Action<GameObject> Destroyed;
 
         public GameObject() : this(Guid.NewGuid().ToString())
         { }
@@ -50,9 +53,15 @@ namespace Ge
             component.Removed(_registry);
         }
 
+        public void RemoveComponent(Component component)
+        {
+            _components.Remove(component.GetType(), component);
+            component.Removed(_registry);
+        }
+
         public T GetComponent<T>() where T : Component
         {
-            IReadOnlyCollection<object> components;
+            IReadOnlyCollection<Component> components;
             if (!_components.TryGetValue(typeof(T), out components))
             {
                 return null;
@@ -68,7 +77,7 @@ namespace Ge
 
         public IEnumerable<T> GetComponents<T>() where T : Component
         {
-            IReadOnlyCollection<object> components;
+            IReadOnlyCollection<Component> components;
             if (_components.TryGetValue(typeof(T), out components))
             {
                 return (IReadOnlyCollection<T>)components;
@@ -77,6 +86,31 @@ namespace Ge
             {
                 return Array.Empty<T>();
             }
+        }
+
+        public void Destroy()
+        {
+            GameObjectDestroyed.Invoke(this);
+        }
+
+        internal void CommitDestroy()
+        {
+            foreach (var componentList in _components)
+            {
+                foreach (var component in componentList.Value)
+                {
+                    component.Removed(_registry);
+                }
+            }
+
+            _components.Clear();
+
+            Destroyed?.Invoke(this);
+        }
+
+        public override string ToString()
+        {
+            return $"{Name}, {_components.Values.Sum(irc => irc.Count)} components";
         }
     }
 }

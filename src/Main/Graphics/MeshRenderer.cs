@@ -5,7 +5,7 @@ using Veldrid.Graphics;
 
 namespace Ge.Graphics
 {
-    public class MeshRendererComponent : Component, RenderItem
+    public class MeshRenderer : Component, RenderItem
     {
         private static readonly string[] s_stages = { "Standard" };
 
@@ -20,7 +20,11 @@ namespace Ge.Graphics
         private IndexBuffer _ib;
         private Material _material;
 
-        public MeshRendererComponent(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
+        private static RasterizerState s_wireframeRS;
+
+        public bool Wireframe { get; set; } = false;
+
+        public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
@@ -44,11 +48,18 @@ namespace Ge.Graphics
         {
             _worldProvider.Data = GameObject.Transform.GetWorldMatrix();
 
-            rc.SetRasterizerState(rc.ResourceFactory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false));
-
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
+            if (Wireframe)
+            {
+                rc.SetRasterizerState(s_wireframeRS);
+            }
+            else
+            {
+                rc.SetRasterizerState(rc.DefaultRasterizerState);
+            }
+
             _material.ApplyPerObjectInputs(_perObjectProviders);
 
             rc.DrawIndexedPrimitives(_indices.Length, 0);
@@ -116,6 +127,11 @@ namespace Ge.Graphics
                 globalInputs,
                 perObjectInputs,
                 textureInputs);
+
+            if (s_wireframeRS == null)
+            {
+                s_wireframeRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+            }
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -134,6 +150,5 @@ namespace Ge.Graphics
 
         private static readonly string VertexShaderSource = "textured-vertex";
         private static readonly string FragmentShaderSource = "lit-frag";
-
     }
 }

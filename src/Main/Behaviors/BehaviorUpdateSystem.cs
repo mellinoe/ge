@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Ge.Behaviors
 {
     public class BehaviorUpdateSystem : GameSystem
     {
-        private readonly List<IUpdateable> _behaviors = new List<IUpdateable>();
+        private ImmutableList<IUpdateable> _behaviors = ImmutableList.Create<IUpdateable>();
 
         public override void Update(float deltaSeconds)
         {
@@ -17,12 +18,12 @@ namespace Ge.Behaviors
 
         internal void Register(IUpdateable behavior)
         {
-            _behaviors.Add(behavior);
+            _behaviors = _behaviors.Add(behavior);
         }
 
         internal void Remove(IUpdateable behavior)
         {
-            _behaviors.Remove(behavior);
+            _behaviors = _behaviors.Remove(behavior);
         }
     }
 }

@@ -5,6 +5,7 @@
         public sealed override void Attached(SystemRegistry registry)
         {
             registry.GetSystem<BehaviorUpdateSystem>().Register(this);
+            Start(registry);
         }
 
         public sealed override void Removed(SystemRegistry registry)
@@ -13,5 +14,7 @@
         }
 
         public abstract void Update(float deltaSeconds);
+
+        protected virtual void Start(SystemRegistry registry) { }
     }
 }

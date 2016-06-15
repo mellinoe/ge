@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using BEPUphysics.Entities;
 
 namespace Ge
 {
@@ -16,17 +17,30 @@ namespace Ge
             set
             {
                 _position = value;
+                OnPositionManuallyChanged();
                 OnPositionChanged();
             }
         }
 
-        public event Action<Transform> TransformChanged;
+        public event Action<Vector3> PositionManuallyChanged;
+        private void OnPositionManuallyChanged()
+        {
+            PositionManuallyChanged?.Invoke(_position);
+        }
 
+        public event Action<Transform> TransformChanged;
         public event Action<Vector3> PositionChanged;
         private void OnPositionChanged()
         {
             PositionChanged?.Invoke(_position);
             TransformChanged?.Invoke(this);
+        }
+
+        internal void OnPhysicsUpdated(Entity obj)
+        {
+            _position = obj.Position;
+            _rotation = obj.Orientation;
+            OnPositionChanged();
         }
 
         public Quaternion _rotation = Quaternion.Identity;
@@ -36,8 +50,15 @@ namespace Ge
             set
             {
                 _rotation = value;
+                OnRotationManuallyChanged();
                 OnRotationChanged();
             }
+        }
+
+        public event Action<Quaternion> RotationManuallyChanged;
+        private void OnRotationManuallyChanged()
+        {
+            RotationManuallyChanged?.Invoke(_rotation);
         }
 
         public event Action<Quaternion> RotationChanged;
@@ -124,6 +145,7 @@ namespace Ge
                 return Vector3.Transform(Vector3.UnitX, _rotation);
             }
         }
+
 
         public override void Attached(SystemRegistry registry)
         {

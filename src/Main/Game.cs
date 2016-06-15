@@ -10,6 +10,7 @@ namespace Ge
         private bool _running;
         private bool _limitFrameRate = true;
         private List<GameObject> _gameObjects = new List<GameObject>();
+        private List<GameObject> _destroyList = new List<GameObject>();
 
         public SystemRegistry SystemRegistry { get; } = new SystemRegistry();
 
@@ -20,11 +21,17 @@ namespace Ge
         public Game()
         {
             GameObject.GameObjectConstructed += OnGameObjectConstructed;
+            GameObject.GameObjectDestroyed += OnGameObjectDestroyed;
         }
 
         private void OnGameObjectConstructed(GameObject go)
         {
             go.SetRegistry(SystemRegistry);
+        }
+
+        private void OnGameObjectDestroyed(GameObject go)
+        {
+            _destroyList.Add(go);
         }
 
         public void RunMainLoop()
@@ -53,6 +60,12 @@ namespace Ge
                     GameSystem system = kvp.Value;
                     system.Update((float)deltaMilliseconds / 1000.0f);
                 }
+
+                foreach (GameObject go in _destroyList)
+                {
+                    go.CommitDestroy();
+                }
+                _destroyList.Clear();
             }
         }
 

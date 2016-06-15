@@ -90,8 +90,6 @@ namespace Ge.Graphics
 
         public unsafe void Render(RenderContext rc, string pipelineStage)
         {
-            ImGui.Text("ge.Main demo game");
-
             UpdateFinished();
             RenderImDrawData(ImGui.GetDrawData(), rc);
             NewFrame();
@@ -218,6 +216,11 @@ namespace Ge.Graphics
 
             int vertexOffsetInVertices = 0;
             int indexOffsetInElements = 0;
+
+            if (draw_data->CmdListsCount == 0)
+            {
+                return;
+            }
 
             for (int i = 0; i < draw_data->CmdListsCount; i++)
             {

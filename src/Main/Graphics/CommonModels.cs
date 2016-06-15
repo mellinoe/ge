@@ -30,10 +30,10 @@ namespace Ge.Graphics
             new VertexPositionNormalTexture(new Vector3(.5f,.5f,.5f),       new Vector3(0,1,0),     new Vector2(1, 1)),
             new VertexPositionNormalTexture(new Vector3(-.5f,.5f,.5f),      new Vector3(0,1,0),     new Vector2(0, 1)),
             // Bottom                                                             
-            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(0,1,0),     new Vector2(0, 0)),
-            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,.5f),      new Vector3(0,1,0),     new Vector2(1, 0)),
-            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,-.5f),     new Vector3(0,1,0),     new Vector2(1, 1)),
-            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,-.5f),    new Vector3(0,1,0),     new Vector2(0, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(0,-1,0),     new Vector2(0, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,.5f),      new Vector3(0,-1,0),     new Vector2(1, 0)),
+            new VertexPositionNormalTexture(new Vector3(.5f,-.5f,-.5f),     new Vector3(0,-1,0),     new Vector2(1, 1)),
+            new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,-.5f),    new Vector3(0,-1,0),     new Vector2(0, 1)),
             // Left                                                               
             new VertexPositionNormalTexture(new Vector3(-.5f,.5f,-.5f),     new Vector3(-1,0,0),    new Vector2(0, 0)),
             new VertexPositionNormalTexture(new Vector3(-.5f,.5f,.5f),      new Vector3(-1,0,0),    new Vector2(1, 0)),
