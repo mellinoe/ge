@@ -15,7 +15,7 @@ uniform WorldMatrix
     mat4 world_matrix;
 };
 
-uniform inverseTransposeWorldMatrixUniform
+uniform InverseTransposeWorldMatrixUniform
 {
     mat4 inverseTransposeWorldMatrix;
 };
