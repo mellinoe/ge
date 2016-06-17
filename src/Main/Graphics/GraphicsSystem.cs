@@ -38,7 +38,7 @@ namespace Ge.Graphics
             }
             else
             {
-                return new OpenGLRenderContext(window);
+                return new OpenGLRenderContext(window, false);
             }
         }
 

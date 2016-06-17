@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Ge.Physics
 {
-    public class BoxCollider : Collider<Box>
+    public class BoxCollider : Collider
     {
         private readonly Box _box;
         public override Entity Entity => _box;

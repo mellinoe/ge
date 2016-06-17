@@ -13,6 +13,8 @@ namespace Ge
 {
     public class Program
     {
+        private static ObjMeshInfo s_sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+        
         public static void Main(string[] args)
         {
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
@@ -102,11 +104,10 @@ namespace Ge
 
             GameObject sphere = new GameObject("Sphere");
             var stoneTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png"));
-            var omi = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
-            sphere.AddComponent(new MeshRenderer(omi.Vertices, omi.Indices, stoneTexture));
+            sphere.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
             sphere.Transform.Position = new Vector3(0, 4f, 0f);
             sphere.Transform.Scale = new Vector3(2f, 2f, 2f);
-            sphere.AddComponent(new SphereCollider(2.0f));
+            sphere.AddComponent(new SphereCollider(2.0f, -1.0f));
 
             GameObject plane = new GameObject("Plane");
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
@@ -124,14 +125,14 @@ namespace Ge
                 if (elapsed >= dropInterval)
                 {
                     elapsed -= dropInterval;
-                    DropRandomBox(r);
+                    //DropRandomObject(r);
                 }
 
                 ImGui.Text($"{s_numBoxes} boxes");
             }));
 
             camera.AddComponent(new FreeFlyMovement());
-            camera.AddComponent(new SphereCollider(1.0f));
+            camera.AddComponent(new SphereCollider(1.0f, -1f));
 
             var fta = new FrameTimeAverager(666);
             camera.AddComponent(new DelegateBehavior(dt =>
@@ -139,26 +140,46 @@ namespace Ge
                 fta.AddTime(dt * 1000.0);
                 ImGui.Text(fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + fta.CurrentAverageFrameTime.ToString("#00.00 ms"));
             }));
+            
+            var parent = new GameObject("Parent");
+            parent.AddComponent(new BoxCollider(.3f, 5f, .3f, 1.0f));
+            parent.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, woodTexture));
+            parent.Transform.Scale = new Vector3(.3f, 5f, .3f);
+            parent.Transform.Position = new Vector3(0f, 10f, 0f);
+            
+            
+            var child = new GameObject("Child");
+            parent.AddComponent(new BoxCollider(.3f, 5f, .3f, 1.0f));
+            parent.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, woodTexture));
+            child.Transform.Parent = parent.Transform;
         }
 
         private static int s_numBoxes = 2;
-        private static void DropRandomBox(Random r)
+        private static void DropRandomObject(Random r)
         {
-            BoxCollider bc;
             var color = new RawTextureDataArray<RgbaFloat>(
                 new RgbaFloat[] { new RgbaFloat((float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble()) },
                 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
 
-            var newCube = new GameObject("Cube" + (++s_numBoxes));
-            newCube.Transform.Position = new Vector3((float)r.NextDouble() * 29f - 14f, (float)r.NextDouble() * 10f, (float)r.NextDouble() * 29f - 14f);
-            var mr = new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, color);
+            bool isBox = r.NextDouble() <= 0.8;
+            var newGo = new GameObject((isBox ? "Cube" : "Sphere") + (++s_numBoxes));
+            newGo.Transform.Position = new Vector3((float)r.NextDouble() * 29f - 14f, (float)r.NextDouble() * 10f, (float)r.NextDouble() * 29f - 14f);
+            var mr = isBox 
+                ? new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, color)
+                : new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, color);
             mr.Wireframe = r.NextDouble() > 0.9;
-            newCube.AddComponent(mr);
-            bc = new BoxCollider(1f, 1f, 1f);
-            newCube.AddComponent(bc);
-            newCube.AddComponent(new TimedDeath(30.0f));
-            newCube.Destroyed += (go) => s_numBoxes--;
-            newCube.Transform.Rotation = Quaternion.CreateFromYawPitchRoll((float)r.NextDouble() * 10f, 0f, 0f);
+            newGo.AddComponent(mr);
+            float radius = 0.3f + (float)r.NextDouble() * .75f;
+            if (!isBox)
+            {
+                newGo.Transform.Scale = new Vector3(radius);
+            }
+            Collider collider = isBox ? (Collider) new BoxCollider(1f, 1f, 1f) : new SphereCollider(radius);
+            
+            newGo.AddComponent(collider);
+            newGo.AddComponent(new TimedDeath(30.0f));
+            newGo.Destroyed += (go) => s_numBoxes--;
+            newGo.Transform.Rotation = Quaternion.CreateFromYawPitchRoll((float)r.NextDouble() * 10f, 0f, 0f);
         }
     }
 }
