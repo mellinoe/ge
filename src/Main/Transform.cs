@@ -7,49 +7,92 @@ namespace Ge
 {
     public class Transform : Component
     {
-        private Vector3 _position;
+        private Vector3 _localPosition;
+        private Quaternion _localRotation = Quaternion.Identity;
+        private Vector3 _localScale = Vector3.One;
+        private Transform _parent;
+        private readonly List<Transform> _children = new List<Transform>(0);
+
         public Vector3 Position
         {
             get
             {
-                return _position;
+                Vector3 pos = _localPosition;
+                if (Parent != null)
+                {
+                    pos += Parent.Position;
+                }
+
+                return pos;
             }
             set
             {
-                _position = value;
+                Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+                _localPosition = value - parentPos;
                 OnPositionManuallyChanged();
                 OnPositionChanged();
+            }
+        }
+
+        public Vector3 LocalPosition
+        {
+            get { return _localPosition; }
+            set
+            {
+                _localPosition = value;
+                OnPositionChanged();
+                OnPositionManuallyChanged();
             }
         }
 
         public event Action<Vector3> PositionManuallyChanged;
         private void OnPositionManuallyChanged()
         {
-            PositionManuallyChanged?.Invoke(_position);
+            PositionManuallyChanged?.Invoke(Position);
         }
 
         public event Action<Transform> TransformChanged;
         public event Action<Vector3> PositionChanged;
         private void OnPositionChanged()
         {
-            PositionChanged?.Invoke(_position);
+            PositionChanged?.Invoke(Position);
             TransformChanged?.Invoke(this);
         }
 
         internal void OnPhysicsUpdated(Entity obj)
         {
-            _position = obj.Position;
-            _rotation = obj.Orientation;
+            Position = obj.Position;
+            Rotation = obj.Orientation;
             OnPositionChanged();
         }
 
-        public Quaternion _rotation = Quaternion.Identity;
         public Quaternion Rotation
         {
-            get { return _rotation; }
+            get
+            {
+                Quaternion rot = _localRotation;
+                if (Parent != null)
+                {
+                    rot = Quaternion.Concatenate(Parent.Rotation, rot);
+                }
+
+                return rot;
+            }
             set
             {
-                _rotation = value;
+                Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+                _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
+                OnRotationManuallyChanged();
+                OnRotationChanged();
+            }
+        }
+
+        public Quaternion LocalRotation
+        {
+            get { return _localRotation; }
+            set
+            {
+                _localRotation = value;
                 OnRotationManuallyChanged();
                 OnRotationChanged();
             }
@@ -58,23 +101,42 @@ namespace Ge
         public event Action<Quaternion> RotationManuallyChanged;
         private void OnRotationManuallyChanged()
         {
-            RotationManuallyChanged?.Invoke(_rotation);
+            RotationManuallyChanged?.Invoke(Rotation);
         }
 
         public event Action<Quaternion> RotationChanged;
         private void OnRotationChanged()
         {
-            RotationChanged?.Invoke(_rotation);
+            RotationChanged?.Invoke(Rotation);
             TransformChanged?.Invoke(this);
         }
 
-        private Vector3 _scale = Vector3.One;
         public Vector3 Scale
         {
-            get { return _scale; }
+            get
+            {
+                Vector3 scale = _localScale;
+                if (Parent != null)
+                {
+                    scale *= Parent.Scale;
+                }
+
+                return scale;
+            }
             set
             {
-                _scale = value;
+                Vector3 parentScale = Parent != null ? Parent.Scale : Vector3.One;
+                _localScale = value / parentScale;
+                OnScalechanged();
+            }
+        }
+
+        public Vector3 LocalScale
+        {
+            get { return _localScale; }
+            set
+            {
+                _localScale = value;
                 OnScalechanged();
             }
         }
@@ -82,12 +144,10 @@ namespace Ge
         internal event Action<Vector3> ScaleChanged;
         private void OnScalechanged()
         {
-            ScaleChanged?.Invoke(_scale);
+            ScaleChanged?.Invoke(Scale);
             TransformChanged?.Invoke(this);
         }
 
-        private Transform _parent;
-        private readonly List<Transform> _children = new List<Transform>(0);
         public Transform Parent
         {
             get
@@ -96,6 +156,11 @@ namespace Ge
             }
             set
             {
+                if (value == this)
+                {
+                    throw new InvalidOperationException("Cannot set a Transform's parent to itself.");
+                }
+
                 if (_parent != null)
                 {
                     _parent._children.Remove(this);
@@ -110,13 +175,13 @@ namespace Ge
 
         public Matrix4x4 GetWorldMatrix()
         {
-            Matrix4x4 mat = Matrix4x4.CreateScale(Scale)
-                * Matrix4x4.CreateFromQuaternion(Rotation)
-                * Matrix4x4.CreateTranslation(Position);
+            Matrix4x4 mat = Matrix4x4.CreateScale(_localScale)
+                * Matrix4x4.CreateFromQuaternion(_localRotation)
+                * Matrix4x4.CreateTranslation(_localPosition);
 
-            if (_parent != null)
+            if (Parent != null)
             {
-                mat *= _parent.GetWorldMatrix();
+                mat *= Parent.GetWorldMatrix();
             }
 
             return mat;
@@ -126,7 +191,7 @@ namespace Ge
         {
             get
             {
-                return Vector3.Transform(Vector3.UnitZ, _rotation);
+                return Vector3.Transform(Vector3.UnitZ, Rotation);
             }
         }
 
@@ -134,7 +199,7 @@ namespace Ge
         {
             get
             {
-                return Vector3.Transform(Vector3.UnitY, _rotation);
+                return Vector3.Transform(Vector3.UnitY, Rotation);
             }
         }
 
@@ -142,7 +207,7 @@ namespace Ge
         {
             get
             {
-                return Vector3.Transform(Vector3.UnitX, _rotation);
+                return Vector3.Transform(Vector3.UnitX, Rotation);
             }
         }
 

@@ -14,7 +14,7 @@ namespace Ge
     public class Program
     {
         private static ObjMeshInfo s_sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
-        
+
         public static void Main(string[] args)
         {
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
@@ -102,12 +102,44 @@ namespace Ge
             bc = new BoxCollider(1f, 1f, 1f);
             cube2.AddComponent(bc);
 
-            GameObject sphere = new GameObject("Sphere");
+            GameObject sphere = new GameObject("Sphere1");
             var stoneTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png"));
             sphere.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
             sphere.Transform.Position = new Vector3(0, 4f, 0f);
-            sphere.Transform.Scale = new Vector3(2f, 2f, 2f);
+            sphere.Transform.Scale = new Vector3(2f);
             sphere.AddComponent(new SphereCollider(2.0f, -1.0f));
+
+            GameObject sphere2 = new GameObject("Sphere2");
+            sphere2.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
+            sphere2.Transform.Parent = sphere.Transform;
+            sphere2.Transform.LocalScale = new Vector3(0.33f);
+            sphere2.Transform.LocalPosition = new Vector3(2.33f, 0f, 0);
+            sphere2.AddComponent(new SphereCollider(0.33f, -1.0f));
+
+            sphere.AddComponent(new DelegateBehavior((dt) =>
+            {
+                Vector3 pos1 = sphere.Transform.LocalPosition;
+                if (ImGui.DragVector3("Sphere1-Position", ref pos1, 0f, 20f, 0.2f))
+                {
+                    sphere.Transform.LocalPosition = pos1;
+                }
+                float scale1 = sphere.Transform.LocalScale.X;
+                if (ImGui.DragFloat("Sphere1-Scale", ref scale1, 0f, 20f, 0.2f))
+                {
+                    sphere.Transform.LocalScale = new Vector3(scale1);
+                }
+                
+                Vector3 pos2 = sphere2.Transform.LocalPosition;
+                if (ImGui.DragVector3("Sphere2-Position", ref pos2, 0f, 20f, 0.2f))
+                {
+                    sphere2.Transform.LocalPosition = pos2;
+                }
+                float scale2 = sphere2.Transform.LocalScale.X;
+                if (ImGui.DragFloat("Sphere2-Scale", ref scale2, 0f, 20f, 0.2f))
+                {
+                    sphere2.Transform.LocalScale = new Vector3(scale2);
+                }
+            }));
 
             GameObject plane = new GameObject("Plane");
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
@@ -125,7 +157,7 @@ namespace Ge
                 if (elapsed >= dropInterval)
                 {
                     elapsed -= dropInterval;
-                    //DropRandomObject(r);
+                    DropRandomObject(r);
                 }
 
                 ImGui.Text($"{s_numBoxes} boxes");
@@ -140,18 +172,6 @@ namespace Ge
                 fta.AddTime(dt * 1000.0);
                 ImGui.Text(fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + fta.CurrentAverageFrameTime.ToString("#00.00 ms"));
             }));
-            
-            var parent = new GameObject("Parent");
-            parent.AddComponent(new BoxCollider(.3f, 5f, .3f, 1.0f));
-            parent.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, woodTexture));
-            parent.Transform.Scale = new Vector3(.3f, 5f, .3f);
-            parent.Transform.Position = new Vector3(0f, 10f, 0f);
-            
-            
-            var child = new GameObject("Child");
-            parent.AddComponent(new BoxCollider(.3f, 5f, .3f, 1.0f));
-            parent.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, woodTexture));
-            child.Transform.Parent = parent.Transform;
         }
 
         private static int s_numBoxes = 2;
@@ -164,7 +184,7 @@ namespace Ge
             bool isBox = r.NextDouble() <= 0.8;
             var newGo = new GameObject((isBox ? "Cube" : "Sphere") + (++s_numBoxes));
             newGo.Transform.Position = new Vector3((float)r.NextDouble() * 29f - 14f, (float)r.NextDouble() * 10f, (float)r.NextDouble() * 29f - 14f);
-            var mr = isBox 
+            var mr = isBox
                 ? new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, color)
                 : new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, color);
             mr.Wireframe = r.NextDouble() > 0.9;
@@ -174,8 +194,8 @@ namespace Ge
             {
                 newGo.Transform.Scale = new Vector3(radius);
             }
-            Collider collider = isBox ? (Collider) new BoxCollider(1f, 1f, 1f) : new SphereCollider(radius);
-            
+            Collider collider = isBox ? (Collider)new BoxCollider(1f, 1f, 1f) : new SphereCollider(radius);
+
             newGo.AddComponent(collider);
             newGo.AddComponent(new TimedDeath(30.0f));
             newGo.Destroyed += (go) => s_numBoxes--;
