@@ -8,6 +8,7 @@ using System.Numerics;
 using System.IO;
 using System;
 using Ge.Physics;
+using Ge.Editor;
 
 namespace Ge
 {
@@ -107,46 +108,14 @@ namespace Ge
             sphere.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
             sphere.Transform.Position = new Vector3(0, 4f, 0f);
             sphere.Transform.Scale = new Vector3(2f);
-            sphere.AddComponent(new SphereCollider(2.0f, -1.0f));
-
-            GameObject sphere2 = new GameObject("Sphere2");
-            sphere2.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
-            sphere2.Transform.Parent = sphere.Transform;
-            sphere2.Transform.LocalScale = new Vector3(0.33f);
-            sphere2.Transform.LocalPosition = new Vector3(2.33f, 0f, 0);
-            sphere2.AddComponent(new SphereCollider(0.33f, -1.0f));
-
-            sphere.AddComponent(new DelegateBehavior((dt) =>
-            {
-                Vector3 pos1 = sphere.Transform.LocalPosition;
-                if (ImGui.DragVector3("Sphere1-Position", ref pos1, 0f, 20f, 0.2f))
-                {
-                    sphere.Transform.LocalPosition = pos1;
-                }
-                float scale1 = sphere.Transform.LocalScale.X;
-                if (ImGui.DragFloat("Sphere1-Scale", ref scale1, 0f, 20f, 0.2f))
-                {
-                    sphere.Transform.LocalScale = new Vector3(scale1);
-                }
-                
-                Vector3 pos2 = sphere2.Transform.LocalPosition;
-                if (ImGui.DragVector3("Sphere2-Position", ref pos2, 0f, 20f, 0.2f))
-                {
-                    sphere2.Transform.LocalPosition = pos2;
-                }
-                float scale2 = sphere2.Transform.LocalScale.X;
-                if (ImGui.DragFloat("Sphere2-Scale", ref scale2, 0f, 20f, 0.2f))
-                {
-                    sphere2.Transform.LocalScale = new Vector3(scale2);
-                }
-            }));
+            sphere.AddComponent(new SphereCollider(1.0f, -1.0f));
 
             GameObject plane = new GameObject("Plane");
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
             plane.Transform.Scale = new Vector3(30f);
             var woodTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png"));
             plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
-            plane.AddComponent(new BoxCollider(30.0f, 0.1f, 30.0f, -1.0f));
+            plane.AddComponent(new BoxCollider(1f, 0.1f / 30f, 1f, -1.0f));
 
             float elapsed = 0f;
             Random r = new Random();
@@ -164,7 +133,7 @@ namespace Ge
             }));
 
             camera.AddComponent(new FreeFlyMovement());
-            camera.AddComponent(new SphereCollider(1.0f, -1f));
+            camera.AddComponent(new DebugPanel(camera.GetComponent<Camera>()));
 
             var fta = new FrameTimeAverager(666);
             camera.AddComponent(new DelegateBehavior(dt =>
@@ -194,7 +163,7 @@ namespace Ge
             {
                 newGo.Transform.Scale = new Vector3(radius);
             }
-            Collider collider = isBox ? (Collider)new BoxCollider(1f, 1f, 1f) : new SphereCollider(radius);
+            Collider collider = isBox ? (Collider)new BoxCollider(1f, 1f, 1f) : new SphereCollider(1.0f);
 
             newGo.AddComponent(collider);
             newGo.AddComponent(new TimedDeath(30.0f));

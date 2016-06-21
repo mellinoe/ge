@@ -7,16 +7,28 @@ namespace Ge.Physics
 {
     public class SphereCollider : Collider
     {
-        private readonly Sphere _sphere;
+        private float _radius;
+        private float _mass;
 
         public SphereCollider(float radius) : this(radius, 1.0f)
         { }
 
         public SphereCollider(float radius, float mass)
         {
-            _sphere = new Sphere(Vector3.Zero, radius, mass);
+            _radius = radius;
+            _mass = mass;
         }
 
-        public override Entity Entity => _sphere;
+        protected override Entity CreateEntity()
+        {
+            Vector3 scale = GameObject.Transform.Scale;
+            return new Sphere(Vector3.Zero, scale.X * _radius, _mass);
+        }
+
+        protected override void ScaleChanged(Vector3 scale)
+        {
+            Sphere sphere = (Sphere)Entity;
+            sphere.Radius = _radius * scale.X;
+        }
     }
 }

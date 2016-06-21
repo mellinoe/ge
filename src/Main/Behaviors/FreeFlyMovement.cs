@@ -10,12 +10,13 @@ namespace Ge.Behaviors
 
         private float _previousMouseX;
         private float _previousMouseY;
-        private float _currentYaw;
-        private float _currentPitch;
+        private float _currentYaw = 0.3f;
+        private float _currentPitch = 0.3f;
 
         private float _speed = 5f;
 
         private float _turboMultiplier = 3f;
+        private bool _draggingOffWindow;
 
         protected override void Start(SystemRegistry registry)
         {
@@ -63,23 +64,30 @@ namespace Ge.Behaviors
 
         void HandleMouseMovement()
         {
-            if (ImGui.IsMouseHoveringAnyWindow())
-            {
-                return;
-            }
-
             float newMouseX = _input.MousePosition.X;
             float newMouseY = _input.MousePosition.Y;
 
             float xDelta = newMouseX - _previousMouseX;
             float yDelta = newMouseY - _previousMouseY;
 
-            if (_input.GetMouseButton(MouseButton.Left) || _input.GetMouseButton(MouseButton.Right))
+            if (!_draggingOffWindow && ((_input.GetMouseButtonDown(MouseButton.Left) || _input.GetMouseButtonDown(MouseButton.Right)) && !ImGui.IsMouseHoveringAnyWindow()))
             {
-                _currentYaw += -xDelta * 0.01f;
-                _currentPitch += yDelta * 0.01f;
+                _draggingOffWindow = true;
+            }
 
-                GameObject.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(_currentYaw, _currentPitch, 0f);
+            if (_draggingOffWindow)
+            {
+                if (!(_input.GetMouseButton(MouseButton.Left) || _input.GetMouseButton(MouseButton.Right)))
+                {
+                    _draggingOffWindow = false;
+                }
+                else
+                {
+                    _currentYaw += -xDelta * 0.01f;
+                    _currentPitch += yDelta * 0.01f;
+
+                    GameObject.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(_currentYaw, _currentPitch, 0f);
+                }
             }
 
             _previousMouseX = newMouseX;

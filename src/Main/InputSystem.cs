@@ -18,7 +18,7 @@ namespace Ge
 
         private readonly List<Action<InputSystem>> _callbacks = new List<Action<InputSystem>>();
 
-        public Vector2 MousePosition;
+        public Vector2 MousePosition { get; private set; }
 
         public InputSnapshot CurrentSnapshot { get; private set; }
 

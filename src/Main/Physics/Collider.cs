@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using BEPUphysics;
 using BEPUphysics.BroadPhaseEntries;
 using BEPUphysics.BroadPhaseEntries.MobileCollidables;
 using BEPUphysics.CollisionRuleManagement;
@@ -13,8 +14,10 @@ namespace Ge.Physics
     public abstract class Collider : Component
     {
         private bool _isTrigger = false;
+        private PhysicsSystem _physicsSystem;
+        public Entity Entity { get; private set; }
 
-        public abstract Entity Entity { get; }
+        protected abstract Entity CreateEntity();
 
         public event TriggerEvent TriggerEntered;
 
@@ -56,21 +59,33 @@ namespace Ge.Physics
 
         public sealed override void Attached(SystemRegistry registry)
         {
-            registry.GetSystem<PhysicsSystem>().AddObject(Entity);
+            _physicsSystem = registry.GetSystem<PhysicsSystem>();
+
+            Entity = CreateEntity();
+            AddAndInitializeEntity();
+
+            GameObject.Transform.RotationManuallyChanged += RotationManuallyChanged;
+            GameObject.Transform.PositionManuallyChanged += PositionManuallyChanged;
+            GameObject.Transform.ScaleChanged += ScaleChanged;
+        }
+
+        private void AddAndInitializeEntity()
+        {
+            _physicsSystem.AddObject(Entity);
             Entity.Position = GameObject.Transform.Position;
             Entity.PositionUpdated += GameObject.Transform.OnPhysicsUpdated;
             Entity.Tag = this;
             Entity.CollisionInformation.Tag = this;
-
-            GameObject.Transform.RotationManuallyChanged += RotationManuallyChanged;
-            GameObject.Transform.PositionManuallyChanged += PositionManuallyChanged;
+            Entity = Entity;
         }
 
         public sealed override void Removed(SystemRegistry registry)
         {
-            registry.GetSystem<PhysicsSystem>().RemoveObject(Entity);
+            _physicsSystem.RemoveObject(Entity);
             Entity.PositionUpdated -= GameObject.Transform.OnPhysicsUpdated;
         }
+
+        protected abstract void ScaleChanged(Vector3 scale);
 
         private void PositionManuallyChanged(Vector3 position)
         {

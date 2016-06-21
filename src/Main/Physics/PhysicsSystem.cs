@@ -7,8 +7,9 @@ namespace Ge.Physics
 {
     public class PhysicsSystem : GameSystem
     {
-        private readonly Space _space;
         private readonly ParallelLooper _looper;
+
+        public Space Space { get; }
 
         public PhysicsSystem()
         {
@@ -18,23 +19,23 @@ namespace Ge.Physics
                 _looper.AddThread();
             }
 
-            _space = new Space(_looper);
-            _space.ForceUpdater.Gravity = new Vector3(0f, -9.81f, 0f);
+            Space = new Space(_looper);
+            Space.ForceUpdater.Gravity = new Vector3(0f, -9.81f, 0f);
         }
 
         public override void Update(float deltaSeconds)
         {
-            _space.Update(deltaSeconds);
+            Space.Update(deltaSeconds);
         }
 
         public void AddObject(ISpaceObject spaceObject)
         {
-            _space.Add(spaceObject);
+            Space.Add(spaceObject);
         }
 
         internal void RemoveObject(ISpaceObject spaceObect)
         {
-            _space.Remove(spaceObect);
+            Space.Remove(spaceObect);
         }
     }
 }

@@ -21,6 +21,7 @@
     <Compile Include="Behaviors\FreeFlyMovement.cs" />
     <Compile Include="Behaviors\IUpdateable.cs" />
     <Compile Include="Behaviors\TimedDeath.cs" />
+    <Compile Include="Editor\DebugPanel.cs" />
     <Compile Include="FrameTimeAverager.cs" />
     <Compile Include="Graphics\Camera.cs" />
     <Compile Include="Graphics\CommonModels.cs" />
@@ -41,6 +42,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="SystemRegistry.cs" />
     <Compile Include="Transform.cs" />
+    <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>

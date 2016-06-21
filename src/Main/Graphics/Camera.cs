@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using BEPUutilities;
+using System.Numerics;
 using Veldrid.Graphics;
 
 namespace Ge.Graphics
@@ -30,6 +31,34 @@ namespace Ge.Graphics
         {
             _gs.Context.DataProviders.Remove("ViewMatrix");
             _gs.Context.DataProviders.Remove("ProjectionMatrix");
+        }
+
+        public Ray GetRayFromScreenPoint(float screenX, float screenY)
+        {
+            var window = _gs.Context.Window;
+
+            // Normalized Device Coordinates
+            float x = (2.0f * screenX) / window.Width - 1.0f;
+            float y = 1.0f - (2.0f * screenY) / window.Height;
+            float z = 1.0f;
+            Vector3 deviceCoords = new Vector3(x, y, z);
+
+            // Clip Coordinates
+            Vector4 clipCoords = new Vector4(deviceCoords.X, deviceCoords.Y, -1.0f, 1.0f);
+
+            // View Coordinates
+            Matrix4x4 invProj;
+            Matrix4x4.Invert(_projectionProvider.Data, out invProj);
+            Vector4 viewCoords = Vector4.Transform(clipCoords, invProj);
+            viewCoords.Z = -1.0f;
+            viewCoords.W = 0.0f;
+
+            Matrix4x4 invView;
+            Matrix4x4.Invert(_viewProvider.Data, out invView);
+            Vector3 worldCoords = Vector4.Transform(viewCoords, invView).XYZ();
+            worldCoords = Vector3.Normalize(worldCoords);
+
+            return new Ray(GameObject.Transform.Position, worldCoords);
         }
 
         private void SetViewMatrix(Transform t)

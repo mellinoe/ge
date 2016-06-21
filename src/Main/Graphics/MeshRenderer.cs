@@ -11,6 +11,7 @@ namespace Ge.Graphics
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
+        private readonly DynamicDataProvider<TintInfo> _tintInfoProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
@@ -24,11 +25,14 @@ namespace Ge.Graphics
 
         public bool Wireframe { get; set; } = false;
 
+        public TintInfo Tint { get { return _tintInfoProvider.Data; } set { _tintInfoProvider.Data = value; } }
+
         public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
-            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
+            _tintInfoProvider = new DynamicDataProvider<TintInfo>();
+            _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _tintInfoProvider };
             _vertices = vertices;
             _indices = indices;
             _texture = texture;
@@ -111,6 +115,7 @@ namespace Ge.Graphics
                 {
                     new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
                     new MaterialPerObjectInputElement("InverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("TintInfoBuffer", MaterialInputType.Float4, _tintInfoProvider.DataSizeInBytes),
                 });
 
             MaterialTextureInputs textureInputs = new MaterialTextureInputs(
@@ -150,5 +155,17 @@ namespace Ge.Graphics
 
         private static readonly string VertexShaderSource = "textured-vertex";
         private static readonly string FragmentShaderSource = "lit-frag";
+    }
+
+    public struct TintInfo
+    {
+        public readonly Vector3 Color;
+        public readonly float TintFactor;
+
+        public TintInfo(Vector3 color, float tintFactor)
+        {
+            Color = color;
+            TintFactor = tintFactor;
+        }
     }
 }

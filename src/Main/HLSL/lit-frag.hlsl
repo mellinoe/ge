@@ -5,6 +5,12 @@
     float __buffer;
 }
 
+cbuffer TintInfoBuffer : register(b5)
+{
+    float3 tintColor;
+    float tintFactor;
+}
+
 struct PixelInput
 {
     float4 position : SV_POSITION;
@@ -30,5 +36,6 @@ float4 PS(PixelInput input) : SV_Target
     float effectiveness = dot(input.normal, lightDir);
     float lightEffectiveness = saturate(effectiveness);
     float4 lightColor = saturate(diffuseColor * lightEffectiveness);
-    return saturate((lightColor * color) + (ambientColor * color));
+    float4 litColor = saturate((lightColor * color) + (ambientColor * color));
+    return (litColor * (1 - tintFactor) + (tintFactor * float4(tintColor, 1)));
 }
