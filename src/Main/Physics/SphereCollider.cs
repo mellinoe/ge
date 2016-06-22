@@ -10,7 +10,7 @@ namespace Ge.Physics
         private float _radius;
         private float _mass;
 
-        public SphereCollider(float radius) : this(radius, 1.0f)
+        public SphereCollider(float radius) : this(radius, (4f / 3f) * (float)Math.PI * radius * radius * radius)
         { }
 
         public SphereCollider(float radius, float mass)

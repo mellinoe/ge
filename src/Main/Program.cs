@@ -85,34 +85,45 @@ namespace Ge
                     lightComponent.Direction = -position;
                 }));
 
-            GameObject cube = new GameObject("Cube1");
-            cube.Transform.Position = new Vector3(0, 0f, 0f);
-            var solidWhite = new RawTextureDataArray<RgbaFloat>(
-                new RgbaFloat[] { RgbaFloat.White },
-                1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
-            cube.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, solidWhite));
-            var bc = new BoxCollider(1f, 1f, 1f);
-            cube.AddComponent(bc);
-
-            var cube2 = new GameObject("Cube2");
-            cube2.Transform.Position = new Vector3(-1.5f, 2.3f, 0f);
-            var solidBlue = new RawTextureDataArray<RgbaFloat>(
-                new RgbaFloat[] { RgbaFloat.Blue },
-                1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
-            cube2.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, solidBlue));
-            bc = new BoxCollider(1f, 1f, 1f);
-            cube2.AddComponent(bc);
-
             GameObject sphere = new GameObject("Sphere1");
             var stoneTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png"));
             sphere.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
-            sphere.Transform.Position = new Vector3(0, 4f, 0f);
-            sphere.Transform.Scale = new Vector3(2f);
-            sphere.AddComponent(new SphereCollider(1.0f, -1.0f));
+            sphere.Transform.Position = new Vector3(0, 2f, 0f);
+            sphere.Transform.Scale = new Vector3(1f);
+            sphere.AddComponent(new SphereCollider(1.0f, 1f));
+
+            GameObject sphere2 = new GameObject("Sphere2");
+            sphere2.AddComponent(new MeshRenderer(s_sphereMeshInfo.Vertices, s_sphereMeshInfo.Indices, stoneTexture));
+            sphere2.Transform.Scale = new Vector3(1f);
+            sphere2.Transform.Parent = sphere.Transform;
+            sphere2.Transform.LocalPosition = new Vector3(-1f, -1f, 0f);
+            sphere2.AddComponent(new SphereCollider(1.0f, 1f));
+
+            GameObject sphere3 = new GameObject("Cube3");
+            sphere3.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, stoneTexture));
+            sphere3.Transform.Scale = new Vector3(1f);
+            sphere3.Transform.Parent = sphere.Transform;
+            sphere3.Transform.LocalPosition = new Vector3(1f, -1f, 0f);
+            sphere3.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f,  1.0f));
+
+            var solidBlue = new RawTextureDataArray<RgbaFloat>(
+                new RgbaFloat[] { RgbaFloat.Blue },
+                1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
+
+            GameObject upperTrigger = new GameObject("UpperTrigger");
+            var mr = new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, solidBlue) { Wireframe = true };
+            upperTrigger.AddComponent(mr);
+            upperTrigger.Transform.Parent = sphere.Transform;
+            upperTrigger.Transform.LocalPosition = new Vector3(0f, 2f, 0f);
+            upperTrigger.Transform.Scale = new Vector3(2.0f);
+            var triggerBox = new BoxCollider(1.0f, 1.0f, 1.0f, .01f) { IsTrigger = true };
+            upperTrigger.AddComponent(triggerBox);
+            triggerBox.TriggerEntered += (other) => Console.WriteLine("Upper box triggered with " + other.GameObject.Name);
 
             GameObject plane = new GameObject("Plane");
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
             plane.Transform.Scale = new Vector3(30f);
+            plane.Transform.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.05f);
             var woodTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png"));
             plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
             plane.AddComponent(new BoxCollider(1f, 0.1f / 30f, 1f, -1.0f));

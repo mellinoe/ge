@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using BEPUphysics.Entities;
+using System.Diagnostics;
 
 namespace Ge
 {
@@ -13,42 +14,98 @@ namespace Ge
         private Transform _parent;
         private readonly List<Transform> _children = new List<Transform>(0);
 
+        private Entity _physicsEntity;
+
+        internal void SetPhysicsEntity(Entity entity)
+        {
+            Debug.Assert(entity != null);
+            _physicsEntity = entity;
+        }
+
+        internal void RemovePhysicsEntity()
+        {
+            Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+            _localPosition = _physicsEntity.Position - parentPos;
+
+            Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+            _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.Orientation);
+
+            _physicsEntity = null;
+        }
+
         public Vector3 Position
         {
             get
             {
-                Vector3 pos = _localPosition;
-                if (Parent != null)
+                if (_physicsEntity == null)
                 {
-                    pos += Parent.Position;
-                }
+                    Vector3 pos = _localPosition;
+                    if (Parent != null)
+                    {
+                        pos += Parent.Position;
+                    }
 
-                return pos;
+                    return pos;
+                }
+                else
+                {
+                    return _physicsEntity.Position;
+                }
             }
             set
             {
-                Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
-                _localPosition = value - parentPos;
-                OnPositionManuallyChanged();
+                Vector3 oldPosition = Position;
+                if (_physicsEntity == null)
+                {
+                    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+                    _localPosition = value - parentPos;
+                }
+                else
+                {
+                    _physicsEntity.Position = value;
+                }
+
+                OnPositionManuallyChanged(oldPosition);
                 OnPositionChanged();
             }
         }
 
         public Vector3 LocalPosition
         {
-            get { return _localPosition; }
+            get
+            {
+                if (_physicsEntity == null)
+                {
+                    return _localPosition;
+                }
+                else
+                {
+                    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+                    return _physicsEntity.Position - parentPos;
+                }
+            }
             set
             {
-                _localPosition = value;
+                Vector3 oldPosition = Position;
+                if (_physicsEntity == null)
+                {
+                    _localPosition = value;
+                }
+                else
+                {
+                    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+                    _physicsEntity.Position = parentPos + value;
+                }
+
                 OnPositionChanged();
-                OnPositionManuallyChanged();
+                OnPositionManuallyChanged(oldPosition);
             }
         }
 
-        public event Action<Vector3> PositionManuallyChanged;
-        private void OnPositionManuallyChanged()
+        public event Action<Vector3, Vector3> PositionManuallyChanged;
+        private void OnPositionManuallyChanged(Vector3 oldPosition)
         {
-            PositionManuallyChanged?.Invoke(Position);
+            PositionManuallyChanged?.Invoke(oldPosition, Position);
         }
 
         public event Action<Transform> TransformChanged;
@@ -59,29 +116,49 @@ namespace Ge
             TransformChanged?.Invoke(this);
         }
 
-        internal void OnPhysicsUpdated(Entity obj)
-        {
-            Position = obj.Position;
-            Rotation = obj.Orientation;
-            OnPositionChanged();
-        }
+        //internal void OnPhysicsUpdated(Entity obj)
+        //{
+        //    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+        //    _localPosition = obj.Position - parentPos;
+        //    OnPositionChanged();
+
+        //    Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+        //    _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), obj.Orientation);
+        //    OnRotationChanged();
+        //}
 
         public Quaternion Rotation
         {
             get
             {
-                Quaternion rot = _localRotation;
-                if (Parent != null)
+                if (_physicsEntity == null)
                 {
-                    rot = Quaternion.Concatenate(Parent.Rotation, rot);
-                }
+                    Quaternion rot = _localRotation;
+                    if (Parent != null)
+                    {
+                        rot = Quaternion.Concatenate(Parent.Rotation, rot);
+                    }
 
-                return rot;
+                    return rot;
+                }
+                else
+                {
+                    return _physicsEntity.Orientation;
+                }
             }
             set
             {
-                Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
-                _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
+
+                if (_physicsEntity == null)
+                {
+                    Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+                    _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
+                }
+                else
+                {
+                    _physicsEntity.Orientation = value;
+                }
+
                 OnRotationManuallyChanged();
                 OnRotationChanged();
             }
@@ -89,10 +166,31 @@ namespace Ge
 
         public Quaternion LocalRotation
         {
-            get { return _localRotation; }
+            get
+            {
+                if (_physicsEntity == null)
+                {
+                    return _localRotation;
+                }
+                else
+                {
+                    Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+                    return Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.Orientation);
+                }
+            }
             set
             {
-                _localRotation = value;
+                if (_physicsEntity == null)
+                {
+                    _localRotation = value;
+                }
+                else
+                {
+                    Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+                    _physicsEntity.Orientation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
+
+                }
+
                 OnRotationManuallyChanged();
                 OnRotationChanged();
             }
@@ -175,6 +273,13 @@ namespace Ge
 
         public Matrix4x4 GetWorldMatrix()
         {
+            if (_physicsEntity != null)
+            {
+                return Matrix4x4.CreateScale(Scale)
+                * Matrix4x4.CreateFromQuaternion(_physicsEntity.Orientation)
+                * Matrix4x4.CreateTranslation(_physicsEntity.Position);
+            }
+
             Matrix4x4 mat = Matrix4x4.CreateScale(_localScale)
                 * Matrix4x4.CreateFromQuaternion(_localRotation)
                 * Matrix4x4.CreateTranslation(_localPosition);

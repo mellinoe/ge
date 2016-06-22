@@ -6,6 +6,8 @@ using BEPUphysics.BroadPhaseEntries.MobileCollidables;
 using BEPUphysics.CollisionRuleManagement;
 using BEPUphysics.Entities;
 using BEPUphysics.NarrowPhaseSystems.Pairs;
+using BEPUphysics.Constraints.SolverGroups;
+using System;
 
 namespace Ge.Physics
 {
@@ -15,6 +17,9 @@ namespace Ge.Physics
     {
         private bool _isTrigger = false;
         private PhysicsSystem _physicsSystem;
+        private WeldJoint _parentJoint;
+        private Collider _parentCollider;
+
         public Entity Entity { get; private set; }
 
         protected abstract Entity CreateEntity();
@@ -28,21 +33,34 @@ namespace Ge.Physics
             get { return _isTrigger; }
             set
             {
-                if (_isTrigger && !value)
+                if (Entity != null)
                 {
-                    Entity.CollisionInformation.CollisionRules.Personal = CollisionRule.NoSolver;
-                    // TODO: Only subscribe to this if there are listeners; otherwise defer.
-                    SubscribeToEvents();
-                }
-                else if (!_isTrigger && value)
-                {
-                    Entity.CollisionInformation.CollisionRules.Personal = CollisionRule.Normal;
-                    // TODO: Only unsubscribe from this if there are listeners.
-                    UnsubscribeFromEvents();
+                    if (!_isTrigger && value)
+                    {
+                        SetEntityTrigger();
+                    }
+                    else if (_isTrigger && !value)
+                    {
+                        UnsetEntityTrigger();
+                    }
                 }
 
                 _isTrigger = value;
             }
+        }
+
+        private void SetEntityTrigger()
+        {
+            Entity.CollisionInformation.CollisionRules.Personal = CollisionRule.NoSolver;
+            // TODO: Only subscribe to this if there are listeners; otherwise defer.
+            SubscribeToEvents();
+        }
+
+        private void UnsetEntityTrigger()
+        {
+            Entity.CollisionInformation.CollisionRules.Personal = CollisionRule.Normal;
+            // TODO: Only unsubscribe from this if there are listeners.
+            UnsubscribeFromEvents();
         }
 
         private void UnsubscribeFromEvents()
@@ -64,25 +82,59 @@ namespace Ge.Physics
             Entity = CreateEntity();
             AddAndInitializeEntity();
 
-            GameObject.Transform.RotationManuallyChanged += RotationManuallyChanged;
-            GameObject.Transform.PositionManuallyChanged += PositionManuallyChanged;
             GameObject.Transform.ScaleChanged += ScaleChanged;
         }
 
         private void AddAndInitializeEntity()
         {
             _physicsSystem.AddObject(Entity);
-            Entity.Position = GameObject.Transform.Position;
-            Entity.PositionUpdated += GameObject.Transform.OnPhysicsUpdated;
+            Entity.Position = Transform.Position;
+            Entity.Orientation = Transform.Rotation;
             Entity.Tag = this;
             Entity.CollisionInformation.Tag = this;
-            Entity = Entity;
+
+            _parentCollider = GameObject.GetComponentInParent<Collider>();
+            if (_parentCollider != null)
+            {
+                CollisionRules.AddRule(Entity, _parentCollider.Entity, CollisionRule.NoBroadPhase);
+
+                var jointPosition = (Entity.Position + _parentCollider.Entity.Position) / 2;
+                _parentJoint = new WeldJoint(_parentCollider.Entity, Entity, jointPosition);
+                _parentJoint.BallSocketJoint.SpringSettings.Stiffness = float.MaxValue;
+                _parentJoint.BallSocketJoint.SpringSettings.Damping = float.MaxValue;
+                _parentJoint.BallSocketJoint.IsActive = true;
+
+                _parentJoint.NoRotationJoint.SpringSettings.Damping = float.MaxValue;
+                _parentJoint.NoRotationJoint.SpringSettings.Stiffness = float.MaxValue;
+                _parentJoint.NoRotationJoint.IsActive = true;
+
+                _parentJoint.IsActive = true;
+                _physicsSystem.AddObject(_parentJoint);
+                _parentCollider.Transform.PositionManuallyChanged += OnAttachedParentManuallyMoved;
+            }
+
+            Transform.SetPhysicsEntity(Entity);
+
+            if (_isTrigger)
+            {
+                SetEntityTrigger();
+            }
+        }
+
+        private void OnAttachedParentManuallyMoved(Vector3 oldParentPos, Vector3 newParentPos)
+        {
+            Entity.Position += (newParentPos - oldParentPos);
         }
 
         public sealed override void Removed(SystemRegistry registry)
         {
             _physicsSystem.RemoveObject(Entity);
-            Entity.PositionUpdated -= GameObject.Transform.OnPhysicsUpdated;
+            Transform.RemovePhysicsEntity();
+            if (_parentCollider != null)
+            {
+                _parentCollider.Transform.PositionManuallyChanged -= OnAttachedParentManuallyMoved;
+            }
+
         }
 
         protected abstract void ScaleChanged(Vector3 scale);

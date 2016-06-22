@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Ge
 {
@@ -64,10 +65,23 @@ namespace Ge
             IReadOnlyCollection<Component> components;
             if (!_components.TryGetValue(typeof(T), out components))
             {
-                return null;
+                foreach (var kvp in _components)
+                {
+                    if (typeof(T).GetTypeInfo().IsAssignableFrom(kvp.Key))
+                    {
+                        if (kvp.Value.Any())
+                        {
+                            return (T)kvp.Value.First();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                return (T)components.First();
             }
 
-            return (T)components.First();
+            return null;
         }
 
         internal void SetRegistry(SystemRegistry systemRegistry)
@@ -86,6 +100,22 @@ namespace Ge
             {
                 return Array.Empty<T>();
             }
+        }
+
+        public T GetComponentInParent<T>() where T : Component
+        {
+            T component;
+            GameObject parent = this;
+            while ((parent = parent.Transform.Parent?.GameObject) != null)
+            {
+                component = parent.GetComponent<T>();
+                if (component != null)
+                {
+                    return component;
+                }
+            }
+
+            return null;
         }
 
         public void Destroy()

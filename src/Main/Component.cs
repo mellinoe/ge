@@ -6,6 +6,8 @@ namespace Ge
 
         public GameObject GameObject => _attachedGO;
 
+        public Transform Transform => _attachedGO.Transform;
+
         internal void AttachToGameObject(GameObject go, SystemRegistry registry)
         {
             _attachedGO = go;
