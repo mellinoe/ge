@@ -6,6 +6,12 @@ uniform LightBuffer
     vec3 lightDirection;
 };
 
+uniform TintInfoBuffer
+{
+   vec3 tintColor;
+   float tintFactor;
+};
+
 uniform sampler2D surfaceTexture;
 
 in vec3 normal;
@@ -24,6 +30,7 @@ void main()
     float effectiveness = dot(normal, lightDir);
     float lightEffectiveness = clamp(effectiveness, 0, 1);
     vec4 lightColor = clamp(diffuseColor * lightEffectiveness, 0, 1);
-    outputColor = clamp((lightColor * color) + (ambientColor * color), 0, 1);
+    vec4 litColor = clamp((lightColor * color) + (ambientColor * color), 0, 1);
+    outputColor = (litColor * (1 - tintFactor) + (tintFactor * vec4(tintColor, 1)));
 
 }
