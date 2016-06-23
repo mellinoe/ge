@@ -19,8 +19,10 @@
     <Compile Include="Behaviors\Behavior.cs" />
     <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
     <Compile Include="Behaviors\DelegateBehavior.cs" />
+    <Compile Include="Behaviors\FpsController.cs" />
     <Compile Include="Behaviors\FreeFlyMovement.cs" />
     <Compile Include="Behaviors\IUpdateable.cs" />
+    <Compile Include="Behaviors\ObjectRain.cs" />
     <Compile Include="Behaviors\TimedDeath.cs" />
     <Compile Include="Editor\DebugPanel.cs" />
     <Compile Include="FrameTimeAverager.cs" />
@@ -38,17 +40,17 @@
     <Compile Include="Graphics\ImGuiRenderer.cs" />
     <Compile Include="InputSystem.cs" />
     <Compile Include="Physics\BoxCollider.cs" />
+    <Compile Include="Physics\CharacterController.cs" />
     <Compile Include="Physics\Collider.cs" />
     <Compile Include="Physics\PhysicsSystem.cs" />
     <Compile Include="Physics\SphereCollider.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ScoreSystem.cs" />
     <Compile Include="SystemRegistry.cs" />
     <Compile Include="Transform.cs" />
     <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />

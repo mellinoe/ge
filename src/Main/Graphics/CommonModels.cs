@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿using System;
+using System.IO;
+using System.Numerics;
 using Veldrid.Graphics;
 
 namespace Ge.Graphics
@@ -65,5 +67,15 @@ namespace Ge.Graphics
             16,17,18, 16,18,19,
             20,21,22, 20,22,23,
         };
+    }
+
+    public static class SphereModel
+    {
+        private static readonly ObjMeshInfo s_sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+
+        public static VertexPositionNormalTexture[] Vertices => s_sphereMeshInfo.Vertices;
+
+        public static int[] Indices => s_sphereMeshInfo.Indices;
+
     }
 }

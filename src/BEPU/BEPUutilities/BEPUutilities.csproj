@@ -13,9 +13,6 @@
   <!-- Default configurations to help VS understand the configurations -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ContainmentType.cs" />
     <Compile Include="ConvexHullHelper.cs" />

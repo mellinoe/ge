@@ -243,6 +243,7 @@ namespace Ge.Graphics
                 _projectionMatrixProvider.Data = mvp;
             }
 
+            BlendState previousBlendState = rc.BlendState;
             rc.SetBlendState(_blendState);
             rc.SetDepthStencilState(_depthDisabledState);
             RasterizerState previousRasterizerState = rc.RasterizerState;
@@ -297,7 +298,7 @@ namespace Ge.Graphics
             }
 
             rc.ClearScissorRectangle();
-            rc.SetBlendState(rc.OverrideBlend);
+            rc.SetBlendState(previousBlendState);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);
             rc.SetRasterizerState(previousRasterizerState);
         }

@@ -33,41 +33,6 @@ namespace Ge.Editor
 
         public override void Update(float deltaSeconds)
         {
-            if (_input.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !ImGui.IsMouseHoveringAnyWindow())
-            {
-                var screenPos = _input.MousePosition;
-                var ray = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
-
-                RayCastResult rcr;
-                if (_physics.Space.RayCast(ray, out rcr))
-                {
-                    if (rcr.HitObject.Tag != null)
-                    {
-                        Collider c = rcr.HitObject.Tag as Collider;
-                        if (c != null)
-                        {
-                            if (_selectedObject == c.GameObject && _input.GetKey(OpenTK.Input.Key.ControlLeft))
-                            {
-                                ClearSelection();
-                            }
-                            else
-                            {
-                                SelectObject(c.GameObject);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    ClearSelection();
-                }
-            }
-
-            if (_selectedObject != null && _input.GetKeyDown(OpenTK.Input.Key.Delete))
-            {
-                _selectedObject.Destroy();
-            }
-
             if (_input.GetKeyDown(OpenTK.Input.Key.Tilde))
             {
                 _windowOpen = !_windowOpen;
@@ -75,6 +40,41 @@ namespace Ge.Editor
 
             if (_windowOpen)
             {
+                if (_input.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !ImGui.IsMouseHoveringAnyWindow())
+                {
+                    var screenPos = _input.MousePosition;
+                    var ray = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
+
+                    RayCastResult rcr;
+                    if (_physics.Space.RayCast(ray, out rcr))
+                    {
+                        if (rcr.HitObject.Tag != null)
+                        {
+                            Collider c = rcr.HitObject.Tag as Collider;
+                            if (c != null)
+                            {
+                                if (_selectedObject == c.GameObject && _input.GetKey(OpenTK.Input.Key.ControlLeft))
+                                {
+                                    ClearSelection();
+                                }
+                                else
+                                {
+                                    SelectObject(c.GameObject);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ClearSelection();
+                    }
+                }
+
+                if (_selectedObject != null && _input.GetKeyDown(OpenTK.Input.Key.Delete))
+                {
+                    _selectedObject.Destroy();
+                }
+
                 Vector2 displaySize = ImGui.GetIO().DisplaySize / ImGui.GetIO().DisplayFramebufferScale;
                 Vector2 size = new Vector2(
                     Math.Min(350, displaySize.X * 0.275f),
