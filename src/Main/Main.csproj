@@ -13,6 +13,7 @@
     <RootNamespace>Ge</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
+    <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Behaviors\Behavior.cs" />
@@ -28,6 +29,7 @@
     <Compile Include="Component.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GameObject.cs" />
+    <Compile Include="GameObjectQuerySystem.cs" />
     <Compile Include="GameSystem.cs" />
     <Compile Include="Graphics\DirectionalLight.cs" />
     <Compile Include="Graphics\GraphicsSystem.cs" />

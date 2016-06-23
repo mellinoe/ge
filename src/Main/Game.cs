@@ -9,17 +9,16 @@ namespace Ge
     {
         private bool _running;
         public bool LimitFrameRate { get; set; } = true;
-        private List<GameObject> _gameObjects = new List<GameObject>();
-        private List<GameObject> _destroyList = new List<GameObject>();
+        private readonly List<GameObject> _gameObjects = new List<GameObject>();
+        private readonly List<GameObject> _destroyList = new List<GameObject>();
 
         public SystemRegistry SystemRegistry { get; } = new SystemRegistry();
-
-        public IReadOnlyList<GameObject> GameObjects => _gameObjects;
 
         public double DesiredFramerate { get; set; } = 60.0;
 
         public Game()
         {
+            SystemRegistry.Register(new GameObjectQuerySystem(_gameObjects));
             GameObject.GameObjectConstructed += OnGameObjectConstructed;
             GameObject.GameObjectDestroyed += OnGameObjectDestroyed;
         }
@@ -27,6 +26,7 @@ namespace Ge
         private void OnGameObjectConstructed(GameObject go)
         {
             go.SetRegistry(SystemRegistry);
+            _gameObjects.Add(go);
         }
 
         private void OnGameObjectDestroyed(GameObject go)
@@ -64,6 +64,7 @@ namespace Ge
                 foreach (GameObject go in _destroyList)
                 {
                     go.CommitDestroy();
+                    _gameObjects.Remove(go);
                 }
                 _destroyList.Clear();
             }

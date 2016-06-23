@@ -6,6 +6,7 @@ using Ge.Graphics;
 using BEPUphysics;
 using System.Numerics;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Ge.Editor
 {
@@ -14,6 +15,7 @@ namespace Ge.Editor
         private Camera _camera;
         private PhysicsSystem _physics;
         private InputSystem _input;
+        private GameObjectQuerySystem _goQuery;
         private GameObject _selectedObject;
         private bool _windowOpen = true;
 
@@ -26,6 +28,7 @@ namespace Ge.Editor
         {
             _physics = registry.GetSystem<PhysicsSystem>();
             _input = registry.GetSystem<InputSystem>();
+            _goQuery = registry.GetSystem<GameObjectQuerySystem>();
         }
 
         public override void Update(float deltaSeconds)
@@ -67,7 +70,7 @@ namespace Ge.Editor
 
             if (_windowOpen)
             {
-                Vector2 displaySize = ImGui.GetIO().DisplaySize;
+                Vector2 displaySize = ImGui.GetIO().DisplaySize / ImGui.GetIO().DisplayFramebufferScale;
                 Vector2 size = new Vector2(
                     Math.Min(350, displaySize.X * 0.275f),
                     Math.Min(600, displaySize.Y * 0.75f));
@@ -81,7 +84,41 @@ namespace Ge.Editor
                     {
                         DrawObject(_selectedObject);
                     }
+                    else
+                    {
+                        DrawHierarchy();
+                    }
                     ImGui.EndWindow();
+                }
+            }
+        }
+
+        private void DrawHierarchy()
+        {
+            foreach (var go in _goQuery.GetUnparentedGameObjects())
+            {
+                DrawNode(go.Transform);
+            }
+        }
+
+        private void DrawNode(Transform t)
+        {
+            if (t.Children.Count > 0)
+            {
+                if (ImGui.TreeNode(t.GameObject.Name))
+                {
+                    foreach (var child in t.Children)
+                    {
+                        DrawNode(child);
+                    }
+
+                    ImGui.TreePop();
+                }
+            }
+            else
+            {
+                if (ImGui.Selectable(t.GameObject.Name))
+                {
                 }
             }
         }

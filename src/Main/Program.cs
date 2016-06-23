@@ -154,15 +154,19 @@ namespace Ge
             }));
         }
 
+        private static int s_totalObjects = 2;
         private static int s_numBoxes = 2;
         private static void DropRandomObject(Random r)
         {
+            s_totalObjects++;
+            s_numBoxes++;
+            
             var color = new RawTextureDataArray<RgbaFloat>(
                 new RgbaFloat[] { new RgbaFloat((float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble()) },
                 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
 
             bool isBox = r.NextDouble() <= 0.8;
-            var newGo = new GameObject((isBox ? "Cube" : "Sphere") + (++s_numBoxes));
+            var newGo = new GameObject((isBox ? "Cube" : "Sphere") + (s_totalObjects));
             newGo.Transform.Position = new Vector3((float)r.NextDouble() * 29f - 14f, (float)r.NextDouble() * 10f, (float)r.NextDouble() * 29f - 14f);
             var mr = isBox
                 ? new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, color)
