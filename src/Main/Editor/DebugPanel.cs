@@ -17,7 +17,7 @@ namespace Ge.Editor
         private InputSystem _input;
         private GameObjectQuerySystem _goQuery;
         private GameObject _selectedObject;
-        private bool _windowOpen = true;
+        private bool _windowOpen = false;
 
         public DebugPanel(Camera camera)
         {
@@ -66,6 +66,11 @@ namespace Ge.Editor
             if (_selectedObject != null && _input.GetKeyDown(OpenTK.Input.Key.Delete))
             {
                 _selectedObject.Destroy();
+            }
+
+            if (_input.GetKeyDown(OpenTK.Input.Key.Tilde))
+            {
+                _windowOpen = !_windowOpen;
             }
 
             if (_windowOpen)

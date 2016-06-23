@@ -9,6 +9,8 @@ using System.IO;
 using System;
 using Ge.Physics;
 using Ge.Editor;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ge
 {
@@ -40,11 +42,6 @@ namespace Ge
                 }
 
                 imGuiRenderer.UpdateImGuiInput(window, input.CurrentSnapshot);
-                bool limitFramerate = game.LimitFrameRate;
-                if (ImGui.Checkbox("Limit Framerate", ref limitFramerate))
-                {
-                    game.LimitFrameRate = limitFramerate;
-                }
             });
 
             game.SystemRegistry.Register(inputSystem);
@@ -104,7 +101,7 @@ namespace Ge
             sphere3.Transform.Scale = new Vector3(1f);
             sphere3.Transform.Parent = sphere.Transform;
             sphere3.Transform.LocalPosition = new Vector3(1f, -1f, 0f);
-            sphere3.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f,  1.0f));
+            sphere3.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f, 1.0f));
 
             var solidBlue = new RawTextureDataArray<RgbaFloat>(
                 new RgbaFloat[] { RgbaFloat.Blue },
@@ -139,19 +136,10 @@ namespace Ge
                     elapsed -= dropInterval;
                     DropRandomObject(r);
                 }
-
-                ImGui.Text($"{s_numBoxes} boxes");
             }));
 
             camera.AddComponent(new FreeFlyMovement());
             camera.AddComponent(new DebugPanel(camera.GetComponent<Camera>()));
-
-            var fta = new FrameTimeAverager(666);
-            camera.AddComponent(new DelegateBehavior(dt =>
-            {
-                fta.AddTime(dt * 1000.0);
-                ImGui.Text(fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + fta.CurrentAverageFrameTime.ToString("#00.00 ms"));
-            }));
         }
 
         private static int s_totalObjects = 2;
@@ -160,7 +148,7 @@ namespace Ge
         {
             s_totalObjects++;
             s_numBoxes++;
-            
+
             var color = new RawTextureDataArray<RgbaFloat>(
                 new RgbaFloat[] { new RgbaFloat((float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble()) },
                 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);

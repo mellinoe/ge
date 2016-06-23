@@ -76,11 +76,6 @@ namespace Ge.Graphics
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
         }
 
-        internal void UpdateImGuiInput(OpenTKWindow window, object currentSnapshot)
-        {
-            throw new NotImplementedException();
-        }
-
         public IEnumerable<string> GetStagesParticipated()
         {
             yield return "Overlay";
