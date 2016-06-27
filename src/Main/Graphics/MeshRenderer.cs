@@ -22,10 +22,15 @@ namespace Ge.Graphics
         private Material _material;
 
         private static RasterizerState s_wireframeRS;
+        private static RasterizerState s_noCullRS;
 
         public bool Wireframe { get; set; } = false;
 
+        public bool DontCullBackFace { get; set; } = false;
+
         public TintInfo Tint { get { return _tintInfoProvider.Data; } set { _tintInfoProvider.Data = value; } }
+
+        public Vector3 RenderOffset { get; set; }
 
         public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
@@ -50,7 +55,7 @@ namespace Ge.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            _worldProvider.Data = GameObject.Transform.GetWorldMatrix();
+            _worldProvider.Data = GameObject.Transform.GetWorldMatrix() * Matrix4x4.CreateTranslation(RenderOffset);
 
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
@@ -58,6 +63,10 @@ namespace Ge.Graphics
             if (Wireframe)
             {
                 rc.SetRasterizerState(s_wireframeRS);
+            }
+            else if (DontCullBackFace)
+            {
+                rc.SetRasterizerState(s_noCullRS);
             }
             else
             {
@@ -136,6 +145,10 @@ namespace Ge.Graphics
             if (s_wireframeRS == null)
             {
                 s_wireframeRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+            }
+            if (s_noCullRS == null)
+            {
+                s_noCullRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
             }
         }
 

@@ -13,7 +13,7 @@ namespace Ge.Physics
         private float _mass;
 
         public BoxCollider(float width, float height, float depth)
-            : this(width, height, depth, 1.0f) { }
+            : this(width, height, depth, 1.0f * (width * height * depth)) { }
 
         public BoxCollider(float width, float height, float depth, float mass)
         {

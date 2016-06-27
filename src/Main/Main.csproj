@@ -16,6 +16,7 @@
     <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Behaviors\BallLauncher.cs" />
     <Compile Include="Behaviors\Behavior.cs" />
     <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
     <Compile Include="Behaviors\DelegateBehavior.cs" />
@@ -42,8 +43,10 @@
     <Compile Include="Physics\BoxCollider.cs" />
     <Compile Include="Physics\CharacterController.cs" />
     <Compile Include="Physics\Collider.cs" />
+    <Compile Include="Physics\CompoundShapeCollider.cs" />
     <Compile Include="Physics\PhysicsSystem.cs" />
     <Compile Include="Physics\SphereCollider.cs" />
+    <Compile Include="Prefabs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ScoreSystem.cs" />
     <Compile Include="SystemRegistry.cs" />

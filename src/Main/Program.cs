@@ -104,8 +104,15 @@ namespace Ge
                 }
             }
 
+            var bin = Prefabs.CreateBin();
+            var scaleBox = new GameObject("ScaleBox");
+            scaleBox.Transform.Position = new Vector3(5f, 0f, 0f);
+            scaleBox.Transform.Scale = new Vector3(3f);
+            scaleBox.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, woodTexture));
+            scaleBox.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f, 50.0f));
+
             camera.AddComponent(new DebugPanel(camera.GetComponent<Camera>()));
-            camera.AddComponent(new ObjectRain());
+            camera.AddComponent(new BallLauncher());
         }
 
         private static void AddObjectRainScene()
