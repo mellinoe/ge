@@ -11,6 +11,7 @@ using Ge.Physics;
 using Ge.Editor;
 using System.Collections.Generic;
 using System.Diagnostics;
+using BEPUphysics.Entities.Prefabs;
 
 namespace Ge
 {
@@ -105,6 +106,7 @@ namespace Ge
             }
 
             var bin = Prefabs.CreateBin();
+
             var scaleBox = new GameObject("ScaleBox");
             scaleBox.Transform.Position = new Vector3(5f, 0f, 0f);
             scaleBox.Transform.Scale = new Vector3(3f);

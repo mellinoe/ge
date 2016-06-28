@@ -12,7 +12,7 @@ namespace Ge.Physics
         private readonly IList<CompoundShapeEntry> _shapes;
         private readonly float _mass;
 
-        public Vector3 RenderOffset { get; private set; }
+        public Vector3 EntityCenter { get; private set; }
 
         public CompoundShapeCollider(IList<CompoundShapeEntry> shapes, float mass)
         {
@@ -23,7 +23,7 @@ namespace Ge.Physics
         protected override Entity CreateEntity()
         {
             CompoundBody cb = new CompoundBody(_shapes, _mass);
-            RenderOffset = -cb.Position;
+            EntityCenter = -cb.Position;
             return cb;
         }
 

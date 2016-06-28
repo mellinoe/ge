@@ -6,7 +6,8 @@ using Ge.Graphics;
 using BEPUphysics;
 using System.Numerics;
 using System.Diagnostics;
-using System.Linq;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Ge.Editor
 {
@@ -19,9 +20,75 @@ namespace Ge.Editor
         private GameObject _selectedObject;
         private bool _windowOpen = false;
 
+        private Dictionary<Type, Action<Component>> _drawers;
+
         public DebugPanel(Camera camera)
         {
             _camera = camera;
+            _drawers = new Dictionary<Type, Action<Component>>()
+            {
+                { typeof(Transform), DrawTransform },
+                { typeof(Collider), DrawCollider },
+                { typeof(MeshRenderer), DrawMeshRenderer },
+
+                { typeof(Component), GenericDrawer },
+
+            };
+        }
+
+        private void GenericDrawer(Component obj)
+        {
+            ImGui.Text(obj.GetType().Name);
+        }
+
+        private static void DrawMeshRenderer(Component c)
+        {
+            MeshRenderer mr = (MeshRenderer)c;
+            bool wf = mr.Wireframe;
+            if (ImGui.Checkbox("Wireframe", ref wf))
+            {
+                mr.Wireframe = wf;
+            }
+
+            bool dcbf = mr.DontCullBackFace;
+            if (ImGui.Checkbox("Don't Cull Backface", ref dcbf))
+            {
+                mr.DontCullBackFace = dcbf;
+            }
+        }
+
+
+        private static void DrawCollider(Component c)
+        {
+            Collider collider = (Collider)c;
+            float mass = collider.Entity.Mass;
+            if (ImGui.DragFloat("Mass", ref mass, 0f, 1000f, .1f))
+            {
+                collider.Entity.Mass = mass;
+            }
+
+            bool trigger = collider.IsTrigger;
+            if (ImGui.Checkbox("Is Trigger", ref trigger))
+            {
+                collider.IsTrigger = trigger;
+            }
+        }
+
+        private static void DrawTransform(Component c)
+        {
+            Transform t = (Transform)c;
+            Vector3 pos = t.LocalPosition;
+            if (ImGui.DragVector3("Position", ref pos, -50f, 50f, 0.05f))
+            {
+                t.LocalPosition = pos;
+            }
+            Quaternion rotation = t.LocalRotation;
+
+            float scale = t.LocalScale.X;
+            if (ImGui.DragFloat("Scale", ref scale, .01f, 50f, 0.05f))
+            {
+                t.LocalScale = new Vector3(scale);
+            }
         }
 
         protected override void Start(SystemRegistry registry)
@@ -134,8 +201,8 @@ namespace Ge.Editor
 
             _selectedObject = go;
             _selectedObject.Destroyed += OnSelectedDestroyed;
-            MeshRenderer mr = _selectedObject.GetComponent<MeshRenderer>();
-            if (mr != null)
+            var mrs = _selectedObject.GetComponents<MeshRenderer>();
+            foreach (var mr in mrs)
             {
                 mr.Tint = new TintInfo(new Vector3(1.0f), 0.6f);
             }
@@ -146,8 +213,8 @@ namespace Ge.Editor
             if (_selectedObject != null)
             {
                 _selectedObject.Destroyed -= OnSelectedDestroyed;
-                MeshRenderer mr = _selectedObject.GetComponent<MeshRenderer>();
-                if (mr != null)
+                var mrs = _selectedObject.GetComponents<MeshRenderer>();
+                foreach (var mr in mrs)
                 {
                     mr.Tint = new TintInfo();
                 }
@@ -166,16 +233,42 @@ namespace Ge.Editor
         {
             if (ImGui.CollapsingHeader(_selectedObject.Name, _selectedObject.Name, true, true))
             {
-                Vector3 pos = _selectedObject.Transform.LocalPosition;
-                if (ImGui.DragVector3("Position", ref pos, -50f, 50f, 0.05f))
+                foreach (var component in _selectedObject.GetComponents<Component>())
                 {
-                    _selectedObject.Transform.LocalPosition = pos;
+                    DrawComponent(component);
                 }
-                float scale = _selectedObject.Transform.LocalScale.X;
-                if (ImGui.DragFloat("Scale", ref scale, .01f, 50f, 0.05f))
+            }
+        }
+
+        private void DrawComponent(Component component)
+        {
+            var type = component.GetType();
+            Action<Component> drawer = GetDrawer(type);
+            if (ImGui.CollapsingHeader(type.Name, type.Name, false, true))
+            {
+                drawer.Invoke(component);
+
+            }
+        }
+
+        private Action<Component> GetDrawer(Type type)
+        {
+            Action<Component> drawer;
+            if (!_drawers.TryGetValue(type, out drawer))
+            {
+                foreach (var kvp in _drawers)
                 {
-                    _selectedObject.Transform.LocalScale = new Vector3(scale);
+                    if (kvp.Key.GetTypeInfo().IsAssignableFrom(type))
+                    {
+                        return kvp.Value;
+                    }
                 }
+
+                throw new InvalidOperationException("No drawer found for " + type.Name);
+            }
+            else
+            {
+                return drawer;
             }
         }
     }

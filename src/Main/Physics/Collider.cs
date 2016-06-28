@@ -8,6 +8,7 @@ using BEPUphysics.Entities;
 using BEPUphysics.NarrowPhaseSystems.Pairs;
 using BEPUphysics.Constraints.SolverGroups;
 using System;
+using BEPUphysics.PositionUpdating;
 
 namespace Ge.Physics
 {
@@ -151,16 +152,28 @@ namespace Ge.Physics
 
         private void OnCollisionPairCreated(EntityCollidable sender, BroadPhaseEntry other, NarrowPhasePair pair)
         {
-            Debug.Assert(other.Tag is Collider);
-            Collider otherCollider = (Collider)other.Tag;
-            TriggerEntered?.Invoke(otherCollider);
+            if (!(other.Tag is Collider))
+            {
+                Console.WriteLine("ERROR: TAG WAS NOT COLLIDER.");
+            }
+            else
+            {
+                Collider otherCollider = (Collider)other.Tag;
+                TriggerEntered?.Invoke(otherCollider);
+            }
         }
 
         private void OnCollisionPairRemoved(EntityCollidable sender, BroadPhaseEntry other)
         {
-            Debug.Assert(other.Tag is Collider);
-            Collider otherCollider = (Collider)other.Tag;
-            TriggerExited?.Invoke(otherCollider);
+            if (other.Tag is Collider)
+            {
+                Collider otherCollider = (Collider)other.Tag;
+                TriggerExited?.Invoke(otherCollider);
+            }
+            else
+            {
+                Console.WriteLine("ERROR: TAG WAS NOT COLLIDER.");
+            }
         }
     }
 }

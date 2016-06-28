@@ -92,13 +92,25 @@ namespace Ge
         public IEnumerable<T> GetComponents<T>() where T : Component
         {
             IReadOnlyCollection<Component> components;
-            if (_components.TryGetValue(typeof(T), out components))
+            if (!_components.TryGetValue(typeof(T), out components))
             {
-                return (IReadOnlyCollection<T>)components;
+                foreach (var kvp in _components)
+                {
+                    if (typeof(T).GetTypeInfo().IsAssignableFrom(kvp.Key))
+                    {
+                        foreach (var comp in kvp.Value)
+                        {
+                            yield return (T)comp;
+                        }
+                    }
+                }
             }
             else
             {
-                return Array.Empty<T>();
+                foreach (var comp in components)
+                {
+                    yield return (T)comp;
+                }
             }
         }
 

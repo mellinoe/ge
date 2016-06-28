@@ -22,7 +22,7 @@ namespace Ge.Physics
         protected override Entity CreateEntity()
         {
             Vector3 scale = GameObject.Transform.Scale;
-            return new Sphere(Vector3.Zero, scale.X * _radius, _mass);
+            return new Sphere(Vector3.Zero, scale.X * _radius, _mass) ;
         }
 
         protected override void ScaleChanged(Vector3 scale)

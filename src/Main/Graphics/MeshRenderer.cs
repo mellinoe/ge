@@ -30,7 +30,7 @@ namespace Ge.Graphics
 
         public TintInfo Tint { get { return _tintInfoProvider.Data; } set { _tintInfoProvider.Data = value; } }
 
-        public Vector3 RenderOffset { get; set; }
+        public Matrix4x4 RenderOffset { get; set; } = Matrix4x4.Identity;
 
         public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
@@ -55,7 +55,7 @@ namespace Ge.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            _worldProvider.Data = GameObject.Transform.GetWorldMatrix() * Matrix4x4.CreateTranslation(RenderOffset);
+            _worldProvider.Data = RenderOffset * GameObject.Transform.GetWorldMatrix();
 
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);

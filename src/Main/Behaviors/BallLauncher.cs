@@ -2,21 +2,21 @@
 using Ge.Physics;
 using Veldrid.Graphics;
 using System.Numerics;
+using System;
+using BEPUphysics.PositionUpdating;
 
 namespace Ge.Behaviors
 {
     public class BallLauncher : Behavior
     {
         private InputSystem _input;
-        private RawTextureDataArray<RgbaFloat> _color;
         private float _launchSpeed = 20.0f;
+
+        private Random _random = new Random();
 
         protected override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
-            _color = new RawTextureDataArray<RgbaFloat>(
-                new RgbaFloat[] { RgbaFloat.Cyan },
-                1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
         }
 
         public override void Update(float deltaSeconds)
@@ -29,13 +29,17 @@ namespace Ge.Behaviors
 
         private void FireBoxForward()
         {
-            var box = new GameObject("Box");
-            var bc = new SphereCollider(1.0f, .01f);
-            box.AddComponent(bc);
-            box.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, _color));
-            box.Transform.Position = Transform.Position + Transform.Forward * 1.0f;
-            box.Transform.Scale = new Vector3(0.3f);
-            bc.Entity.LinearVelocity = Transform.Forward * _launchSpeed;
+            var ball = new GameObject("Ball");
+            var sc = new SphereCollider(1.0f, .01f);
+            ball.AddComponent(sc);
+            sc.Entity.PositionUpdateMode = PositionUpdateMode.Continuous;
+            var color = new RawTextureDataArray<RgbaFloat>(
+                new RgbaFloat[] { new RgbaFloat((float)_random.NextDouble(), (float)_random.NextDouble(), (float)_random.NextDouble(), 1.0f) },
+                1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
+            ball.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, color) { Wireframe = _random.NextDouble() > .99 });
+            ball.Transform.Position = Transform.Position + Transform.Forward * 1.0f;
+            ball.Transform.Scale = new Vector3(0.1f);
+            sc.Entity.LinearVelocity = Transform.Forward * _launchSpeed;
         }
     }
 }
