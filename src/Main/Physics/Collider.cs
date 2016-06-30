@@ -52,14 +52,18 @@ namespace Ge.Physics
 
         private void SetEntityTrigger()
         {
+            Entity.IsAffectedByGravity = false;
             Entity.CollisionInformation.CollisionRules.Personal = CollisionRule.NoSolver;
+            Entity.LinearVelocity = Vector3.Zero;
             // TODO: Only subscribe to this if there are listeners; otherwise defer.
             SubscribeToEvents();
         }
 
         private void UnsetEntityTrigger()
         {
+            Entity.IsAffectedByGravity = true;
             Entity.CollisionInformation.CollisionRules.Personal = CollisionRule.Normal;
+            Entity.LinearVelocity = Vector3.Zero;
             // TODO: Only unsubscribe from this if there are listeners.
             UnsubscribeFromEvents();
         }

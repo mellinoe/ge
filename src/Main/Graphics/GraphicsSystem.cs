@@ -15,15 +15,19 @@ namespace Ge.Graphics
         private readonly PipelineStage[] _pipelineStages;
         private readonly Window _window;
 
+        public MaterialCache MaterialCache { get; }
+
         public RenderContext Context { get; }
 
         public GraphicsSystem(OpenTKWindow window)
         {
             _window = window;
             Context = CreatePlatformDefaultContext(window);
+            MaterialCache = new MaterialCache(Context.ResourceFactory);
 
             _pipelineStages = new PipelineStage[]
             {
+                new ShadowMapStage(Context),
                 new StandardPipelineStage(Context, "Standard"),
                 new StandardPipelineStage(Context, "Overlay")
             };

@@ -39,6 +39,9 @@
     <Compile Include="Graphics\MeshRenderer.cs" />
     <Compile Include="Graphics\ImGuiImageHelper.cs" />
     <Compile Include="Graphics\ImGuiRenderer.cs" />
+    <Compile Include="Graphics\MaterialCache.cs" />
+    <Compile Include="Graphics\ShadowMapPreview.cs" />
+    <Compile Include="Graphics\ShadowMapStage.cs" />
     <Compile Include="InputSystem.cs" />
     <Compile Include="Physics\BoxCollider.cs" />
     <Compile Include="Physics\CharacterController.cs" />
@@ -53,7 +56,9 @@
     <Compile Include="Transform.cs" />
     <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />
@@ -65,6 +70,24 @@
     <ProjectReference Include="..\..\ext\veldrid\src\Veldrid.Assets\Veldrid.Assets.csproj" />
     <ProjectReference Include="..\BEPU\BEPUphysics\BEPUphysics.csproj" />
     <ProjectReference Include="..\BEPU\BEPUutilities\BEPUutilities.csproj" />
+    <Content Include="GLSL\shadowmap-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GLSL\shadowmap-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GLSL\simple-2d-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GLSL\simple-2d-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GLSL\shadow-frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GLSL\shadow-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Models\Sphere.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -91,6 +114,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="HLSL\lit-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadow-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadow-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadowmap-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\shadowmap-vertex.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\simple-2d-frag.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="HLSL\simple-2d-vertex.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="HLSL\textured-vertex.hlsl">

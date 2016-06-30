@@ -23,7 +23,7 @@ namespace Ge
                     new RigidTransform(new Vector3(-1.75f, 1.75f, 0f), Quaternion.CreateFromAxisAngle(-Vector3.UnitZ, (float)Math.PI / 2))),
                 new CompoundShapeEntry(new BoxShape(3.0f, 0.5f, 3.0f),
                     new RigidTransform(new Vector3(1.75f, 1.75f, 0f), Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI / 2))),
-                    new CompoundShapeEntry(new BoxShape(3.0f, 0.5f, 3.0f),
+                new CompoundShapeEntry(new BoxShape(3.0f, 0.5f, 3.0f),
                     new RigidTransform(new Vector3(0f, 1.75f, 1.75f), Quaternion.CreateFromAxisAngle(-Vector3.UnitX, (float)Math.PI / 2))),
                 new CompoundShapeEntry(new BoxShape(3.0f, 0.5f, 3.0f),
                     new RigidTransform(new Vector3(0f, 1.75f, -1.75f), Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2))),
@@ -33,7 +33,7 @@ namespace Ge
             GameObject bin = new GameObject("Bin");
             var csc = new CompoundShapeCollider(shapes, 4.0f);
             bin.AddComponent(csc);
-            
+
             foreach (var shape in shapes)
             {
                 var mc = new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, stoneTexture);

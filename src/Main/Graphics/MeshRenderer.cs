@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using Veldrid.Graphics;
+using Veldrid.Graphics.OpenGL;
 
 namespace Ge.Graphics
 {
-    public class MeshRenderer : Component, RenderItem
+    public unsafe class MeshRenderer : Component, RenderItem
     {
-        private static readonly string[] s_stages = { "Standard" };
+        private static readonly string[] s_stages = { "ShadowMap", "Standard" };
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
@@ -19,7 +22,9 @@ namespace Ge.Graphics
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
-        private Material _material;
+        private Material _regularPassMaterial;
+        private Material _shadowPassMaterial;
+        private ShaderTextureBinding _textureBinding;
 
         private static RasterizerState s_wireframeRS;
         private static RasterizerState s_noCullRS;
@@ -59,7 +64,22 @@ namespace Ge.Graphics
 
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
-            rc.SetMaterial(_material);
+
+            if (pipelineStage == "ShadowMap")
+            {
+                rc.SetMaterial(_shadowPassMaterial);
+                _shadowPassMaterial.ApplyPerObjectInput(_worldProvider);
+            }
+            else
+            {
+                Debug.Assert(pipelineStage == "Standard");
+
+                rc.SetMaterial(_regularPassMaterial);
+
+                _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
+                _regularPassMaterial.UseTexture(0, _textureBinding);
+            }
+
             if (Wireframe)
             {
                 rc.SetRasterizerState(s_wireframeRS);
@@ -73,15 +93,14 @@ namespace Ge.Graphics
                 rc.SetRasterizerState(rc.DefaultRasterizerState);
             }
 
-            _material.ApplyPerObjectInputs(_perObjectProviders);
-
+            _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
             rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
 
         public override void Attached(SystemRegistry registry)
         {
             var gs = registry.GetSystem<GraphicsSystem>();
-            InitializeContextObjects(gs.Context);
+            InitializeContextObjects(gs.Context, gs.MaterialCache);
             gs.AddRenderItem(this);
         }
 
@@ -91,7 +110,7 @@ namespace Ge.Graphics
             ClearDeviceResources();
         }
 
-        private void InitializeContextObjects(RenderContext context)
+        private unsafe void InitializeContextObjects(RenderContext context, MaterialCache cache)
         {
             ResourceFactory factory = context.ResourceFactory;
 
@@ -102,45 +121,49 @@ namespace Ge.Graphics
             _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
             _ib.SetIndices(_indices);
 
-            MaterialVertexInput materialInputs = new MaterialVertexInput(
-                VertexPositionNormalTexture.SizeInBytes,
-                new MaterialVertexInputElement[]
-                {
-                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
-                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
-                });
+            if (s_regularGlobalInputs == null)
+            {
+                s_regularGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement[]
+                    {
+                        new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"]),
+                        new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
+                        new MaterialGlobalInputElement("LightProjectionMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["LightProjMatrix"]),
+                        new MaterialGlobalInputElement("LightViewMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["LightViewMatrix"]),
+                        new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
+                    });
+            }
 
-            MaterialInputs<MaterialGlobalInputElement> globalInputs = new MaterialInputs<MaterialGlobalInputElement>(
-                new MaterialGlobalInputElement[]
-                {
-                    new MaterialGlobalInputElement("projectionMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"]),
-                    new MaterialGlobalInputElement("viewMatrixUniform", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
-                    new MaterialGlobalInputElement("LightBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
-                });
-
-            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
-                new MaterialPerObjectInputElement[]
-                {
-                    new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixUniform", MaterialInputType.Matrix4x4, _inverseTransposeWorldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("TintInfoBuffer", MaterialInputType.Float4, _tintInfoProvider.DataSizeInBytes),
-                });
-
-            MaterialTextureInputs textureInputs = new MaterialTextureInputs(
-                new MaterialTextureInputElement[]
-                {
-                    new TextureDataInputElement("surfaceTexture", _texture)
-                });
-
-            _material = factory.CreateMaterial(
+            _regularPassMaterial = cache.GetMaterial(
                 context,
-                VertexShaderSource,
-                FragmentShaderSource,
-                materialInputs,
-                globalInputs,
-                perObjectInputs,
-                textureInputs);
+                RegularPassVertexShaderSource,
+                RegularPassFragmentShaderSource,
+                s_vertexInputs,
+                s_regularGlobalInputs,
+                s_perObjectInputs,
+                s_textureInputs);
+
+            _deviceTexture = _texture.CreateDeviceTexture(factory);
+            _textureBinding = factory.CreateShaderTextureBinding(_deviceTexture);
+
+            if (s_shadowmapGlobalInputs == null)
+            {
+                s_shadowmapGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement[]
+                    {
+                        new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, context.DataProviders["LightProjMatrix"]),
+                        new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, context.DataProviders["LightViewMatrix"])
+                    });
+            }
+
+            _shadowPassMaterial = cache.GetMaterial(
+                context,
+                ShadowMapPassVertexShaderSource,
+                ShadowMapPassFragmentShaderSource,
+                s_vertexInputs,
+                s_shadowmapGlobalInputs,
+                s_shadowmapPerObjectInputs,
+                MaterialTextureInputs.Empty);
 
             if (s_wireframeRS == null)
             {
@@ -163,11 +186,44 @@ namespace Ge.Graphics
         {
             _vb.Dispose();
             _ib.Dispose();
-            _material.Dispose();
+            _regularPassMaterial.Dispose();
         }
 
-        private static readonly string VertexShaderSource = "textured-vertex";
-        private static readonly string FragmentShaderSource = "lit-frag";
+        private static readonly string RegularPassVertexShaderSource = "shadow-vertex";
+        private static readonly string RegularPassFragmentShaderSource = "shadow-frag";
+
+        private static readonly string ShadowMapPassVertexShaderSource = "shadowmap-vertex";
+        private static readonly string ShadowMapPassFragmentShaderSource = "shadowmap-frag";
+        private DeviceTexture _deviceTexture;
+
+        private static MaterialVertexInput s_vertexInputs = new MaterialVertexInput(
+            VertexPositionNormalTexture.SizeInBytes,
+            new MaterialVertexInputElement[]
+            {
+                new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
+            });
+        private static MaterialInputs<MaterialGlobalInputElement> s_regularGlobalInputs;
+        private static MaterialInputs<MaterialPerObjectInputElement> s_perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+            new MaterialPerObjectInputElement[]
+            {
+                new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4)),
+                new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4)),
+                new MaterialPerObjectInputElement("TintInfoBuffer", MaterialInputType.Float4, sizeof(TintInfo))
+            });
+        private static MaterialTextureInputs s_textureInputs = new MaterialTextureInputs(
+            new MaterialTextureInputElement[]
+            {
+                new ManualTextureInput("surfaceTexture"),
+                new ContextTextureInputElement("ShadowMap")
+            });
+        private static MaterialInputs<MaterialGlobalInputElement> s_shadowmapGlobalInputs;
+        private static MaterialInputs<MaterialPerObjectInputElement> s_shadowmapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+            new MaterialPerObjectInputElement[]
+            {
+                new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
+            });
     }
 
     public struct TintInfo

@@ -84,7 +84,7 @@ namespace Ge
             light.AddComponent(new DelegateBehavior(
                 dt =>
                 {
-                    timeFactor += dt;
+                    timeFactor += (dt / 20f);
                     var position = new Vector3(
                         (float)(Math.Cos(timeFactor) * 5),
                         6 + (float)Math.Sin(timeFactor) * 2,
