@@ -31,7 +31,7 @@ namespace Ge
             };
 
             GameObject bin = new GameObject("Bin");
-            var csc = new CompoundShapeCollider(shapes, 4.0f);
+            var csc = new CompoundShapeCollider(shapes, 40.0f);
             bin.AddComponent(csc);
 
             foreach (var shape in shapes)

@@ -19,6 +19,7 @@
     <Compile Include="Behaviors\BallLauncher.cs" />
     <Compile Include="Behaviors\Behavior.cs" />
     <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
+    <Compile Include="Behaviors\CameraBob.cs" />
     <Compile Include="Behaviors\DelegateBehavior.cs" />
     <Compile Include="Behaviors\FpsController.cs" />
     <Compile Include="Behaviors\FreeFlyMovement.cs" />
@@ -43,6 +44,7 @@
     <Compile Include="Graphics\ShadowMapPreview.cs" />
     <Compile Include="Graphics\ShadowMapStage.cs" />
     <Compile Include="InputSystem.cs" />
+    <Compile Include="MathUtil.cs" />
     <Compile Include="Physics\BoxCollider.cs" />
     <Compile Include="Physics\CharacterController.cs" />
     <Compile Include="Physics\Collider.cs" />

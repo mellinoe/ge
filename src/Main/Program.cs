@@ -74,8 +74,9 @@ namespace Ge
             character.Transform.Position = new Vector3(0, 0, -5f);
 
             camera.Transform.Parent = character.Transform;
-            camera.Transform.LocalPosition = new Vector3(0, 1.7f, 0);
+            camera.Transform.LocalPosition = new Vector3(0, 1.0f, 0);
             camera.AddComponent(new FpsLookController());
+            camera.AddComponent(new CameraBob());
 
             GameObject light = new GameObject("Light");
             var lightComponent = new DirectionalLight(RgbaFloat.White, new Vector3(0.3f, -.3f, -1f));

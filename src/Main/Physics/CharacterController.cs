@@ -11,7 +11,11 @@ namespace Ge.Physics
         public override void Attached(SystemRegistry registry)
         {
             _physics = registry.GetSystem<PhysicsSystem>();
-            Controller = new BEPUphysics.Character.CharacterController(Transform.Position, jumpSpeed: 8f);
+            Controller = new BEPUphysics.Character.CharacterController(
+                Transform.Position,
+                jumpSpeed: 8f,
+                tractionForce: 1500
+                );
             _physics.AddObject(Controller);
             Transform.SetPhysicsEntity(Controller.Body);
         }

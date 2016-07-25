@@ -1,6 +1,7 @@
 ﻿using Ge.Physics;
 using ImGuiNET;
 using OpenTK.Input;
+using System;
 using System.Numerics;
 
 namespace Ge.Behaviors
@@ -12,6 +13,9 @@ namespace Ge.Behaviors
         private float _previousMouseY;
         private float _currentYaw;
         private float _currentPitch;
+
+        private float _moveSpeed = 7.0f;
+        private float _sprintFactor = 4f / 3f;
 
         private InputSystem _input;
 
@@ -40,6 +44,8 @@ namespace Ge.Behaviors
             {
                 _currentYaw += -xDelta * 0.01f;
                 _currentPitch += yDelta * 0.01f;
+
+                _currentPitch = MathUtil.Clamp(_currentPitch, ((float)-Math.PI / 2f) + .01f, ((float)Math.PI / 2f) - .01f);
 
                 _cc.Controller.ViewDirection = Transform.Forward;
             }
@@ -80,6 +86,14 @@ namespace Ge.Behaviors
             {
                 _cc.SetMotionDirection(Vector2.Zero);
             }
+
+            float currentSpeed = _moveSpeed;
+            if (_input.GetKey(Key.ShiftLeft))
+            {
+                currentSpeed *= _sprintFactor;
+            }
+
+            _cc.Controller.StandingSpeed = currentSpeed;
 
             if (_input.GetKeyDown(Key.Space))
             {
