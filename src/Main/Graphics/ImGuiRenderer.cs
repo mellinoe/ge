@@ -8,6 +8,9 @@ using System.Numerics;
 using Veldrid.Graphics;
 using Veldrid.Platform;
 
+using Key = Veldrid.Platform.Key;
+using Veldrid;
+
 namespace Ge.Graphics
 {
     public class ImGuiRenderer : RenderItem, IUpdateable, IDisposable
@@ -90,7 +93,7 @@ namespace Ge.Graphics
             NewFrame();
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(System.Numerics.Vector3 position)
         {
             return new RenderOrderKey();
         }
@@ -316,6 +319,11 @@ namespace Ge.Graphics
         internal void UpdateFinished()
         {
             ImGui.Render();
+        }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            return false;
         }
     }
 }

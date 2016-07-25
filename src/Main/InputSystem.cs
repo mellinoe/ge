@@ -10,11 +10,11 @@ namespace Ge
     {
         private readonly Window _window;
 
-        private readonly HashSet<Key> _currentlyPressedKeys = new HashSet<Key>();
-        private readonly HashSet<Key> _newKeysThisFrame = new HashSet<Key>();
+        private readonly HashSet<Veldrid.Platform.Key> _currentlyPressedKeys = new HashSet<Veldrid.Platform.Key>();
+        private readonly HashSet<Veldrid.Platform.Key> _newKeysThisFrame = new HashSet<Veldrid.Platform.Key>();
 
-        private readonly HashSet<MouseButton> _currentlyPressedMouseButtons = new HashSet<MouseButton>();
-        private readonly HashSet<MouseButton> _newMouseButtonsThisFrame = new HashSet<MouseButton>();
+        private readonly HashSet<Veldrid.Platform.MouseButton> _currentlyPressedMouseButtons = new HashSet<Veldrid.Platform.MouseButton>();
+        private readonly HashSet<Veldrid.Platform.MouseButton> _newMouseButtonsThisFrame = new HashSet<Veldrid.Platform.MouseButton>();
 
         private readonly List<Action<InputSystem>> _callbacks = new List<Action<InputSystem>>();
 
@@ -45,22 +45,22 @@ namespace Ge
             }
         }
 
-        public bool GetKey(Key key)
+        public bool GetKey(Veldrid.Platform.Key Key)
         {
-            return _currentlyPressedKeys.Contains(key);
+            return _currentlyPressedKeys.Contains(Key);
         }
 
-        public bool GetKeyDown(Key key)
+        public bool GetKeyDown(Veldrid.Platform.Key Key)
         {
-            return _newKeysThisFrame.Contains(key);
+            return _newKeysThisFrame.Contains(Key);
         }
 
-        public bool GetMouseButton(MouseButton button)
+        public bool GetMouseButton(Veldrid.Platform.MouseButton button)
         {
             return _currentlyPressedMouseButtons.Contains(button);
         }
 
-        public bool GetMouseButtonDown(MouseButton button)
+        public bool GetMouseButtonDown(Veldrid.Platform.MouseButton button)
         {
             return _newMouseButtonsThisFrame.Contains(button);
         }
@@ -96,31 +96,31 @@ namespace Ge
             }
         }
 
-        private void MouseUp(MouseButton mouseButton)
+        private void MouseUp(Veldrid.Platform.MouseButton MouseButton)
         {
-            _currentlyPressedMouseButtons.Remove(mouseButton);
-            _newMouseButtonsThisFrame.Remove(mouseButton);
+            _currentlyPressedMouseButtons.Remove(MouseButton);
+            _newMouseButtonsThisFrame.Remove(MouseButton);
         }
 
-        private void MouseDown(MouseButton mouseButton)
+        private void MouseDown(Veldrid.Platform.MouseButton MouseButton)
         {
-            if (_currentlyPressedMouseButtons.Add(mouseButton))
+            if (_currentlyPressedMouseButtons.Add(MouseButton))
             {
-                _newMouseButtonsThisFrame.Add(mouseButton);
+                _newMouseButtonsThisFrame.Add(MouseButton);
             }
         }
 
-        private void KeyUp(Key key)
+        private void KeyUp(Veldrid.Platform.Key Key)
         {
-            _currentlyPressedKeys.Remove(key);
-            _newKeysThisFrame.Remove(key);
+            _currentlyPressedKeys.Remove(Key);
+            _newKeysThisFrame.Remove(Key);
         }
 
-        private void KeyDown(Key key)
+        private void KeyDown(Veldrid.Platform.Key Key)
         {
-            if (_currentlyPressedKeys.Add(key))
+            if (_currentlyPressedKeys.Add(Key))
             {
-                _newKeysThisFrame.Add(key);
+                _newKeysThisFrame.Add(Key);
             }
         }
     }

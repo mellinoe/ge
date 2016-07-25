@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -15,9 +16,31 @@ namespace Ge.Graphics
         private readonly PipelineStage[] _pipelineStages;
         private readonly Window _window;
 
+        private BoundingFrustum _frustum;
+        private Camera _mainCamera;
+
         public MaterialCache MaterialCache { get; }
 
         public RenderContext Context { get; }
+
+        private Camera MainCamera => _mainCamera;
+
+        public void SetViewFrustum(ref BoundingFrustum frustum)
+        {
+            _frustum = frustum;
+            ((StandardPipelineStage)_pipelineStages[1]).CameraFrustum = frustum;
+            ((StandardPipelineStage)_pipelineStages[2]).CameraFrustum = frustum;
+        }
+
+        public void SetMainCamera(Camera camera)
+        {
+            if (_mainCamera != null)
+            {
+                throw new InvalidOperationException("A main camera is already set.");
+            }
+
+            _mainCamera = camera;
+        }
 
         public GraphicsSystem(OpenTKWindow window)
         {
@@ -64,7 +87,7 @@ namespace Ge.Graphics
             float b = 0.5f + (0.5f * (float)Math.Sin(tickCount / 50f));
             Context.ClearColor = new RgbaFloat(r, g, b, 1.0f);
 
-            _renderer.RenderFrame(_visiblityManager);
+            _renderer.RenderFrame(_visiblityManager, _mainCamera.Transform.Position);
         }
     }
 }

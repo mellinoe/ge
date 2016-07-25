@@ -32,11 +32,11 @@ namespace Ge
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
             {
-                if (input.GetKeyDown(OpenTK.Input.Key.F4) && (input.GetKey(OpenTK.Input.Key.AltLeft) || input.GetKey(OpenTK.Input.Key.AltRight)))
+                if (input.GetKeyDown(Key.F4) && (input.GetKey(Key.AltLeft) || input.GetKey(Key.AltRight)))
                 {
                     game.Exit();
                 }
-                if (input.GetKeyDown(OpenTK.Input.Key.F11))
+                if (input.GetKeyDown(Key.F11))
                 {
                     window.WindowState = window.WindowState == WindowState.Normal ? WindowState.FullScreen : WindowState.Normal;
                 }

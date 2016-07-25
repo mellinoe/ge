@@ -16,12 +16,14 @@ namespace Ge.Graphics
 
         public override void Attached(SystemRegistry registry)
         {
+            _gs = registry.GetSystem<GraphicsSystem>();
+
             GameObject.Transform.TransformChanged += SetViewMatrix;
             SetViewMatrix(GameObject.Transform);
 
-            _gs = registry.GetSystem<GraphicsSystem>();
-            _gs.Context.DataProviders.Add("ViewMatrix", _viewProvider);
-            _gs.Context.DataProviders.Add("ProjectionMatrix", _projectionProvider);
+            _gs.Context.RegisterGlobalDataProvider("ViewMatrix", _viewProvider);
+            _gs.Context.RegisterGlobalDataProvider("ProjectionMatrix", _projectionProvider);
+            _gs.SetMainCamera(this);
 
             _gs.Context.WindowResized += SetProjectionMatrix;
             SetProjectionMatrix();
@@ -29,8 +31,6 @@ namespace Ge.Graphics
 
         public override void Removed(SystemRegistry registry)
         {
-            _gs.Context.DataProviders.Remove("ViewMatrix");
-            _gs.Context.DataProviders.Remove("ProjectionMatrix");
         }
 
         public Ray GetRayFromScreenPoint(float screenX, float screenY)
@@ -67,6 +67,8 @@ namespace Ge.Graphics
                 GameObject.Transform.Position,
                 GameObject.Transform.Position + GameObject.Transform.Forward,
                 GameObject.Transform.Up);
+
+            UpdateViewFrustum();
         }
 
         private void SetProjectionMatrix()
@@ -76,6 +78,14 @@ namespace Ge.Graphics
                 (float)_gs.Context.Window.Width / _gs.Context.Window.Height,
                 _nearPlane,
                 _farPlane);
+
+            UpdateViewFrustum();
+        }
+
+        private void UpdateViewFrustum()
+        {
+            Veldrid.BoundingFrustum frustum = new Veldrid.BoundingFrustum(_viewProvider.Data * _projectionProvider.Data);
+            _gs.SetViewFrustum(ref frustum);
         }
     }
 }

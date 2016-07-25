@@ -4,6 +4,7 @@ using Veldrid.Graphics;
 using System.Numerics;
 using System;
 using BEPUphysics.PositionUpdating;
+using Veldrid.Platform;
 
 namespace Ge.Behaviors
 {
@@ -21,7 +22,7 @@ namespace Ge.Behaviors
 
         public override void Update(float deltaSeconds)
         {
-            if (_input.GetKey(OpenTK.Input.Key.F))
+            if (_input.GetKey(Key.F))
             {
                 FireBoxForward();
             }

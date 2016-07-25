@@ -44,14 +44,14 @@ namespace Ge.Graphics
             rc.GetTextureContextBinding(_contextBindingName).Value = _depthTexture;
         }
 
-        public void ExecuteStage(VisibiltyManager visibilityManager)
+        public void ExecuteStage(VisibiltyManager visibilityManager, Vector3 cameraPosition)
         {
             RenderContext.ClearScissorRectangle();
             RenderContext.SetFramebuffer(_shadowMapFramebuffer);
             RenderContext.ClearBuffer();
             RenderContext.SetViewport(0, 0, DepthMapWidth, DepthMapHeight);
             _queue.Clear();
-            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap", Vector3.Zero, Vector3.Zero);
+            visibilityManager.CollectVisibleObjects(_queue, "ShadowMap", Vector3.Zero);
             _queue.Sort();
 
             foreach (RenderItem item in _queue)

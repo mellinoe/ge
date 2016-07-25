@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Graphics.OpenGL;
 
@@ -19,6 +20,7 @@ namespace Ge.Graphics
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
         private readonly TextureData _texture;
+        private readonly BoundingSphere _centeredBounds;
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
@@ -46,11 +48,12 @@ namespace Ge.Graphics
             _vertices = vertices;
             _indices = indices;
             _texture = texture;
+            _centeredBounds = BoundingSphere.CreateFromPoints(_vertices);
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
         {
-            return new RenderOrderKey();
+            return RenderOrderKey.Create(Vector3.Distance(Transform.Position, cameraPosition), _regularPassMaterial.GetHashCode());
         }
 
         public IEnumerable<string> GetStagesParticipated()
@@ -126,11 +129,11 @@ namespace Ge.Graphics
                 s_regularGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                     new MaterialGlobalInputElement[]
                     {
-                        new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["ProjectionMatrix"]),
-                        new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["ViewMatrix"]),
-                        new MaterialGlobalInputElement("LightProjectionMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["LightProjMatrix"]),
-                        new MaterialGlobalInputElement("LightViewMatrixBuffer", MaterialInputType.Matrix4x4, context.DataProviders["LightViewMatrix"]),
-                        new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Custom, context.DataProviders["LightBuffer"]),
+                        new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                        new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
+                        new MaterialGlobalInputElement("LightProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "LightProjMatrix"),
+                        new MaterialGlobalInputElement("LightViewMatrixBuffer", MaterialInputType.Matrix4x4, "LightViewMatrix"),
+                        new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Custom, "LightBuffer")
                     });
             }
 
@@ -151,8 +154,8 @@ namespace Ge.Graphics
                 s_shadowmapGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                     new MaterialGlobalInputElement[]
                     {
-                        new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, context.DataProviders["LightProjMatrix"]),
-                        new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, context.DataProviders["LightViewMatrix"])
+                        new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, "LightProjMatrix"),
+                        new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, "LightViewMatrix")
                     });
             }
 
@@ -187,6 +190,16 @@ namespace Ge.Graphics
             _vb.Dispose();
             _ib.Dispose();
             _regularPassMaterial.Dispose();
+        }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            Vector3 translation, scale; Quaternion rotation;
+
+            bool decomposed = Matrix4x4.Decompose(RenderOffset, out scale, out rotation, out translation);
+            var center = _centeredBounds.Center + translation + Transform.Position;
+            var boundingSphere = new BoundingSphere(center, _centeredBounds.Radius * (decomposed ? scale.X : 1.0f) * Transform.Scale.X);
+            return visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
         }
 
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";

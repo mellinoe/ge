@@ -28,14 +28,13 @@ namespace Ge.Graphics
         public override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
-            _gs.Context.DataProviders.Add("LightBuffer", _lightProvider);
-            _gs.Context.DataProviders.Add("LightProjMatrix", _lightProjectionProvider);
-            _gs.Context.DataProviders.Add("LightViewMatrix", _lightViewProvider);
+            _gs.Context.RegisterGlobalDataProvider("LightBuffer", _lightProvider);
+            _gs.Context.RegisterGlobalDataProvider("LightProjMatrix", _lightProjectionProvider);
+            _gs.Context.RegisterGlobalDataProvider("LightViewMatrix", _lightViewProvider);
         }
 
         public override void Removed(SystemRegistry registry)
         {
-            _gs.Context.DataProviders.Remove("LightBuffer");
         }
 
         private void SetProvider()

@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Reflection;
+using Veldrid.Platform;
 
 namespace Ge.Editor
 {
@@ -100,14 +101,14 @@ namespace Ge.Editor
 
         public override void Update(float deltaSeconds)
         {
-            if (_input.GetKeyDown(OpenTK.Input.Key.Tilde))
+            if (_input.GetKeyDown(Key.Tilde))
             {
                 _windowOpen = !_windowOpen;
             }
 
             if (_windowOpen)
             {
-                if (_input.GetMouseButtonDown(OpenTK.Input.MouseButton.Left) && !ImGui.IsMouseHoveringAnyWindow())
+                if (_input.GetMouseButtonDown(MouseButton.Left) && !ImGui.IsMouseHoveringAnyWindow())
                 {
                     var screenPos = _input.MousePosition;
                     var ray = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
@@ -120,7 +121,7 @@ namespace Ge.Editor
                             Collider c = rcr.HitObject.Tag as Collider;
                             if (c != null)
                             {
-                                if (_selectedObject == c.GameObject && _input.GetKey(OpenTK.Input.Key.ControlLeft))
+                                if (_selectedObject == c.GameObject && _input.GetKey(Key.ControlLeft))
                                 {
                                     ClearSelection();
                                 }
@@ -137,7 +138,7 @@ namespace Ge.Editor
                     }
                 }
 
-                if (_selectedObject != null && _input.GetKeyDown(OpenTK.Input.Key.Delete))
+                if (_selectedObject != null && _input.GetKeyDown(Key.Delete))
                 {
                     _selectedObject.Destroy();
                 }

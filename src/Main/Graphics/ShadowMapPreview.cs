@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Veldrid;
 using Veldrid.Graphics;
 
 namespace Ge.Graphics
@@ -57,7 +58,7 @@ namespace Ge.Graphics
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
         }
 
-        public RenderOrderKey GetRenderOrderKey()
+        public RenderOrderKey GetRenderOrderKey(Vector3 position)
         {
             return new RenderOrderKey();
         }
@@ -88,6 +89,11 @@ namespace Ge.Graphics
             rc.SetDepthStencilState(_depthDisabledState);
             rc.DrawIndexedPrimitives(6, 0);
             rc.SetDepthStencilState(rc.DefaultDepthStencilState);
+        }
+
+        public bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            return false;
         }
     }
 }
