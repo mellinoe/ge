@@ -7,7 +7,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <ProjectGuid>{AE9BC745-284F-42F3-8236-C43FF9731DF2}</ProjectGuid>
+    <ProjectGuid>{AE9BC745-284F-42F3-8236-C43AB9425DF2}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AssemblyName>ge.Main</AssemblyName>
     <RootNamespace>Ge</RootNamespace>
@@ -28,6 +28,7 @@
     <Compile Include="Behaviors\TimedDeath.cs" />
     <Compile Include="Editor\DebugPanel.cs" />
     <Compile Include="FrameTimeAverager.cs" />
+    <Compile Include="Graphics\BoundsRenderItem.cs" />
     <Compile Include="Graphics\Camera.cs" />
     <Compile Include="Graphics\CommonModels.cs" />
     <Compile Include="Component.cs" />
@@ -43,6 +44,7 @@
     <Compile Include="Graphics\MaterialCache.cs" />
     <Compile Include="Graphics\ShadowMapPreview.cs" />
     <Compile Include="Graphics\ShadowMapStage.cs" />
+    <Compile Include="Graphics\WireframeShapeRenderer.cs" />
     <Compile Include="InputSystem.cs" />
     <Compile Include="MathUtil.cs" />
     <Compile Include="Physics\BoxCollider.cs" />
@@ -86,6 +88,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GLSL\shadow-vertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MaterialAsset\Wireframe.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Models\Sphere.obj">

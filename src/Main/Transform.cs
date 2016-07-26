@@ -18,8 +18,16 @@ namespace Ge
 
         internal void SetPhysicsEntity(Entity entity)
         {
+            Debug.Assert(_physicsEntity == null);
             Debug.Assert(entity != null);
             _physicsEntity = entity;
+            _physicsEntity.PositionUpdated += OnPhysicsEntityMoved;
+        }
+
+        private void OnPhysicsEntityMoved(Entity entity)
+        {
+            OnPositionChanged();
+            OnRotationChanged();
         }
 
         internal void RemovePhysicsEntity()
@@ -29,6 +37,8 @@ namespace Ge
 
             Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
             _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.Orientation);
+
+            _physicsEntity.PositionUpdated -= OnPhysicsEntityMoved;
 
             _physicsEntity = null;
         }

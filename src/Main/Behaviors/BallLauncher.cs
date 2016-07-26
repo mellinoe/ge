@@ -41,6 +41,8 @@ namespace Ge.Behaviors
             ball.Transform.Position = Transform.Position + Transform.Forward * 1.0f;
             ball.Transform.Scale = new Vector3(0.1f);
             sc.Entity.LinearVelocity = Transform.Forward * _launchSpeed;
+
+            ball.AddComponent(new TimedDeath(5.0f));
         }
     }
 }

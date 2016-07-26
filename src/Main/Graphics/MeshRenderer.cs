@@ -9,7 +9,7 @@ using Veldrid.Graphics.OpenGL;
 
 namespace Ge.Graphics
 {
-    public unsafe class MeshRenderer : Component, RenderItem
+    public unsafe class MeshRenderer : Component, BoundsRenderItem
     {
         private static readonly string[] s_stages = { "ShadowMap", "Standard" };
 
@@ -20,7 +20,8 @@ namespace Ge.Graphics
         private readonly VertexPositionNormalTexture[] _vertices;
         private readonly int[] _indices;
         private readonly TextureData _texture;
-        private readonly BoundingSphere _centeredBounds;
+        private readonly BoundingSphere _centeredBoundingSphere;
+        private readonly BoundingBox _centeredBoundingBox;
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
@@ -39,6 +40,14 @@ namespace Ge.Graphics
 
         public Matrix4x4 RenderOffset { get; set; } = Matrix4x4.Identity;
 
+        public BoundingBox Bounds
+        {
+            get
+            {
+                return BoundingBox.Transform(_centeredBoundingBox, RenderOffset * Transform.GetWorldMatrix());
+            }
+        }
+
         public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, TextureData texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
@@ -48,7 +57,8 @@ namespace Ge.Graphics
             _vertices = vertices;
             _indices = indices;
             _texture = texture;
-            _centeredBounds = BoundingSphere.CreateFromPoints(_vertices);
+            _centeredBoundingSphere = BoundingSphere.CreateFromPoints(_vertices);
+            _centeredBoundingBox = BoundingBox.CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
@@ -104,7 +114,7 @@ namespace Ge.Graphics
         {
             var gs = registry.GetSystem<GraphicsSystem>();
             InitializeContextObjects(gs.Context, gs.MaterialCache);
-            gs.AddRenderItem(this);
+            gs.AddRenderItem(this, Transform);
         }
 
         public override void Removed(SystemRegistry registry)
@@ -189,7 +199,6 @@ namespace Ge.Graphics
         {
             _vb.Dispose();
             _ib.Dispose();
-            _regularPassMaterial.Dispose();
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
@@ -197,8 +206,8 @@ namespace Ge.Graphics
             Vector3 translation, scale; Quaternion rotation;
 
             bool decomposed = Matrix4x4.Decompose(RenderOffset, out scale, out rotation, out translation);
-            var center = _centeredBounds.Center + translation + Transform.Position;
-            var boundingSphere = new BoundingSphere(center, _centeredBounds.Radius * (decomposed ? scale.X : 1.0f) * Transform.Scale.X);
+            var center = _centeredBoundingSphere.Center + translation + Transform.Position;
+            var boundingSphere = new BoundingSphere(center, _centeredBoundingSphere.Radius * (decomposed ? scale.X : 1.0f) * Transform.Scale.X);
             return visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
         }
 

@@ -3,15 +3,11 @@ using Ge.Graphics;
 using System.Runtime.InteropServices;
 using Veldrid.Platform;
 using Veldrid.Graphics;
-using ImGuiNET;
 using System.Numerics;
 using System.IO;
 using System;
 using Ge.Physics;
 using Ge.Editor;
-using System.Collections.Generic;
-using System.Diagnostics;
-using BEPUphysics.Entities.Prefabs;
 
 namespace Ge
 {
@@ -27,7 +23,7 @@ namespace Ge
             GraphicsSystem gs = new GraphicsSystem(window);
             game.SystemRegistry.Register(gs);
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow);
-            gs.AddRenderItem(imGuiRenderer);
+            gs.AddFreeRenderItem(imGuiRenderer);
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
@@ -39,6 +35,10 @@ namespace Ge
                 if (input.GetKeyDown(Key.F11))
                 {
                     window.WindowState = window.WindowState == WindowState.Normal ? WindowState.FullScreen : WindowState.Normal;
+                }
+                if (input.GetKeyDown(Key.F12))
+                {
+                    gs.ToggleOctreeVisualizer();
                 }
 
                 imGuiRenderer.UpdateImGuiInput(window, input.CurrentSnapshot);

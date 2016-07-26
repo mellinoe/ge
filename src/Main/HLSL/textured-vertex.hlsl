@@ -8,12 +8,12 @@ cbuffer ViewMatrixBuffer : register(b1)
     float4x4 view;
 }
 
-cbuffer WorldMatrixBuffer : register(b3)
+cbuffer WorldMatrixBuffer : register(b2)
 {
     float4x4 world;
 }
 
-cbuffer InverseTransposeWorldMatrixBuffer : register(b4)
+cbuffer InverseTransposeWorldMatrixBuffer : register(b3)
 {
     float4x4 inverseTransposeWorld;
 }

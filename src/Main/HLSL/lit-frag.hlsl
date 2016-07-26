@@ -1,17 +1,4 @@
-﻿cbuffer LightBuffer : register(b2)
-{
-    float4 diffuseColor;
-    float3 lightDirection;
-    float __buffer;
-}
-
-cbuffer TintInfoBuffer : register(b5)
-{
-    float3 tintColor;
-    float tintFactor;
-}
-
-struct PixelInput
+﻿struct PixelInput
 {
     float4 position : SV_POSITION;
     float3 normal : NORMAL;
@@ -29,13 +16,6 @@ SamplerState MeshTextureSampler
 
 float4 PS(PixelInput input) : SV_Target
 {
-    float4 ambientColor = float4(.4, .4, .4, 1);
-
     float4 color = shaderTexture.Sample(MeshTextureSampler, input.texCoord);
-    float3 lightDir = -normalize(lightDirection);
-    float effectiveness = dot(input.normal, lightDir);
-    float lightEffectiveness = saturate(effectiveness);
-    float4 lightColor = saturate(diffuseColor * lightEffectiveness);
-    float4 litColor = saturate((lightColor * color) + (ambientColor * color));
-    return (litColor * (1 - tintFactor) + (tintFactor * float4(tintColor, 1)));
+	return color;
 }
