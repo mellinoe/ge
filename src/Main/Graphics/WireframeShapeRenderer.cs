@@ -366,4 +366,29 @@ namespace Ge.Graphics
             _indices.Add(baseIndex + 3);
         }
     }
+
+    public class BoundsRenderItemWireframeRenderer : BoundingBoxWireframeRenderer, BoundsRenderItem
+    {
+        private BoundsRenderItem _bri;
+
+        public BoundsRenderItemWireframeRenderer(BoundsRenderItem bri, AssetDatabase ad, RenderContext rc)
+            : base(bri.Bounds, ad, rc)
+        {
+            _bri = bri;
+        }
+
+        public BoundingBox Bounds
+        {
+            get
+            {
+                return _bri.Bounds;
+            }
+        }
+
+        protected override void AddVerticesAndIndices()
+        {
+            Box = _bri.Bounds;
+            base.AddVerticesAndIndices();
+        }
+    }
 }

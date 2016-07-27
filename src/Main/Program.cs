@@ -8,12 +8,12 @@ using System.IO;
 using System;
 using Ge.Physics;
 using Ge.Editor;
+using Ge.Assets;
 
 namespace Ge
 {
     public class Program
     {
-
         public static void Main(string[] args)
         {
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
@@ -45,6 +45,9 @@ namespace Ge
             });
 
             game.SystemRegistry.Register(inputSystem);
+
+            AssetSystem assetSystem = new AssetSystem();
+            game.SystemRegistry.Register(assetSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem();
             game.SystemRegistry.Register(bus);

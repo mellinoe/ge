@@ -114,7 +114,7 @@ namespace Ge.Editor
                     var ray = _camera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
 
                     RayCastResult rcr;
-                    if (_physics.Space.RayCast(ray, out rcr))
+                    if (_physics.Space.RayCast(ray, (bpe) => bpe.Tag != null && bpe.Tag is Collider, out rcr))
                     {
                         if (rcr.HitObject.Tag != null)
                         {

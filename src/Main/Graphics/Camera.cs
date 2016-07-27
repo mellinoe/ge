@@ -37,9 +37,9 @@ namespace Ge.Graphics
         {
             var window = _gs.Context.Window;
 
-            // Normalized Device Coordinates
-            float x = (2.0f * screenX) / window.Width - 1.0f;
-            float y = 1.0f - (2.0f * screenY) / window.Height;
+            // Normalized Device Coordinates Top-Left (-1, 1) to Bottom-Right (1, -1)
+            float x = (2.0f * screenX) / (window.Width / window.ScaleFactor.X) - 1.0f;
+            float y = 1.0f - (2.0f * screenY) / (window.Height / window.ScaleFactor.Y);
             float z = 1.0f;
             Vector3 deviceCoords = new Vector3(x, y, z);
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ge.Assets;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Numerics;
 using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Graphics.OpenGL;
+using Veldrid.Assets;
 
 namespace Ge.Graphics
 {
@@ -112,14 +114,15 @@ namespace Ge.Graphics
 
         public override void Attached(SystemRegistry registry)
         {
-            var gs = registry.GetSystem<GraphicsSystem>();
-            InitializeContextObjects(gs.Context, gs.MaterialCache);
-            gs.AddRenderItem(this, Transform);
+            _gs = registry.GetSystem<GraphicsSystem>();
+            _ad = registry.GetSystem<AssetSystem>().Database;
+            InitializeContextObjects(_gs.Context, _gs.MaterialCache);
+            _gs.AddRenderItem(this, Transform);
         }
 
         public override void Removed(SystemRegistry registry)
         {
-            registry.GetSystem<GraphicsSystem>().RemoveRenderItem(this);
+            _gs.RemoveRenderItem(this);
             ClearDeviceResources();
         }
 
@@ -211,6 +214,31 @@ namespace Ge.Graphics
             return visibleFrustum.Contains(boundingSphere) == ContainmentType.Disjoint;
         }
 
+        private BoundsRenderItemWireframeRenderer _boundsRenderer;
+        private bool _boundsRendererEnabled;
+
+        public void ToggleBoundsRenderer()
+        {
+            _boundsRendererEnabled = !_boundsRendererEnabled;
+            if (_boundsRendererEnabled)
+            {
+                if (_boundsRenderer == null)
+                {
+                    _boundsRenderer = new BoundsRenderItemWireframeRenderer(this, _ad, _gs.Context);
+                }
+
+                _gs.AddRenderItem(_boundsRenderer, Transform);
+            }
+
+            else
+            {
+                if (_boundsRenderer != null)
+                {
+                    _gs.RemoveRenderItem(_boundsRenderer);
+                }
+            }
+        }
+
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";
         private static readonly string RegularPassFragmentShaderSource = "shadow-frag";
 
@@ -246,6 +274,8 @@ namespace Ge.Graphics
             {
                 new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
+        private GraphicsSystem _gs;
+        private LooseFileDatabase _ad;
     }
 
     public struct TintInfo
