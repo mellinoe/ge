@@ -9,6 +9,7 @@ using BEPUphysics.NarrowPhaseSystems.Pairs;
 using BEPUphysics.Constraints.SolverGroups;
 using System;
 using BEPUphysics.PositionUpdating;
+using Newtonsoft.Json;
 
 namespace Ge.Physics
 {
@@ -21,6 +22,7 @@ namespace Ge.Physics
         private WeldJoint _parentJoint;
         private Collider _parentCollider;
 
+        [JsonIgnore]
         public Entity Entity { get; private set; }
 
         protected abstract Entity CreateEntity();

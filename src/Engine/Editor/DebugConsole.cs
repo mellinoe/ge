@@ -1,28 +1,34 @@
 ﻿using Ge.Behaviors;
 using ImGuiNET;
-using System.Collections.Generic;
 using System.Numerics;
 using System;
 using Ge.Graphics;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IO;
 using System.Collections.Immutable;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Ge.Editor
 {
     public class DebugConsole : Behavior
     {
+        private GraphicsSystem _gs;
+        private ConsoleCommandSystem _ccs;
+
         private ImmutableList<string> _lines = ImmutableList<string>.Empty;
         private TextInputBuffer _inputBuffer = new TextInputBuffer(1024);
         private bool _windowOpen;
-        private GraphicsSystem _gs;
         private int _previousFrameLines;
         private bool _focusInput;
 
         protected override void Start(SystemRegistry registry)
         {
+            _ccs = registry.GetSystem<ConsoleCommandSystem>();
+            _ccs.Print += AddLine;
+            _gs = registry.GetSystem<GraphicsSystem>();
+
             registry.GetSystem<InputSystem>().RegisterCallback(input =>
             {
                 if (input.GetKeyDown(Veldrid.Platform.Key.Tilde))
@@ -34,8 +40,6 @@ namespace Ge.Editor
                     }
                 }
             });
-
-            _gs = registry.GetSystem<GraphicsSystem>();
         }
 
         public unsafe override void Update(float deltaSeconds)
@@ -88,7 +92,9 @@ namespace Ge.Editor
                         InputTextFlags.AutoSelectAll | InputTextFlags.EnterReturnsTrue,
                         null))
                     {
-                        SubmitCommand(_inputBuffer.GetString());
+                        _ccs.SubmitCommand(_inputBuffer.GetString());
+                        _inputBuffer.ClearData();
+                        _focusInput = true;
                     }
                 }
 
@@ -97,43 +103,97 @@ namespace Ge.Editor
             }
         }
 
-        private void SubmitCommand(string command)
-        {
-            string[] args = command.Split(' ');
-            Process p = new Process()
-            {
-                StartInfo = new ProcessStartInfo(args[0], string.Join(" ", args.Skip(1)))
-                {
-                    RedirectStandardOutput = true
-                }
-            };
-
-            try
-            {
-                p.Start();
-                Task.Run(() =>
-                {
-
-                    while (!p.StandardOutput.EndOfStream)
-                    {
-                        string output = p.StandardOutput.ReadLine();
-                        AddLine(output);
-                    }
-                });
-            }
-            catch (Exception e)
-            {
-                AddLine("Error starting process");
-                AddLine(e.ToString());
-            }
-
-            _inputBuffer.ClearData();
-            _focusInput = true;
-        }
-
-        private void AddLine(string text)
+        public void AddLine(string text)
         {
             _lines = _lines.Add(text);
+        }
+    }
+
+    public class ConsoleCommandSystem : GameSystem
+    {
+        private readonly List<ConsoleCommandOption> _commandOptions = new List<ConsoleCommandOption>();
+        private readonly SystemRegistry _registry;
+
+        public event Action<string> Print;
+
+        public ConsoleCommandSystem(SystemRegistry registry)
+        {
+            _registry = registry;
+            LoadCommands(typeof(ConsoleCommandSystem).GetTypeInfo().Assembly);
+        }
+
+        public override void Update(float deltaSeconds)
+        {
+        }
+
+        public void SubmitCommand(string command)
+        {
+            string[] args = command.Split(' ');
+            string name = args[0];
+
+            Type cmdType = _commandOptions.FirstOrDefault(cco => cco.Names.Contains(name)).CommandType;
+            if (cmdType == null)
+            {
+                AddLine("Invalid command name: " + name);
+            }
+            else
+            {
+                ConsoleCommand cmd = (ConsoleCommand)Activator.CreateInstance(cmdType);
+                cmd.Log += AddLine;
+                cmd.Execute(string.Join(" ", args.Skip(1)), _registry);
+            }
+        }
+
+        private void AddLine(string message)
+        {
+            Print?.Invoke(message);
+        }
+
+        private void LoadCommands(Assembly assembly)
+        {
+            var types = assembly.GetTypes().Where(t =>
+            {
+                Type ccType = typeof(ConsoleCommand);
+                return t != ccType && t != typeof(HelpCommand)
+                    && ccType.IsAssignableFrom(t);
+            });
+            _commandOptions.AddRange(types.Select(t => new ConsoleCommandOption((ConsoleCommand)Activator.CreateInstance(t))));
+            _commandOptions.Add(new ConsoleCommandOption(new HelpCommand()));
+        }
+
+        private class HelpCommand : ConsoleCommand
+        {
+
+            public override string[] Aliases { get; } = { "-?", "-h" };
+            public override string Name => "help";
+
+            public HelpCommand()
+            {
+            }
+
+            public override void Execute(string args, SystemRegistry registry)
+            {
+                var options = registry.GetSystem<ConsoleCommandSystem>()._commandOptions;
+                Print("Availiable commands:");
+                foreach (var option in options)
+                {
+                    string name = option.Names.Last();
+                    var aliases = option.Names.Take(option.Names.Length - 1);
+                    Print($"    {name}, ({string.Join(", ", aliases)})");
+                }
+            }
+        }
+
+        private struct ConsoleCommandOption
+        {
+            public string[] Names { get; }
+            public Type CommandType { get; }
+
+            public ConsoleCommandOption(ConsoleCommand cmd)
+            {
+                Names = cmd.Aliases.Append(cmd.Name).ToArray();
+                CommandType = cmd.GetType();
+            }
         }
     }
 }

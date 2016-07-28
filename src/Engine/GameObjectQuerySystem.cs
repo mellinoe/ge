@@ -26,5 +26,10 @@ namespace Ge
         {
             return _gameObjects.Where(go => go.Transform.Parent == null);
         }
+
+        public IEnumerable<GameObject> GetAllGameObjects()
+        {
+            return _gameObjects;
+        }
     }
 }

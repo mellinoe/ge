@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Numerics;
 
 namespace Ge.Physics
@@ -6,6 +6,8 @@ namespace Ge.Physics
     public class CharacterController : Component
     {
         private PhysicsSystem _physics;
+
+        [JsonIgnore]
         public BEPUphysics.Character.CharacterController Controller { get; private set; }
 
         public override void Attached(SystemRegistry registry)

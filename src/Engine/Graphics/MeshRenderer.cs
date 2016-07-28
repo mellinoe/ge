@@ -19,11 +19,16 @@ namespace Ge.Graphics
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly DynamicDataProvider<TintInfo> _tintInfoProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
-        private readonly VertexPositionNormalTexture[] _vertices;
-        private readonly int[] _indices;
-        private readonly TextureData _texture;
+        private VertexPositionNormalTexture[] _vertices;
+        private int[] _indices;
+        private TextureData _texture;
         private readonly BoundingSphere _centeredBoundingSphere;
         private readonly BoundingBox _centeredBoundingBox;
+
+        // Serialization Accessors
+        public VertexPositionNormalTexture[] Vertices { get { return _vertices; } set { _vertices = value; } }
+        public int[] Indices { get { return _indices; } set { _indices = value; } }
+        public TextureData Texture { get { return _texture; } set { _texture = value; } }
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;

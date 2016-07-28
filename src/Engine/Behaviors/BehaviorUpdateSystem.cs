@@ -16,12 +16,12 @@ namespace Ge.Behaviors
             }
         }
 
-        internal void Register(IUpdateable behavior)
+        public void Register(IUpdateable behavior)
         {
             _behaviors = _behaviors.Add(behavior);
         }
 
-        internal void Remove(IUpdateable behavior)
+        public void Remove(IUpdateable behavior)
         {
             _behaviors = _behaviors.Remove(behavior);
         }

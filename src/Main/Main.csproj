@@ -16,51 +16,7 @@
     <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Assets\AssetSystem.cs" />
-    <Compile Include="Behaviors\BallLauncher.cs" />
-    <Compile Include="Behaviors\Behavior.cs" />
-    <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
-    <Compile Include="Behaviors\CameraBob.cs" />
-    <Compile Include="Behaviors\DelegateBehavior.cs" />
-    <Compile Include="Behaviors\FpsController.cs" />
-    <Compile Include="Behaviors\FreeFlyMovement.cs" />
-    <Compile Include="Behaviors\IUpdateable.cs" />
-    <Compile Include="Behaviors\ObjectRain.cs" />
-    <Compile Include="Behaviors\TimedDeath.cs" />
-    <Compile Include="Editor\DebugConsole.cs" />
-    <Compile Include="Editor\DebugPanel.cs" />
-    <Compile Include="FrameTimeAverager.cs" />
-    <Compile Include="Graphics\BoundsRenderItem.cs" />
-    <Compile Include="Graphics\Camera.cs" />
-    <Compile Include="Graphics\CommonModels.cs" />
-    <Compile Include="Component.cs" />
-    <Compile Include="Game.cs" />
-    <Compile Include="GameObject.cs" />
-    <Compile Include="GameObjectQuerySystem.cs" />
-    <Compile Include="GameSystem.cs" />
-    <Compile Include="Graphics\DirectionalLight.cs" />
-    <Compile Include="Graphics\GraphicsSystem.cs" />
-    <Compile Include="Graphics\MeshRenderer.cs" />
-    <Compile Include="Graphics\ImGuiImageHelper.cs" />
-    <Compile Include="Graphics\ImGuiRenderer.cs" />
-    <Compile Include="Graphics\MaterialCache.cs" />
-    <Compile Include="Graphics\ShadowMapPreview.cs" />
-    <Compile Include="Graphics\ShadowMapStage.cs" />
-    <Compile Include="Graphics\WireframeShapeRenderer.cs" />
-    <Compile Include="InputSystem.cs" />
-    <Compile Include="MathUtil.cs" />
-    <Compile Include="Physics\BoxCollider.cs" />
-    <Compile Include="Physics\CharacterController.cs" />
-    <Compile Include="Physics\Collider.cs" />
-    <Compile Include="Physics\CompoundShapeCollider.cs" />
-    <Compile Include="Physics\PhysicsSystem.cs" />
-    <Compile Include="Physics\SphereCollider.cs" />
-    <Compile Include="Prefabs.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="ScoreSystem.cs" />
-    <Compile Include="SystemRegistry.cs" />
-    <Compile Include="Transform.cs" />
-    <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
@@ -88,6 +44,10 @@
     <ProjectReference Include="..\BEPU\BEPUutilities\BEPUutilities.csproj">
       <Project>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</Project>
       <Name>BEPUutilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine\Engine.csproj">
+      <Project>{9bfba3a1-21d4-4cbd-b0e1-a4f3ab80fd30}</Project>
+      <Name>Engine</Name>
     </ProjectReference>
     <Content Include="GLSL\shadowmap-frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AssemblyName>Engine</AssemblyName>
+    <RootNamespace>Engine</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NuGetTargetMoniker>.NETStandard,Version=v1.6</NuGetTargetMoniker>
+    <ProjectGuid>{9BFBA3A1-21D4-4CBD-B0E1-A4F3AB80FD30}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <ItemGroup>
+    <Compile Include="Assets\AssetSystem.cs" />
+    <Compile Include="Assets\SceneAsset.cs" />
+    <Compile Include="Behaviors\BallLauncher.cs" />
+    <Compile Include="Behaviors\Behavior.cs" />
+    <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
+    <Compile Include="Behaviors\CameraBob.cs" />
+    <Compile Include="Behaviors\DelegateBehavior.cs" />
+    <Compile Include="Behaviors\FpsController.cs" />
+    <Compile Include="Behaviors\FreeFlyMovement.cs" />
+    <Compile Include="Behaviors\IUpdateable.cs" />
+    <Compile Include="Behaviors\ObjectRain.cs" />
+    <Compile Include="Behaviors\TimedDeath.cs" />
+    <Compile Include="Editor\ConsoleCommand.cs" />
+    <Compile Include="Editor\DebugConsole.cs" />
+    <Compile Include="Editor\DebugPanel.cs" />
+    <Compile Include="FrameTimeAverager.cs" />
+    <Compile Include="Graphics\BoundsRenderItem.cs" />
+    <Compile Include="Graphics\Camera.cs" />
+    <Compile Include="Graphics\CommonModels.cs" />
+    <Compile Include="Component.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="GameObject.cs" />
+    <Compile Include="GameObjectQuerySystem.cs" />
+    <Compile Include="GameSystem.cs" />
+    <Compile Include="Graphics\DirectionalLight.cs" />
+    <Compile Include="Graphics\GraphicsSystem.cs" />
+    <Compile Include="Graphics\MeshRenderer.cs" />
+    <Compile Include="Graphics\ImGuiImageHelper.cs" />
+    <Compile Include="Graphics\ImGuiRenderer.cs" />
+    <Compile Include="Graphics\MaterialCache.cs" />
+    <Compile Include="Graphics\ShadowMapPreview.cs" />
+    <Compile Include="Graphics\ShadowMapStage.cs" />
+    <Compile Include="Graphics\WireframeShapeRenderer.cs" />
+    <Compile Include="InputSystem.cs" />
+    <Compile Include="MathUtil.cs" />
+    <Compile Include="Physics\BoxCollider.cs" />
+    <Compile Include="Physics\CharacterController.cs" />
+    <Compile Include="Physics\Collider.cs" />
+    <Compile Include="Physics\CompoundShapeCollider.cs" />
+    <Compile Include="Physics\PhysicsSystem.cs" />
+    <Compile Include="Physics\SphereCollider.cs" />
+    <Compile Include="Prefabs.cs" />
+    <Compile Include="ScoreSystem.cs" />
+    <Compile Include="SystemRegistry.cs" />
+    <Compile Include="Transform.cs" />
+    <Compile Include="VectorExtensions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
+      <Project>{2665014F-0FEC-4268-8F77-7B029921AB09}</Project>
+      <Name>ImGui.NET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ext\veldrid\src\Veldrid\Veldrid.csproj">
+      <Project>{AE9BC745-284F-42F3-8236-C43FF9731DF2}</Project>
+      <Name>Veldrid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ext\veldrid\src\Veldrid.Assets\Veldrid.Assets.csproj">
+      <Project>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</Project>
+      <Name>Veldrid.Assets</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BEPU\BEPUphysics\BEPUphysics.csproj">
+      <Project>{C0D52C9F-14B8-4008-8DDC-109C27561A5C}</Project>
+      <Name>BEPUphysics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BEPU\BEPUutilities\BEPUutilities.csproj">
+      <Project>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</Project>
+      <Name>BEPUutilities</Name>
+    </ProjectReference>
+    <None Include="project.json" />
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>

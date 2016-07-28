@@ -9,6 +9,9 @@ using System;
 using Ge.Physics;
 using Ge.Editor;
 using Ge.Assets;
+using Engine.Assets;
+using System.Linq;
+using Veldrid.Assets;
 
 namespace Ge
 {
@@ -59,9 +62,19 @@ namespace Ge
             ScoreSystem ss = new ScoreSystem();
             game.SystemRegistry.Register(ss);
 
+            ConsoleCommandSystem ccs = new ConsoleCommandSystem(game.SystemRegistry);
+            game.SystemRegistry.Register(ccs);
+
             window.Closed += game.Exit;
 
-            AddBinGameScene();
+            //AddBinGameScene();
+
+            SceneAsset scene = new SceneAsset();
+            var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
+            scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
+            LooseFileDatabase db = new LooseFileDatabase(AppContext.BaseDirectory);
+            //db.SaveDefinition(scene, "BINSCENE.scene");
+            db.LoadAsset<SceneAsset>("BINSCENE.scene");
 
             game.RunMainLoop();
         }

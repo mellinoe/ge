@@ -1,6 +1,6 @@
 ﻿namespace Ge.Behaviors
 {
-    internal interface IUpdateable
+    public interface IUpdateable
     {
         void Update(float deltaSeconds);
     }
