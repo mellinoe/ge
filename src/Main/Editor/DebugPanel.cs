@@ -101,7 +101,7 @@ namespace Ge.Editor
 
         public override void Update(float deltaSeconds)
         {
-            if (_input.GetKeyDown(Key.Tilde))
+            if (_input.GetKeyDown(Key.F1))
             {
                 _windowOpen = !_windowOpen;
             }
@@ -161,8 +161,8 @@ namespace Ge.Editor
                     {
                         DrawHierarchy();
                     }
-                    ImGui.EndWindow();
                 }
+                ImGui.EndWindow();
             }
         }
 

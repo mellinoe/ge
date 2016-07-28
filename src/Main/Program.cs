@@ -22,8 +22,6 @@ namespace Ge
             Game game = new Game();
             GraphicsSystem gs = new GraphicsSystem(window);
             game.SystemRegistry.Register(gs);
-            ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow);
-            gs.AddFreeRenderItem(imGuiRenderer);
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
@@ -40,11 +38,13 @@ namespace Ge
                 {
                     gs.ToggleOctreeVisualizer();
                 }
-
-                imGuiRenderer.UpdateImGuiInput(window, input.CurrentSnapshot);
             });
 
             game.SystemRegistry.Register(inputSystem);
+
+            ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
+            gs.AddFreeRenderItem(imGuiRenderer);
+            ImGuiNET.ImGui.GetIO().FontAllowUserScaling = true;
 
             AssetSystem assetSystem = new AssetSystem();
             game.SystemRegistry.Register(assetSystem);
@@ -119,6 +119,7 @@ namespace Ge
 
             camera.AddComponent(new DebugPanel(camera.GetComponent<Camera>()));
             camera.AddComponent(new BallLauncher());
+            camera.AddComponent(new DebugConsole());
         }
 
         private static void AddObjectRainScene()

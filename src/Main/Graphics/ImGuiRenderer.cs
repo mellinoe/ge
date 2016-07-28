@@ -10,6 +10,7 @@ using Veldrid.Platform;
 
 using Key = Veldrid.Platform.Key;
 using Veldrid;
+using System.IO;
 
 namespace Ge.Graphics
 {
@@ -28,13 +29,17 @@ namespace Ge.Graphics
         private RasterizerState _rasterizerState;
         private ShaderTextureBinding _fontTextureBinding;
 
-        private float _wheelPosition;
         private int _fontAtlasID = 1;
         private RenderContext _rc;
+        private readonly InputSystem _input;
+        private bool _controlDown;
+        private bool _shiftDown;
+        private bool _altDown;
 
-        public ImGuiRenderer(RenderContext rc, NativeWindow window)
+        public ImGuiRenderer(RenderContext rc, NativeWindow window, InputSystem input)
         {
             _rc = rc;
+            _input = input;
             CreateFontsTexture(rc);
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
@@ -42,6 +47,7 @@ namespace Ge.Graphics
             SetOpenTKKeyMappings();
 
             SetPerFrameImGuiData(rc, 1f / 60f);
+
             NewFrame();
         }
 
@@ -84,13 +90,15 @@ namespace Ge.Graphics
             yield return "Overlay";
         }
 
-        public void NewFrame() => ImGui.NewFrame();
+        public void NewFrame()
+        {
+            ImGui.NewFrame();
+        }
 
         public unsafe void Render(RenderContext rc, string pipelineStage)
         {
-            UpdateFinished();
+            ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData(), rc);
-            NewFrame();
         }
 
         public RenderOrderKey GetRenderOrderKey(System.Numerics.Vector3 position)
@@ -101,6 +109,8 @@ namespace Ge.Graphics
         public void Update(float deltaSeconds)
         {
             SetPerFrameImGuiData(_rc, deltaSeconds);
+            UpdateImGuiInput((OpenTKWindow)_rc.Window, _input.CurrentSnapshot);
+            NewFrame();
         }
 
         public unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaSeconds)
@@ -139,32 +149,51 @@ namespace Ge.Graphics
             io.MouseDown[1] = mouseState.RightButton == ButtonState.Pressed;
             io.MouseDown[2] = mouseState.MiddleButton == ButtonState.Pressed;
 
-            float newWheelPos = mouseState.WheelPrecise;
-            float delta = newWheelPos - _wheelPosition;
-            _wheelPosition = newWheelPos;
+            float delta = snapshot.WheelDelta;
             io.MouseWheel = delta;
+
+            ImGuiNative.igGetIO()->MouseWheel = delta;
 
             foreach (char c in snapshot.KeyCharPresses)
             {
                 ImGui.AddInputCharacter(c);
             }
 
-            io.CtrlPressed = false;
-            io.AltPressed = false;
-            io.ShiftPressed = false;
-
             foreach (var keyEvent in snapshot.KeyEvents)
             {
                 io.KeysDown[(int)keyEvent.Key] = keyEvent.Down;
-                io.ShiftPressed |= ((keyEvent.Modifiers & ModifierKeys.Shift) != 0);
-                io.CtrlPressed |= ((keyEvent.Modifiers & ModifierKeys.Control) != 0);
-                io.AltPressed |= ((keyEvent.Modifiers & ModifierKeys.Alt) != 0);
+                if (keyEvent.Key == Key.ControlLeft)
+                {
+                    _controlDown = keyEvent.Down;
+                }
+                if (keyEvent.Key == Key.ShiftLeft)
+                {
+                    _shiftDown = keyEvent.Down;
+                }
+                if (keyEvent.Key == Key.AltLeft)
+                {
+                    _altDown = keyEvent.Down;
+                }
             }
+
+            io.CtrlPressed = _controlDown;
+            io.AltPressed = _altDown;
+            io.ShiftPressed = _shiftDown;
         }
 
         private unsafe void CreateFontsTexture(RenderContext rc)
         {
-            ImGui.LoadDefaultFont();
+            if (File.Exists(@"C:\Windows\Fonts\consola.ttf"))
+            {
+                unsafe
+                {
+                    ImGuiNET.ImGuiNative.ImFontAtlas_AddFontFromFileTTF(ImGuiNET.ImGuiNative.igGetIO()->FontAtlas, @"C:\Windows\Fonts\consola.ttf", 14, IntPtr.Zero, null);
+                }
+            }
+            else
+            {
+                ImGui.LoadDefaultFont();
+            }
             IO io = ImGui.GetIO();
 
             // Build
@@ -314,11 +343,6 @@ namespace Ge.Graphics
             _depthDisabledState.Dispose();
             _blendState.Dispose();
             _fontTextureBinding.Dispose();
-        }
-
-        internal void UpdateFinished()
-        {
-            ImGui.Render();
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
