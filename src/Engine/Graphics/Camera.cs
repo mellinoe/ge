@@ -10,9 +10,9 @@ namespace Ge.Graphics
         private DynamicDataProvider<Matrix4x4> _projectionProvider = new DynamicDataProvider<Matrix4x4>();
         private GraphicsSystem _gs;
 
-        private float _fieldOfView = 1.05f;
-        private float _nearPlane = 0.1f;
-        private float _farPlane = 1000f;
+        public float FieldOfViewRadians { get; set; } = 1.05f;
+        public float NearPlaneDistance { get; set; } = 0.3f;
+        public float FarPlaneDistance { get; set; } = 30f;
 
         public override void Attached(SystemRegistry registry)
         {
@@ -74,10 +74,10 @@ namespace Ge.Graphics
         private void SetProjectionMatrix()
         {
             _projectionProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
-                _fieldOfView,
+                FieldOfViewRadians,
                 (float)_gs.Context.Window.Width / _gs.Context.Window.Height,
-                _nearPlane,
-                _farPlane);
+                NearPlaneDistance,
+                FarPlaneDistance);
 
             UpdateViewFrustum();
         }

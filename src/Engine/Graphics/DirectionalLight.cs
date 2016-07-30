@@ -12,9 +12,6 @@ namespace Ge.Graphics
         private GraphicsSystem _gs;
         private DynamicDataProvider<LightInfo> _lightProvider = new DynamicDataProvider<LightInfo>();
 
-        private DynamicDataProvider<Matrix4x4> _lightProjectionProvider = new DynamicDataProvider<Matrix4x4>();
-        private DynamicDataProvider<Matrix4x4> _lightViewProvider = new DynamicDataProvider<Matrix4x4>();
-
         public RgbaFloat DiffuseColor { get { return _diffuseColor; } set { _diffuseColor = value; SetProvider(); } }
         public Vector3 Direction { get { return _direction; } set { _direction = Vector3.Normalize(value); SetProvider(); } }
 
@@ -29,8 +26,7 @@ namespace Ge.Graphics
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _gs.Context.RegisterGlobalDataProvider("LightBuffer", _lightProvider);
-            _gs.Context.RegisterGlobalDataProvider("LightProjMatrix", _lightProjectionProvider);
-            _gs.Context.RegisterGlobalDataProvider("LightViewMatrix", _lightViewProvider);
+            _gs.SetDirectionalLight(this);
         }
 
         public override void Removed(SystemRegistry registry)
@@ -40,10 +36,6 @@ namespace Ge.Graphics
         private void SetProvider()
         {
             _lightProvider.Data = new LightInfo(_diffuseColor, _direction);
-
-            Vector3 lightPosition = -_direction * 20f;
-            _lightViewProvider.Data = Matrix4x4.CreateLookAt(lightPosition, Vector3.Zero, Vector3.UnitY);
-            _lightProjectionProvider.Data = Matrix4x4.CreateOrthographicOffCenter(-25, 25, -25, 25, 0, 50f);
         }
     }
 

@@ -20,16 +20,16 @@ namespace Ge.Graphics
         private readonly Window _window;
         private readonly Dictionary<BoundsRenderItem, OctreeItem<RenderItem>> _octreeItems = new Dictionary<BoundsRenderItem, OctreeItem<RenderItem>>();
 
+        private OctreeRenderer<RenderItem> _octreeRenderer;
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
+        public ShadowMapStage ShadowMapStage { get; }
 
         public MaterialCache MaterialCache { get; }
 
         public RenderContext Context { get; }
 
         private Camera MainCamera => _mainCamera;
-
-        private OctreeRenderer<RenderItem> _octreeRenderer;
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
         {
@@ -46,6 +46,12 @@ namespace Ge.Graphics
             }
 
             _mainCamera = camera;
+            ShadowMapStage.MainCamera = camera;
+        }
+
+        public void SetDirectionalLight(DirectionalLight directionalLight)
+        {
+            ShadowMapStage.Light = directionalLight;  
         }
 
         public GraphicsSystem(OpenTKWindow window)
@@ -54,9 +60,10 @@ namespace Ge.Graphics
             Context = CreatePlatformDefaultContext(window);
             MaterialCache = new MaterialCache(Context.ResourceFactory);
 
+            ShadowMapStage = new ShadowMapStage(Context);
             _pipelineStages = new PipelineStage[]
             {
-                new ShadowMapStage(Context),
+                ShadowMapStage,
                 new StandardPipelineStage(Context, "Standard"),
                 new StandardPipelineStage(Context, "Overlay")
             };

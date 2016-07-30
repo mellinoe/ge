@@ -25,6 +25,7 @@ namespace Ge
             Game game = new Game();
             GraphicsSystem gs = new GraphicsSystem(window);
             game.SystemRegistry.Register(gs);
+            gs.AddFreeRenderItem(new ShadowMapPreview(gs.Context));
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
@@ -67,14 +68,7 @@ namespace Ge
 
             window.Closed += game.Exit;
 
-            //AddBinGameScene();
-
-            SceneAsset scene = new SceneAsset();
-            var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
-            scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
-            LooseFileDatabase db = new LooseFileDatabase(AppContext.BaseDirectory);
-            //db.SaveDefinition(scene, "BINSCENE.scene");
-            db.LoadAsset<SceneAsset>("BINSCENE.scene");
+            AddBinGameScene();
 
             game.RunMainLoop();
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Pipeline;
 
@@ -7,12 +8,13 @@ namespace Ge.Graphics
 {
     public class ShadowMapStage : PipelineStage
     {
-        private string _contextBindingName = "ShadowMap";
-
-        private const int DepthMapWidth = 4096;
-        private const int DepthMapHeight = 4096;
+        private const int DepthMapWidth = 2048;
+        private const int DepthMapHeight = 2048;
 
         private readonly RenderQueue _queue = new RenderQueue();
+        private readonly string _contextBindingName = "ShadowMap";
+        private readonly DynamicDataProvider<Matrix4x4> _lightViewProvider = new DynamicDataProvider<Matrix4x4>();
+        private readonly DynamicDataProvider<Matrix4x4> _lightProjectionProvider = new DynamicDataProvider<Matrix4x4>();
 
         private Framebuffer _shadowMapFramebuffer;
         private DeviceTexture2D _depthTexture;
@@ -23,11 +25,16 @@ namespace Ge.Graphics
 
         public RenderContext RenderContext { get; private set; }
 
+        public DirectionalLight Light { get; set; }
+        public Camera MainCamera { get; set; }
+
         public ShadowMapStage(RenderContext rc, string contextBindingName = "ShadowMap")
         {
             RenderContext = rc;
             _contextBindingName = contextBindingName;
             InitializeContextObjects(rc);
+            rc.RegisterGlobalDataProvider("LightViewMatrix", _lightViewProvider);
+            rc.RegisterGlobalDataProvider("LightProjMatrix", _lightProjectionProvider);
         }
 
         public void ChangeRenderContext(RenderContext rc)
@@ -46,6 +53,7 @@ namespace Ge.Graphics
 
         public void ExecuteStage(VisibiltyManager visibilityManager, Vector3 cameraPosition)
         {
+            UpdateLightProjection();
             RenderContext.ClearScissorRectangle();
             RenderContext.SetFramebuffer(_shadowMapFramebuffer);
             RenderContext.ClearBuffer();
@@ -58,6 +66,68 @@ namespace Ge.Graphics
             {
                 item.Render(RenderContext, "ShadowMap");
             }
+        }
+
+        private void UpdateLightProjection()
+        {
+            if (MainCamera == null || Light == null)
+            {
+                Console.WriteLine("No directional light and/or camera in the scene, aborting light projection updates.");
+                return;
+            }
+
+            Vector3 cameraDir = MainCamera.Transform.Forward;
+            Vector3 unitY = Vector3.UnitY;
+            Vector3 cameraPosition = MainCamera.Transform.Position;
+            FrustumCorners corners;
+            FrustumHelpers.ComputePerspectiveFrustumCorners(
+                ref cameraPosition,
+                ref cameraDir,
+                ref unitY,
+                MainCamera.FieldOfViewRadians,
+                MainCamera.NearPlaneDistance,
+                MainCamera.FarPlaneDistance,
+                (float)RenderContext.Window.Width / (float)RenderContext.Window.Height,
+                out corners);
+
+            // Approach used: http://alextardif.com/ShadowMapping.html
+
+            Vector3 frustumCenter = Vector3.Zero;
+            frustumCenter += corners.NearTopLeft;
+            frustumCenter += corners.NearTopRight;
+            frustumCenter += corners.NearBottomLeft;
+            frustumCenter += corners.NearBottomRight;
+            frustumCenter += corners.FarTopLeft;
+            frustumCenter += corners.FarTopRight;
+            frustumCenter += corners.FarBottomLeft;
+            frustumCenter += corners.FarBottomRight;
+            frustumCenter /= 8f;
+
+            float radius = (corners.NearTopLeft - corners.FarBottomRight).Length() / 2.0f;
+            float texelsPerUnit = (float)DepthMapWidth / (radius * 2.0f);
+
+            Matrix4x4 scalar = Matrix4x4.CreateScale(texelsPerUnit, texelsPerUnit, texelsPerUnit);
+
+            var _lightDirection = Light.Direction;
+            Vector3 baseLookAt = -_lightDirection;
+
+            Matrix4x4 lookat = Matrix4x4.CreateLookAt(Vector3.Zero, baseLookAt, Vector3.UnitY);
+            lookat = scalar * lookat;
+            Matrix4x4 lookatInv;
+            Matrix4x4.Invert(lookat, out lookatInv);
+
+            frustumCenter = Vector3.Transform(frustumCenter, lookat);
+            frustumCenter.X = (int)frustumCenter.X;
+            frustumCenter.Y = (int)frustumCenter.Y;
+            frustumCenter = Vector3.Transform(frustumCenter, lookatInv);
+
+            Vector3 lightPos = frustumCenter - (_lightDirection * radius * 2f);
+
+            Matrix4x4 lightView = Matrix4x4.CreateLookAt(lightPos, frustumCenter, Vector3.UnitY);
+
+            _lightProjectionProvider.Data = Matrix4x4.CreateOrthographicOffCenter(
+                -radius, radius, -radius, radius, -radius * 4f, radius * 4f);
+            _lightViewProvider.Data = lightView;
         }
 
         private void Dispose()
