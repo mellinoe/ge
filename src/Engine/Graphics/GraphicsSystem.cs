@@ -10,7 +10,7 @@ using Veldrid.Graphics.OpenGL;
 using Veldrid.Graphics.Pipeline;
 using Veldrid.Platform;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public class GraphicsSystem : GameSystem
     {
@@ -29,7 +29,7 @@ namespace Ge.Graphics
 
         public RenderContext Context { get; }
 
-        private Camera MainCamera => _mainCamera;
+        public Camera MainCamera => _mainCamera;
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
         {

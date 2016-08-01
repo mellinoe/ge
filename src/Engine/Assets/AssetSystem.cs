@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
 using Veldrid.Assets;
 
-namespace Ge.Assets
+namespace Engine.Assets
 {
     public class AssetSystem : GameSystem
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Veldrid.Platform;
 
-namespace Ge
+namespace Engine
 {
     public class InputSystem : GameSystem
     {

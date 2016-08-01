@@ -1,17 +1,17 @@
-using Ge.Behaviors;
-using Ge.Graphics;
+using Engine.Behaviors;
+using Engine.Graphics;
 using System.Runtime.InteropServices;
 using Veldrid.Platform;
 using Veldrid.Graphics;
 using System.Numerics;
 using System.IO;
 using System;
-using Ge.Physics;
-using Ge.Editor;
-using Ge.Assets;
+using Engine.Physics;
+using Engine.Editor;
 using Engine.Assets;
-using System.Linq;
+using Engine;
 using Veldrid.Assets;
+using System.Linq;
 
 namespace Ge
 {
@@ -53,7 +53,7 @@ namespace Ge
             AssetSystem assetSystem = new AssetSystem();
             game.SystemRegistry.Register(assetSystem);
 
-            BehaviorUpdateSystem bus = new BehaviorUpdateSystem();
+            BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);
             game.SystemRegistry.Register(bus);
             bus.Register(imGuiRenderer);
 
@@ -68,7 +68,16 @@ namespace Ge
 
             window.Closed += game.Exit;
 
-            AddBinGameScene();
+            LooseFileDatabase db = new LooseFileDatabase(AppContext.BaseDirectory);
+
+            //AddBinGameScene();
+            //SceneAsset scene = new SceneAsset();
+            //var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
+            //scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
+            //db.SaveDefinition(scene, "BINSCENE.scene");
+
+            var scene = db.LoadAsset<SceneAsset>("BINSCENE.scene");
+            scene.GenerateGameObjects();
 
             game.RunMainLoop();
         }
@@ -89,21 +98,10 @@ namespace Ge
             camera.AddComponent(new CameraBob());
 
             GameObject light = new GameObject("Light");
-            var lightComponent = new DirectionalLight(RgbaFloat.White, new Vector3(0.3f, -.3f, -1f));
+            var lightComponent = new DirectionalLight(RgbaFloat.White, new Vector3(0.3f, -1f, -1f));
             light.AddComponent(lightComponent);
-            float timeFactor = 0.0f;
-            light.AddComponent(new DelegateBehavior(
-                dt =>
-                {
-                    timeFactor += (dt / 20f);
-                    var position = new Vector3(
-                        (float)(Math.Cos(timeFactor) * 5),
-                        6 + (float)Math.Sin(timeFactor) * 2,
-                        -(float)(Math.Sin(timeFactor) * 5));
-                    lightComponent.Direction = -position;
-                }));
 
-            var woodTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png"));
+            var woodTexture = Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png");
             for (int x = 0; x < 7; x++)
             {
                 for (int z = 0; z < 7; z++)
@@ -124,7 +122,7 @@ namespace Ge
             scaleBox.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, woodTexture));
             scaleBox.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f, 50.0f));
 
-            camera.AddComponent(new DebugPanel(camera.GetComponent<Camera>()));
+            camera.AddComponent(new DebugPanel());
             camera.AddComponent(new BallLauncher());
             camera.AddComponent(new DebugConsole());
         }
@@ -152,7 +150,7 @@ namespace Ge
                 }));
 
             GameObject sphere = new GameObject("Sphere1");
-            var stoneTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png"));
+            var stoneTexture = Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png");
             sphere.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, stoneTexture));
             sphere.Transform.Position = new Vector3(0, 2f, 0f);
             sphere.Transform.Scale = new Vector3(1f);
@@ -190,13 +188,13 @@ namespace Ge
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
             plane.Transform.Scale = new Vector3(30f);
             plane.Transform.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.05f);
-            var woodTexture = new ImageProcessorTexture(Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png"));
+            var woodTexture = Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png");
             plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
             plane.AddComponent(new BoxCollider(1f, 0.1f / 30f, 1f, -1.0f));
 
             camera.AddComponent(new ObjectRain());
             camera.AddComponent(new FreeFlyMovement());
-            camera.AddComponent(new DebugPanel(camera.GetComponent<Camera>()));
+            camera.AddComponent(new DebugPanel());
         }
     }
 }

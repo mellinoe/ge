@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid.Graphics;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public class DirectionalLight : Component
     {

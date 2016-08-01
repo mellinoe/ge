@@ -1,7 +1,7 @@
 ﻿using Veldrid;
 using Veldrid.Graphics;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public interface BoundsRenderItem : RenderItem
     {

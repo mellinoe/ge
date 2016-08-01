@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Ge
+namespace Engine
 {
     public abstract class Component
     {

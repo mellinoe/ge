@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ge.Behaviors
+namespace Engine.Behaviors
 {
     public class TimedDeath : Behavior
     {

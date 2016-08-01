@@ -1,4 +1,4 @@
-﻿namespace Ge.Behaviors
+﻿namespace Engine.Behaviors
 {
     public interface IUpdateable
     {

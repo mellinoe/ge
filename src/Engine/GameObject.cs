@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Ge
+namespace Engine
 {
     public class GameObject
     {
@@ -29,6 +29,12 @@ namespace Ge
             Transform = t;
             Name = name;
             GameObjectConstructed?.Invoke(this);
+        }
+
+        public void AddComponent(Component component)
+        {
+            _components.Add(component.GetType(), component);
+            component.AttachToGameObject(this, _registry);
         }
 
         public void AddComponent<T>(T component) where T : Component

@@ -4,7 +4,7 @@ using System.Numerics;
 using Veldrid;
 using Veldrid.Graphics;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public class ShadowMapPreview : RenderItem
     {

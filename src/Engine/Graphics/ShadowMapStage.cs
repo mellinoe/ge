@@ -4,12 +4,12 @@ using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Pipeline;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public class ShadowMapStage : PipelineStage
     {
-        private const int DepthMapWidth = 2048;
-        private const int DepthMapHeight = 2048;
+        private const int DepthMapWidth = 4096;
+        private const int DepthMapHeight = 4096;
 
         private readonly RenderQueue _queue = new RenderQueue();
         private readonly string _contextBindingName = "ShadowMap";

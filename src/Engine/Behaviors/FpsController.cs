@@ -1,10 +1,10 @@
-﻿using Ge.Physics;
+﻿using Engine.Physics;
 using ImGuiNET;
 using Veldrid.Platform;
 using System;
 using System.Numerics;
 
-namespace Ge.Behaviors
+namespace Engine.Behaviors
 {
     public class FpsLookController : Behavior
     {
@@ -19,7 +19,7 @@ namespace Ge.Behaviors
 
         private InputSystem _input;
 
-        protected override void Start(SystemRegistry registry)
+        internal override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
             _cc = GameObject.GetComponentInParent<CharacterController>();

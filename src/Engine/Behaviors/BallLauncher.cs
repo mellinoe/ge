@@ -1,12 +1,12 @@
-﻿using Ge.Graphics;
-using Ge.Physics;
+﻿using Engine.Graphics;
+using Engine.Physics;
 using Veldrid.Graphics;
 using System.Numerics;
 using System;
 using BEPUphysics.PositionUpdating;
 using Veldrid.Platform;
 
-namespace Ge.Behaviors
+namespace Engine.Behaviors
 {
     public class BallLauncher : Behavior
     {
@@ -15,7 +15,7 @@ namespace Ge.Behaviors
 
         private Random _random = new Random();
 
-        protected override void Start(SystemRegistry registry)
+        internal override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
         }

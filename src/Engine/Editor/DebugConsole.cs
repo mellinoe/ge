@@ -1,8 +1,8 @@
-﻿using Ge.Behaviors;
+﻿using Engine.Behaviors;
 using ImGuiNET;
 using System.Numerics;
 using System;
-using Ge.Graphics;
+using Engine.Graphics;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +10,7 @@ using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Ge.Editor
+namespace Engine.Editor
 {
     public class DebugConsole : Behavior
     {
@@ -23,7 +23,7 @@ namespace Ge.Editor
         private int _previousFrameLines;
         private bool _focusInput;
 
-        protected override void Start(SystemRegistry registry)
+        internal override void Start(SystemRegistry registry)
         {
             _ccs = registry.GetSystem<ConsoleCommandSystem>();
             _ccs.Print += AddLine;

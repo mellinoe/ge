@@ -1,4 +1,4 @@
-﻿using Ge.Behaviors;
+﻿using Engine.Behaviors;
 using ImGuiNET;
 using OpenTK;
 using OpenTK.Input;
@@ -12,7 +12,7 @@ using Key = Veldrid.Platform.Key;
 using Veldrid;
 using System.IO;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public class ImGuiRenderer : RenderItem, IUpdateable, IDisposable
     {

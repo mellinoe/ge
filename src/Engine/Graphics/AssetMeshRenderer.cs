@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Engine.Assets;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using Veldrid;
 using Veldrid.Graphics;
+using Veldrid.Graphics.OpenGL;
 using Veldrid.Assets;
-using Engine.Assets;
-using Newtonsoft.Json;
 
 namespace Engine.Graphics
 {
-    public unsafe class MeshRenderer : Component, BoundsRenderItem
+    public unsafe class AssetMeshRenderer : Component, BoundsRenderItem
     {
         private static readonly string[] s_stages = { "ShadowMap", "Standard" };
 
@@ -18,16 +19,19 @@ namespace Engine.Graphics
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly DynamicDataProvider<TintInfo> _tintInfoProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
+
+        // Serialization Accessors
+        public AssetRef<ObjFile> MeshFileRef { get; set; }
+        public AssetRef<ImageProcessorTexture> TextureFileRef { get; set; }
+
+        private GraphicsSystem _gs;
+        private LooseFileDatabase _ad;
+
         private VertexPositionNormalTexture[] _vertices;
         private int[] _indices;
         private TextureData _texture;
-        private readonly BoundingSphere _centeredBoundingSphere;
-        private readonly BoundingBox _centeredBoundingBox;
-
-        // Serialization Accessors
-        public VertexPositionNormalTexture[] Vertices { get { return _vertices; } set { _vertices = value; } }
-        public int[] Indices { get { return _indices; } set { _indices = value; } }
-        public RefOrImmediate<TextureData> Texture { get; set; }
+        private BoundingSphere _centeredBoundingSphere;
+        private BoundingBox _centeredBoundingBox;
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
@@ -54,18 +58,38 @@ namespace Engine.Graphics
             }
         }
 
-        [JsonConstructor]
-        public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, RefOrImmediate<TextureData> texture)
+        public AssetMeshRenderer(AssetRef<ObjFile> meshRef, AssetRef<ImageProcessorTexture> textureRef)
         {
+            MeshFileRef = meshRef;
+            TextureFileRef = textureRef;
+
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _tintInfoProvider = new DynamicDataProvider<TintInfo>();
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _tintInfoProvider };
-            _vertices = vertices;
-            _indices = indices;
-            Texture = texture;
+        }
+
+        public override void Attached(SystemRegistry registry)
+        {
+            _gs = registry.GetSystem<GraphicsSystem>();
+            _ad = registry.GetSystem<AssetSystem>().Database;
+            InitializeContextObjects(_gs.Context, _gs.MaterialCache);
+            _gs.AddRenderItem(this, Transform);
+
+            var objFile = _ad.LoadAsset(MeshFileRef);
+            ConstructedMeshInfo firstMesh = objFile.GetFirstMesh();
+            _vertices = firstMesh.Vertices;
+            _indices = firstMesh.Indices;
+            _texture = _ad.LoadAsset(TextureFileRef);
+
             _centeredBoundingSphere = BoundingSphere.CreateFromPoints(_vertices);
-            _centeredBoundingBox = BoundingBox.CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
+            _centeredBoundingBox = BoundingBox.CreateFromVertices(_vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
+        }
+
+        public override void Removed(SystemRegistry registry)
+        {
+            _gs.RemoveRenderItem(this);
+            ClearDeviceResources();
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
@@ -117,21 +141,6 @@ namespace Engine.Graphics
             rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
 
-        public override void Attached(SystemRegistry registry)
-        {
-            _gs = registry.GetSystem<GraphicsSystem>();
-            _ad = registry.GetSystem<AssetSystem>().Database;
-            _texture = Texture.Get(_ad);
-            InitializeContextObjects(_gs.Context, _gs.MaterialCache);
-            _gs.AddRenderItem(this, Transform);
-        }
-
-        public override void Removed(SystemRegistry registry)
-        {
-            _gs.RemoveRenderItem(this);
-            ClearDeviceResources();
-        }
-
         private unsafe void InitializeContextObjects(RenderContext context, MaterialCache cache)
         {
             ResourceFactory factory = context.ResourceFactory;
@@ -164,11 +173,6 @@ namespace Engine.Graphics
                 s_regularGlobalInputs,
                 s_perObjectInputs,
                 s_textureInputs);
-
-            if (_texture == null)
-            {
-                _texture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Pink);
-            }
 
             _deviceTexture = _texture.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(_deviceTexture);
@@ -285,7 +289,5 @@ namespace Engine.Graphics
             {
                 new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
-        private GraphicsSystem _gs;
-        private LooseFileDatabase _ad;
     }
 }

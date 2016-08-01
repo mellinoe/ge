@@ -3,7 +3,7 @@ using System.IO;
 using System.Numerics;
 using Veldrid.Graphics;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public static class PlaneModel
     {

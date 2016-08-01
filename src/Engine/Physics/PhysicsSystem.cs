@@ -3,7 +3,7 @@ using BEPUphysics;
 using BEPUutilities.Threading;
 using System.Numerics;
 
-namespace Ge.Physics
+namespace Engine.Physics
 {
     public class PhysicsSystem : GameSystem
     {

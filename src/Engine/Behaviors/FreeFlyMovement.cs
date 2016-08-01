@@ -2,7 +2,7 @@
 using System.Numerics;
 using Veldrid.Platform;
 
-namespace Ge.Behaviors
+namespace Engine.Behaviors
 {
     public class FreeFlyMovement : Behavior
     {
@@ -18,7 +18,7 @@ namespace Ge.Behaviors
         private float _turboMultiplier = 3f;
         private bool _draggingOffWindow;
 
-        protected override void Start(SystemRegistry registry)
+        internal override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
         }

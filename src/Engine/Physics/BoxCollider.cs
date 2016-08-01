@@ -2,16 +2,22 @@
 using BEPUphysics.Entities;
 using System.Numerics;
 using System;
+using Newtonsoft.Json;
 
-namespace Ge.Physics
+namespace Engine.Physics
 {
     public class BoxCollider : Collider
     {
+        [JsonProperty]
         private float _width;
+        [JsonProperty]
         private float _height;
+        [JsonProperty]
         private float _depth;
+        [JsonProperty]
         private float _mass;
 
+        [JsonConstructor]
         public BoxCollider(float width, float height, float depth)
             : this(width, height, depth, 1.0f * (width * height * depth)) { }
 

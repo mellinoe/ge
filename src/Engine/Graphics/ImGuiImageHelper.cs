@@ -2,7 +2,7 @@
 using Veldrid.Graphics;
 using System;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public static class ImGuiImageHelper
     {

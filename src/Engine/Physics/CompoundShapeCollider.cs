@@ -4,17 +4,23 @@ using BEPUphysics.Entities;
 using System.Collections.Generic;
 using BEPUphysics.Entities.Prefabs;
 using BEPUphysics.CollisionShapes;
+using Newtonsoft.Json;
+using System.Linq;
+using BEPUphysics.CollisionShapes.ConvexShapes;
 
-namespace Ge.Physics
+namespace Engine.Physics
 {
     public class CompoundShapeCollider : Collider
     {
-        private readonly IList<CompoundShapeEntry> _shapes;
+        [JsonProperty]
+        private readonly IList<BoxShapeDescription> _shapes;
+        [JsonProperty]
         private readonly float _mass;
 
         public Vector3 EntityCenter { get; private set; }
 
-        public CompoundShapeCollider(IList<CompoundShapeEntry> shapes, float mass)
+        [JsonConstructor]
+        public CompoundShapeCollider(IList<BoxShapeDescription> shapes, float mass)
         {
             _shapes = shapes;
             _mass = mass;
@@ -22,7 +28,7 @@ namespace Ge.Physics
 
         protected override Entity CreateEntity()
         {
-            CompoundBody cb = new CompoundBody(_shapes, _mass);
+            CompoundBody cb = new CompoundBody(_shapes.Select(bse => bse.GetShapeEntry()).ToList(), _mass);
             EntityCenter = -cb.Position;
             return cb;
         }
@@ -30,6 +36,62 @@ namespace Ge.Physics
         protected override void ScaleChanged(Vector3 scale)
         {
             throw new NotSupportedException();
+        }
+    }
+
+    public abstract class ShapeDescription
+    {
+        public Vector3 Position { get; set; }
+        public Quaternion Orientation { get; set; }
+
+        public ShapeDescription(Vector3 position, Quaternion orientation)
+        {
+            Position = position;
+            Orientation = orientation;
+        }
+
+        public CompoundShapeEntry GetShapeEntry()
+        {
+            return new CompoundShapeEntry(GetEnityShape(), new BEPUutilities.RigidTransform(Position, Orientation));
+        }
+
+        public abstract EntityShape GetEnityShape();
+    }
+
+    public class BoxShapeDescription : ShapeDescription
+    {
+        public Vector3 Dimensions { get; set; }
+
+        public BoxShapeDescription(Vector3 dimensions, Vector3 position)
+            : this(dimensions, position, Quaternion.Identity) { }
+
+        [JsonConstructor]
+        public BoxShapeDescription(Vector3 dimensions, Vector3 position, Quaternion orientation)
+            : base(position, orientation)
+        {
+            Dimensions = dimensions;
+            Position = position;
+            Orientation = orientation;
+        }
+
+        public override EntityShape GetEnityShape()
+        {
+            return new BoxShape(Dimensions.X, Dimensions.Y, Dimensions.Z);
+        }
+    }
+
+    public class SphereShapeDescription : ShapeDescription
+    {
+        public float Radius { get; private set; }
+
+        public SphereShapeDescription(float radius, Vector3 position, Quaternion orientation) : base(position, orientation)
+        {
+            Radius = radius;
+        }
+
+        public override EntityShape GetEnityShape()
+        {
+            return new SphereShape(Radius);
         }
     }
 }

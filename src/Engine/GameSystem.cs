@@ -1,4 +1,4 @@
-namespace Ge
+namespace Engine
 {
     public abstract class GameSystem
     {

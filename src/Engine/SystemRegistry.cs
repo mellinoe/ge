@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Ge
+namespace Engine
 {
     public class SystemRegistry
     {

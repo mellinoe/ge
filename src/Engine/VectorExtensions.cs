@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Ge
+namespace Engine
 {
     public static class VectorExtensions
     {

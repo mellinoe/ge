@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ge
+namespace Engine
 {
     public class ScoreSystem : GameSystem
     {

@@ -5,7 +5,7 @@ using Veldrid;
 using Veldrid.Assets;
 using Veldrid.Graphics;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public abstract class WireframeShapeRenderer : RenderItem, IDisposable
     {

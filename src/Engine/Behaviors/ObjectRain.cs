@@ -1,10 +1,10 @@
-﻿using Ge.Graphics;
-using Ge.Physics;
+﻿using Engine.Graphics;
+using Engine.Physics;
 using System;
 using System.Numerics;
 using Veldrid.Graphics;
 
-namespace Ge.Behaviors
+namespace Engine.Behaviors
 {
     public class ObjectRain : Behavior
     {

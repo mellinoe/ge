@@ -4,7 +4,7 @@ using System.Numerics;
 using BEPUphysics.Entities;
 using System.Diagnostics;
 
-namespace Ge
+namespace Engine
 {
     public class Transform : Component
     {

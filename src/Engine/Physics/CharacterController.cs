@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Numerics;
 
-namespace Ge.Physics
+namespace Engine.Physics
 {
     public class CharacterController : Component
     {

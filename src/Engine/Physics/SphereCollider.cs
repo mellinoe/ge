@@ -3,7 +3,7 @@ using BEPUphysics.Entities;
 using BEPUphysics.Entities.Prefabs;
 using System.Numerics;
 
-namespace Ge.Physics
+namespace Engine.Physics
 {
     public class SphereCollider : Collider
     {

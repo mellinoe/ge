@@ -1,4 +1,4 @@
-﻿using Ge;
+﻿using Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +13,8 @@ namespace Engine.Assets
         public void GenerateGameObjects()
         {
             Dictionary<string, GameObject> gameObjects = new Dictionary<string, GameObject>();
+            Dictionary<string, SerializedGameObject> sGameObjects = new Dictionary<string, SerializedGameObject>();
+
             foreach (var sgo in GameObjects)
             {
                 GameObject go = new GameObject(sgo.Name);
@@ -23,6 +25,19 @@ namespace Engine.Assets
                 foreach (var component in sgo.Components)
                 {
                     go.AddComponent(component);
+                }
+
+                gameObjects.Add(go.Name, go);
+                sGameObjects.Add(go.Name, sgo);
+            }
+
+            foreach (var kvp in sGameObjects)
+            {
+                string parentName = kvp.Value.Transform.ParentName;
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    var parent = gameObjects[parentName];
+                    gameObjects[kvp.Key].Transform.Parent = parent.Transform;
                 }
             }
         }

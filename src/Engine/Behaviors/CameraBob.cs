@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Numerics;
-using Ge.Physics;
+using Engine.Physics;
 using ImGuiNET;
 
-namespace Ge.Behaviors
+namespace Engine.Behaviors
 {
     public class CameraBob : Behavior
     {
@@ -18,7 +18,7 @@ namespace Ge.Behaviors
 
         private Vector3 _origin;
 
-        protected override void Start(SystemRegistry registry)
+        internal override void Start(SystemRegistry registry)
         {
             _cc = GameObject.GetComponentInParent<CharacterController>();
             _origin = Transform.LocalPosition;

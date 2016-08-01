@@ -2,7 +2,7 @@
 using System.Numerics;
 using Veldrid.Graphics;
 
-namespace Ge.Graphics
+namespace Engine.Graphics
 {
     public class Camera : Component
     {
@@ -10,9 +10,13 @@ namespace Ge.Graphics
         private DynamicDataProvider<Matrix4x4> _projectionProvider = new DynamicDataProvider<Matrix4x4>();
         private GraphicsSystem _gs;
 
-        public float FieldOfViewRadians { get; set; } = 1.05f;
-        public float NearPlaneDistance { get; set; } = 0.3f;
-        public float FarPlaneDistance { get; set; } = 30f;
+        private float _fov = 1.05f;
+        private float _nearPlaneDistance = 0.3f;
+        private float _farPlaneDistance = 30f;
+
+        public float FieldOfViewRadians { get { return _fov; } set { _fov = value; SetProjectionMatrix(); } }
+        public float NearPlaneDistance { get { return _nearPlaneDistance; } set { _nearPlaneDistance = value; SetProjectionMatrix(); } }
+        public float FarPlaneDistance { get { return _farPlaneDistance; } set { _farPlaneDistance = value; SetProjectionMatrix(); } }
 
         public override void Attached(SystemRegistry registry)
         {
@@ -73,6 +77,11 @@ namespace Ge.Graphics
 
         private void SetProjectionMatrix()
         {
+            if (_gs == null)
+            {
+                return;
+            }
+
             _projectionProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
                 FieldOfViewRadians,
                 (float)_gs.Context.Window.Width / _gs.Context.Window.Height,

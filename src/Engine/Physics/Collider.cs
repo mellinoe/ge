@@ -11,7 +11,7 @@ using System;
 using BEPUphysics.PositionUpdating;
 using Newtonsoft.Json;
 
-namespace Ge.Physics
+namespace Engine.Physics
 {
     public delegate void TriggerEvent(Collider other);
 
