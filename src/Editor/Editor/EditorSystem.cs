@@ -1,24 +1,36 @@
-﻿using System;
+﻿using BEPUphysics;
+using Engine.Assets;
 using Engine.Behaviors;
+using Engine.Graphics;
 using Engine.Physics;
 using ImGuiNET;
-using Engine.Graphics;
-using BEPUphysics;
-using System.Numerics;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Reflection;
-using Veldrid.Platform;
-using System.Linq;
 using Newtonsoft.Json;
-using Veldrid.Graphics;
-using Engine.Assets;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using Veldrid.Graphics;
+using Veldrid.Platform;
 
 namespace Engine.Editor
 {
-    public class DebugPanel : Behavior
+    public class EditorSystem : GameSystem
     {
+        private static HashSet<string> s_ignoredGenericProps = new HashSet<string>()
+        {
+            "Transform",
+            "GameObject"
+        };
+        private static readonly char[] s_pathTrimChar = new char[]
+        {
+            '\"',
+            '\''
+        };
+
+        private readonly SystemRegistry _registry;
         private PhysicsSystem _physics;
         private InputSystem _input;
         private GameObjectQuerySystem _goQuery;
@@ -26,20 +38,56 @@ namespace Engine.Editor
         private AssetSystem _as;
         private GraphicsSystem _gs;
         private bool _windowOpen = false;
+        private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
+        private readonly List<EditorBehavior> _newStarts = new List<EditorBehavior>();
+        private readonly TextInputBuffer _filenameInputBuffer = new TextInputBuffer(256);
+        private BehaviorUpdateSystem _bus;
+        private Camera _sceneCam;
+        private readonly GameObject _editorCameraGO;
+        private readonly Camera _editorCamera;
 
-        public DebugPanel()
+        public EditorSystem(SystemRegistry registry)
         {
+            _registry = registry;
+            _physics = registry.GetSystem<PhysicsSystem>();
+            _input = registry.GetSystem<InputSystem>();
+            _goQuery = registry.GetSystem<GameObjectQuerySystem>();
+            _gs = registry.GetSystem<GraphicsSystem>();
+            _as = registry.GetSystem<AssetSystem>();
+            _bus = registry.GetSystem<BehaviorUpdateSystem>();
+
             DrawerCache.AddDrawer(new FuncDrawer<Transform>(DrawTransform));
             DrawerCache.AddDrawer(new FuncDrawer<Collider>(DrawCollider));
             DrawerCache.AddDrawer(new FuncDrawer<MeshRenderer>(DrawMeshRenderer));
             DrawerCache.AddDrawer(new FuncDrawer<Component>(GenericDrawer));
+
+            _registry.Register(this);
+
+            _editorCameraGO = new GameObject("__EditorCamera");
+
+            _sceneCam = _gs.MainCamera;
+            _editorCamera = new Camera()
+            {
+                FarPlaneDistance = 200
+            };
+            _editorCameraGO.AddComponent(_editorCamera);
+            _editorCameraGO.AddComponent(new EditorCameraMovement());
+
+            _physics.Update(1f / 60f);
+            _physics.Enabled = false;
+            _bus.Enabled = false;
+
+            var imGuiRenderer = _bus.Updateables.Single(u => u is ImGuiRenderer);
+            RegisterBehavior(imGuiRenderer);
         }
 
-        private static HashSet<string> s_ignoredGenericProps = new HashSet<string>()
+        public void StartSimulation()
         {
-            "Transform",
-            "GameObject"
-        };
+            _bus.Enabled = true;
+            _physics.Enabled = true;
+            _editorCameraGO.Enabled = false;
+            _gs.SetMainCamera(_sceneCam);
+        }
 
         private void GenericDrawer(Component obj)
         {
@@ -53,8 +101,16 @@ namespace Engine.Editor
                     continue;
                 }
 
-                var drawer = DrawerCache.GetDrawer(prop.PropertyType);
+                Drawer drawer; 
                 object value = prop.GetValue(obj);
+                if (value == null)
+                {
+                    drawer = DrawerCache.GetDrawer(prop.PropertyType);
+                }
+                else
+                {
+                    drawer = DrawerCache.GetDrawer(value.GetType());
+                }
                 if (drawer.Draw(prop.Name, ref value, _gs.Context))
                 {
                     if (prop.SetMethod != null)
@@ -119,17 +175,12 @@ namespace Engine.Editor
             }
         }
 
-        internal override void Start(SystemRegistry registry)
+        protected override void UpdateCore(float deltaSeconds)
         {
-            _physics = registry.GetSystem<PhysicsSystem>();
-            _input = registry.GetSystem<InputSystem>();
-            _goQuery = registry.GetSystem<GameObjectQuerySystem>();
-            _gs = registry.GetSystem<GraphicsSystem>();
-            _as = registry.GetSystem<AssetSystem>();
-        }
+            UpdateUpdateables(deltaSeconds);
 
-        public override void Update(float deltaSeconds)
-        {
+            DrawMainMenu();
+
             if (_input.GetKeyDown(Key.F1))
             {
                 _windowOpen = !_windowOpen;
@@ -178,7 +229,7 @@ namespace Engine.Editor
                     Vector2 size = new Vector2(
                         Math.Min(350, displaySize.X * 0.275f),
                         Math.Min(600, displaySize.Y * 0.75f));
-                    Vector2 pos = new Vector2(5, 5);
+                    Vector2 pos = new Vector2(0, 20);
                     ImGui.SetNextWindowSize(size, SetCondition.Always);
                     ImGui.SetNextWindowPos(pos, SetCondition.Always);
 
@@ -195,7 +246,7 @@ namespace Engine.Editor
                     Vector2 size = new Vector2(
                         Math.Min(350, displaySize.X * 0.275f),
                         Math.Min(600, displaySize.Y * 0.75f));
-                    Vector2 pos = new Vector2(displaySize.X - size.X - 5, 5);
+                    Vector2 pos = new Vector2(displaySize.X - size.X, 20);
                     ImGui.SetNextWindowSize(size, SetCondition.Always);
                     ImGui.SetNextWindowPos(pos, SetCondition.Always);
 
@@ -208,6 +259,125 @@ namespace Engine.Editor
                     }
                     ImGui.EndWindow();
                 }
+            }
+        }
+
+        private void DrawMainMenu()
+        {
+            bool openPopup = false;
+
+            if (ImGui.BeginMainMenuBar())
+            {
+                if (ImGui.BeginMenu("File"))
+                {
+                    if (ImGui.MenuItem("Open Scene"))
+                    {
+                        openPopup = true;
+                    }
+                    if (!string.IsNullOrEmpty(EditorPreferences.Instance.LastOpenedScene))
+                    {
+                        if (ImGui.MenuItem($"Last Opened: {EditorPreferences.Instance.LastOpenedScene}"))
+                        {
+                            LoadScene(EditorPreferences.Instance.LastOpenedScene);
+                        }
+                    }
+                    if (ImGui.MenuItem("Exit"))
+                    {
+                        ExitEditor();
+                    }
+
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Game"))
+                {
+                    if (ImGui.MenuItem("Play"))
+                    {
+                        StartSimulation();
+                    }
+
+                    ImGui.EndMenu();
+                }
+
+                ImGui.EndMainMenuBar();
+            }
+            if (openPopup)
+            {
+                ImGui.OpenPopup("###OpenScenePopup");
+            }
+
+            if (ImGui.BeginPopup("###OpenScenePopup"))
+            {
+                ImGui.Text("Path to scene file:");
+                if (openPopup)
+                {
+                    ImGuiNative.igSetKeyboardFocusHere(0);
+                }
+                if (ImGui.InputText(string.Empty, _filenameInputBuffer.Buffer, _filenameInputBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
+                {
+                    LoadScene(_filenameInputBuffer.ToString());
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.SameLine();
+                if (ImGui.Button("Open"))
+                {
+                    LoadScene(_filenameInputBuffer.ToString());
+                    ImGui.CloseCurrentPopup();
+                }
+
+                if (ImGui.Button("Close"))
+                {
+                    ImGui.CloseCurrentPopup();
+                }
+
+                ImGui.EndPopup();
+            }
+        }
+
+        private void ExitEditor()
+        {
+            _gs.Context.Window.Close();
+        }
+
+        private void LoadScene(string path)
+        {
+            path = path.Trim(s_pathTrimChar);
+            Console.WriteLine("Open scene: " + path);
+            SceneAsset sa = null;
+            using (var fs = File.OpenRead(path))
+            {
+                var jtr = new JsonTextReader(new StreamReader(fs));
+                sa = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
+            }
+
+            string assetRoot = Path.GetDirectoryName(path);
+            _gs.Context.ResourceFactory.ShaderAssetRootPath = assetRoot;
+
+            sa.GenerateGameObjects();
+            DoPhysicsTick();
+
+            _sceneCam = _gs.MainCamera;
+
+            _gs.SetMainCamera(_editorCamera);
+
+            EditorPreferences.Instance.LastOpenedScene = path;
+        }
+
+        private void DoPhysicsTick()
+        {
+            _physics.Space.Update();
+        }
+
+        private void UpdateUpdateables(float deltaSeconds)
+        {
+            foreach (var b in _newStarts)
+            {
+                b.Start(_registry);
+            }
+            _newStarts.Clear();
+
+            foreach (var updateable in _updateables)
+            {
+                updateable.Update(deltaSeconds);
             }
         }
 
@@ -363,6 +533,20 @@ namespace Engine.Editor
             {
                 drawer.Draw(type.Name, ref componentAsObject, _gs.Context);
             }
+        }
+
+        public void RegisterBehavior(IUpdateable behavior)
+        {
+            _updateables.Add(behavior);
+            if (behavior is EditorBehavior)
+            {
+                _newStarts.Add((EditorBehavior)behavior);
+            }
+        }
+
+        public void RemoveBehavior(IUpdateable behavior)
+        {
+            _updateables.Remove(behavior);
         }
     }
 }

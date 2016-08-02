@@ -11,7 +11,6 @@ using Engine.Editor;
 using Engine.Assets;
 using Engine;
 using Veldrid.Assets;
-using System.Linq;
 
 namespace Ge
 {
@@ -86,7 +85,7 @@ namespace Ge
         {
             GameObject camera = new GameObject("Camera");
             camera.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(0.3f, 0.3f, 0f);
-            camera.AddComponent(new Camera());
+            //camera.AddComponent(new Camera());
 
             GameObject character = new GameObject("Character");
             character.AddComponent(new CharacterController());
@@ -122,7 +121,6 @@ namespace Ge
             scaleBox.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, woodTexture));
             scaleBox.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f, 50.0f));
 
-            camera.AddComponent(new DebugPanel());
             camera.AddComponent(new BallLauncher());
             camera.AddComponent(new DebugConsole());
         }
@@ -194,7 +192,6 @@ namespace Ge
 
             camera.AddComponent(new ObjectRain());
             camera.AddComponent(new FreeFlyMovement());
-            camera.AddComponent(new DebugPanel());
         }
     }
 }

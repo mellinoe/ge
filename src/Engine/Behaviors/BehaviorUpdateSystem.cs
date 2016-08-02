@@ -11,12 +11,14 @@ namespace Engine.Behaviors
         private ImmutableList<IUpdateable> _behaviors = ImmutableList.Create<IUpdateable>();
         private List<Behavior> _newStarts = new List<Behavior>();
 
+        public IEnumerable<IUpdateable> Updateables => _behaviors;
+
         public BehaviorUpdateSystem(SystemRegistry sr)
         {
             _registry = sr;
         }
 
-        public override void Update(float deltaSeconds)
+        protected override void UpdateCore(float deltaSeconds)
         {
             foreach (var b in _newStarts)
             {

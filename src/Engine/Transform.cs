@@ -97,18 +97,21 @@ namespace Engine
             set
             {
                 Vector3 oldPosition = Position;
-                if (_physicsEntity == null)
+                if (value != oldPosition)
                 {
-                    _localPosition = value;
-                }
-                else
-                {
-                    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
-                    _physicsEntity.Position = parentPos + value;
-                }
+                    if (_physicsEntity == null)
+                    {
+                        _localPosition = value;
+                    }
+                    else
+                    {
+                        Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
+                        _physicsEntity.Position = parentPos + value;
+                    }
 
-                OnPositionChanged();
-                OnPositionManuallyChanged(oldPosition);
+                    OnPositionChanged();
+                    OnPositionManuallyChanged(oldPosition);
+                }
             }
         }
 
@@ -158,19 +161,21 @@ namespace Engine
             }
             set
             {
-
-                if (_physicsEntity == null)
+                if (value != Rotation)
                 {
-                    Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
-                    _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
-                }
-                else
-                {
-                    _physicsEntity.Orientation = value;
-                }
+                    if (_physicsEntity == null)
+                    {
+                        Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
+                        _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
+                    }
+                    else
+                    {
+                        _physicsEntity.Orientation = value;
+                    }
 
-                OnRotationManuallyChanged();
-                OnRotationChanged();
+                    OnRotationManuallyChanged();
+                    OnRotationChanged();
+                }
             }
         }
 
@@ -306,7 +311,7 @@ namespace Engine
         {
             get
             {
-                return Vector3.Transform(Vector3.UnitZ, Rotation);
+                return Vector3.Transform(-Vector3.UnitZ, Rotation);
             }
         }
 

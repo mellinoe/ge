@@ -43,7 +43,7 @@ namespace Engine.Behaviors
             if ((_input.GetMouseButton(MouseButton.Left) || _input.GetMouseButton(MouseButton.Right)) && !ImGui.IsMouseHoveringAnyWindow())
             {
                 _currentYaw += -xDelta * 0.01f;
-                _currentPitch += yDelta * 0.01f;
+                _currentPitch += -yDelta * 0.01f;
 
                 _currentPitch = MathUtil.Clamp(_currentPitch, ((float)-Math.PI / 2f) + .01f, ((float)Math.PI / 2f) - .01f);
 

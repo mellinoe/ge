@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
+using System.Reflection;
 using Veldrid.Graphics;
 
 namespace Engine.Graphics
@@ -71,7 +72,16 @@ namespace Engine.Graphics
 
     public static class SphereModel
     {
-        private static readonly ObjMeshInfo s_sphereMeshInfo = ObjImporter.LoadFromPath(Path.Combine(AppContext.BaseDirectory, "Models", "Sphere.obj"));
+        private static readonly ConstructedMeshInfo s_sphereMeshInfo = LoadShereMesh();
+
+        private static ConstructedMeshInfo LoadShereMesh()
+        {
+            Assembly assembly = typeof(SphereModel).GetTypeInfo().Assembly;
+            using (var rs = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.Models.Sphere.obj"))
+            {
+                return new ObjParser().Parse(rs).GetFirstMesh();
+            }
+        }
 
         public static VertexPositionNormalTexture[] Vertices => s_sphereMeshInfo.Vertices;
 

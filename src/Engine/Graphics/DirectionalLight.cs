@@ -40,7 +40,7 @@ namespace Engine.Graphics
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct LightInfo
+    public struct LightInfo : IEquatable<LightInfo>
     {
         public readonly RgbaFloat DiffuseColor;
         public readonly Vector3 Direction;
@@ -52,6 +52,11 @@ namespace Engine.Graphics
             Direction = direction;
 
             __buffer = 0;
+        }
+
+        public bool Equals(LightInfo other)
+        {
+            return DiffuseColor.Equals(other.DiffuseColor) && Direction.Equals(other.Direction);
         }
     }
 }

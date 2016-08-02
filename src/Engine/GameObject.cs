@@ -9,10 +9,17 @@ namespace Engine
     {
         private readonly MultiValueDictionary<Type, Component> _components = new MultiValueDictionary<Type, Component>();
         private SystemRegistry _registry;
+        private bool _enabled = true;
 
         public string Name { get; set; }
 
         public Transform Transform { get; }
+
+        public bool Enabled
+        {
+            get { return _enabled; }
+            set { if (value != _enabled) { SetEnabled(value); } }
+        }
 
         internal static event Action<GameObject> GameObjectConstructed;
         internal static event Action<GameObject> GameObjectDestroyed;
@@ -154,6 +161,24 @@ namespace Engine
             _components.Clear();
 
             Destroyed?.Invoke(this);
+        }
+
+        private void SetEnabled(bool state)
+        {
+            if (!state)
+            {
+                foreach (var component in GetComponents<Component>())
+                {
+                    component.Removed(_registry);
+                }
+            }
+            else
+            {
+                foreach (var component in GetComponents<Component>())
+                {
+                    component.Attached(_registry);
+                }
+            }
         }
 
         public override string ToString()

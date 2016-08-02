@@ -18,6 +18,9 @@ namespace Engine.Graphics
         public float NearPlaneDistance { get { return _nearPlaneDistance; } set { _nearPlaneDistance = value; SetProjectionMatrix(); } }
         public float FarPlaneDistance { get { return _farPlaneDistance; } set { _farPlaneDistance = value; SetProjectionMatrix(); } }
 
+        public ConstantBufferDataProvider ViewProvider => _viewProvider;
+        public ConstantBufferDataProvider ProjectionProvider => _projectionProvider;
+
         public override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
@@ -25,8 +28,6 @@ namespace Engine.Graphics
             GameObject.Transform.TransformChanged += SetViewMatrix;
             SetViewMatrix(GameObject.Transform);
 
-            _gs.Context.RegisterGlobalDataProvider("ViewMatrix", _viewProvider);
-            _gs.Context.RegisterGlobalDataProvider("ProjectionMatrix", _projectionProvider);
             _gs.SetMainCamera(this);
 
             _gs.Context.WindowResized += SetProjectionMatrix;

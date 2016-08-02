@@ -16,7 +16,7 @@ namespace Engine.Assets
 
         public LooseFileDatabase Database => _ad;
 
-        public override void Update(float deltaSeconds)
+        protected override void UpdateCore(float deltaSeconds)
         {
         }
     }

@@ -25,12 +25,8 @@
     <Compile Include="Behaviors\IUpdateable.cs" />
     <Compile Include="Behaviors\ObjectRain.cs" />
     <Compile Include="Behaviors\TimedDeath.cs" />
-    <Compile Include="Editor\AssetEditorWindow.cs" />
-    <Compile Include="Editor\AssetRefDrawer.cs" />
-    <Compile Include="Editor\ConsoleCommand.cs" />
-    <Compile Include="Editor\DebugConsole.cs" />
-    <Compile Include="Editor\DebugPanel.cs" />
-    <Compile Include="Editor\TextureDrawer.cs" />
+    <Compile Include="Debug\ConsoleCommand.cs" />
+    <Compile Include="Debug\DebugConsole.cs" />
     <Compile Include="FrameTimeAverager.cs" />
     <Compile Include="Graphics\BoundsRenderItem.cs" />
     <Compile Include="Graphics\Camera.cs" />
@@ -87,6 +83,7 @@
       <Project>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</Project>
       <Name>BEPUutilities</Name>
     </ProjectReference>
+    <EmbeddedResource Include="Models\Sphere.obj" />
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

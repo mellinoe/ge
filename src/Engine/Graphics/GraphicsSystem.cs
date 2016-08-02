@@ -40,18 +40,16 @@ namespace Engine.Graphics
 
         public void SetMainCamera(Camera camera)
         {
-            if (_mainCamera != null)
-            {
-                throw new InvalidOperationException("A main camera is already set.");
-            }
-
             _mainCamera = camera;
             ShadowMapStage.MainCamera = camera;
+
+            Context.RegisterGlobalDataProvider("ViewMatrix", _mainCamera.ViewProvider);
+            Context.RegisterGlobalDataProvider("ProjectionMatrix", _mainCamera.ProjectionProvider);
         }
 
         public void SetDirectionalLight(DirectionalLight directionalLight)
         {
-            ShadowMapStage.Light = directionalLight;  
+            ShadowMapStage.Light = directionalLight;
         }
 
         public GraphicsSystem(OpenTKWindow window)
@@ -113,7 +111,7 @@ namespace Engine.Graphics
             _visiblityManager.Octree.RemoveItem(octreeItem);
         }
 
-        public override void Update(float deltaSeconds)
+        protected override void UpdateCore(float deltaSeconds)
         {
             //float tickCount = Environment.TickCount / 10.0f;
             //float r = 0.5f + (0.5f * (float)Math.Sin(tickCount / 300f));

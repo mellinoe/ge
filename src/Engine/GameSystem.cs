@@ -5,6 +5,16 @@ namespace Engine
         ///
         /// <summary>Performs a one-tick update of the GameSystem.</summary>
         ///
-        public abstract void Update(float deltaSeconds);
+        public void Update(float deltaSeconds)
+        {
+            if (Enabled)
+            {
+                UpdateCore(deltaSeconds);
+            }
+        }
+
+        protected abstract void UpdateCore(float deltaSeconds);
+
+        public bool Enabled { get; set; } = true;
     }
 }

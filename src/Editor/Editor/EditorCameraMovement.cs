@@ -2,9 +2,9 @@
 using System.Numerics;
 using Veldrid.Platform;
 
-namespace Engine.Behaviors
+namespace Engine.Editor
 {
-    public class FreeFlyMovement : Behavior
+    public class EditorCameraMovement : EditorBehavior
     {
         private InputSystem _input { get; set; }
 
@@ -37,11 +37,11 @@ namespace Engine.Behaviors
             }
             if (_input.GetKey(Key.A))
             {
-                moveDirection += GameObject.Transform.Right;
+                moveDirection -= GameObject.Transform.Right;
             }
             if (_input.GetKey(Key.D))
             {
-                moveDirection -= GameObject.Transform.Right;
+                moveDirection += GameObject.Transform.Right;
             }
             if (_input.GetKey(Key.E))
             {

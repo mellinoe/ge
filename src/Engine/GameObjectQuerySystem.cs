@@ -13,7 +13,7 @@ namespace Engine
             _gameObjects = gameObjectList;
         }
         
-        public override void Update(float deltaSeconds)
+        protected override void UpdateCore(float deltaSeconds)
         {
         }
         

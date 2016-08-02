@@ -23,7 +23,7 @@ namespace Engine.Physics
             Space.ForceUpdater.Gravity = new Vector3(0f, -9.81f, 0f);
         }
 
-        public override void Update(float deltaSeconds)
+        protected override void UpdateCore(float deltaSeconds)
         {
             Space.Update(deltaSeconds);
         }

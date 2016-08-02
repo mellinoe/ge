@@ -36,7 +36,7 @@ namespace Engine
             _callbacks.Add(callback);
         }
 
-        public override void Update(float deltaSeconds)
+        protected override void UpdateCore(float deltaSeconds)
         {
             UpdateFrameInput(_window.GetInputSnapshot());
             foreach (var callback in _callbacks)
