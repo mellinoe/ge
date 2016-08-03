@@ -14,6 +14,7 @@ using System.Numerics;
 using System.Reflection;
 using Veldrid.Graphics;
 using Veldrid.Platform;
+using Veldrid.Assets;
 
 namespace Engine.Editor
 {
@@ -78,6 +79,7 @@ namespace Engine.Editor
             _bus.Enabled = false;
 
             var imGuiRenderer = _bus.Updateables.Single(u => u is ImGuiRenderer);
+            _bus.Remove(imGuiRenderer);
             RegisterBehavior(imGuiRenderer);
         }
 
@@ -86,7 +88,19 @@ namespace Engine.Editor
             _bus.Enabled = true;
             _physics.Enabled = true;
             _editorCameraGO.Enabled = false;
+
+            _sceneCam.GameObject.Enabled = true;
             _gs.SetMainCamera(_sceneCam);
+        }
+
+        public void PauseSimulation()
+        {
+            _bus.Enabled = false;
+            _physics.Enabled = false;
+            _sceneCam.GameObject.Enabled = false;
+
+            _editorCameraGO.Enabled = true;
+            _gs.SetMainCamera(_editorCamera);
         }
 
         private void GenericDrawer(Component obj)
@@ -101,7 +115,7 @@ namespace Engine.Editor
                     continue;
                 }
 
-                Drawer drawer; 
+                Drawer drawer;
                 object value = prop.GetValue(obj);
                 if (value == null)
                 {
@@ -121,7 +135,7 @@ namespace Engine.Editor
             }
         }
 
-        private static void DrawMeshRenderer(Component c)
+        private void DrawMeshRenderer(Component c)
         {
             MeshRenderer mr = (MeshRenderer)c;
             bool wf = mr.Wireframe;
@@ -135,8 +149,38 @@ namespace Engine.Editor
             {
                 mr.DontCullBackFace = dcbf;
             }
+
+            if (!mr.Texture.HasValue)
+            {
+                var result = DrawTextureRef(mr.Texture.GetRef(), _as.Database);
+                if (result != null)
+                {
+                    mr.Texture = result;
+                }
+            }
         }
 
+        private AssetRef<TextureData> DrawTextureRef(AssetRef<TextureData> tex, LooseFileDatabase database)
+        {
+            AssetID result = default(AssetID);
+            var assets = database.GetAssetsOfType(typeof(TextureData));
+            foreach (var id in assets)
+            {
+                if (ImGui.Button(id.Value))
+                {
+                    result = id;
+                }
+            }
+
+            if (result != default(AssetID))
+            {
+                return new AssetRef<TextureData>(result);
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         private static void DrawCollider(Component c)
         {
@@ -290,9 +334,19 @@ namespace Engine.Editor
                 }
                 if (ImGui.BeginMenu("Game"))
                 {
-                    if (ImGui.MenuItem("Play"))
+                    if (!_bus.Enabled)
                     {
-                        StartSimulation();
+                        if (ImGui.MenuItem("Play", "Ctrl-P") || (ImGui.GetIO().KeysDown[(int)Key.P] && ImGui.GetIO().CtrlPressed))
+                        {
+                            StartSimulation();
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui.MenuItem("Pause", "Ctrl-P"))
+                        {
+                            PauseSimulation();
+                        }
                     }
 
                     ImGui.EndMenu();
@@ -300,6 +354,20 @@ namespace Engine.Editor
 
                 ImGui.EndMainMenuBar();
             }
+
+            if (_input.GetKeyDown(Key.P) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
+            {
+                if (!_bus.Enabled)
+                {
+                    StartSimulation();
+                }
+                else
+                {
+                    PauseSimulation();
+                }
+            }
+
+
             if (openPopup)
             {
                 ImGui.OpenPopup("###OpenScenePopup");
@@ -349,8 +417,9 @@ namespace Engine.Editor
                 sa = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
             }
 
-            string assetRoot = Path.GetDirectoryName(path);
-            _gs.Context.ResourceFactory.ShaderAssetRootPath = assetRoot;
+            string projectRoot = Path.GetDirectoryName(path);
+            _gs.Context.ResourceFactory.ShaderAssetRootPath = projectRoot;
+            _as.Database.RootPath = Path.Combine(projectRoot, "Assets");
 
             sa.GenerateGameObjects();
             DoPhysicsTick();
@@ -383,7 +452,7 @@ namespace Engine.Editor
 
         private void DrawHierarchy()
         {
-            IEnumerable<GameObject> rootObjects = _goQuery.GetUnparentedGameObjects().ToArray();
+            IEnumerable<GameObject> rootObjects = _goQuery.GetUnparentedGameObjects().OrderBy(go => go.Name).ToArray();
             foreach (var go in rootObjects)
             {
                 DrawNode(go.Transform);

@@ -20,6 +20,7 @@ namespace Engine.Graphics
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
         private VertexPositionNormalTexture[] _vertices;
         private int[] _indices;
+        private RefOrImmediate<TextureData> _textureRef;
         private TextureData _texture;
         private readonly BoundingSphere _centeredBoundingSphere;
         private readonly BoundingBox _centeredBoundingBox;
@@ -27,7 +28,28 @@ namespace Engine.Graphics
         // Serialization Accessors
         public VertexPositionNormalTexture[] Vertices { get { return _vertices; } set { _vertices = value; } }
         public int[] Indices { get { return _indices; } set { _indices = value; } }
-        public RefOrImmediate<TextureData> Texture { get; set; }
+        public RefOrImmediate<TextureData> Texture
+        {
+            get { return _textureRef; }
+            set
+            {
+                _textureRef = value;
+                if (_texture != null)
+                {
+                    RecreateTexture();
+                }
+            }
+        }
+
+        private void RecreateTexture()
+        {
+            _deviceTexture.Dispose();
+            _textureBinding.Dispose();
+
+            _texture = _textureRef.Get(_ad);
+            _deviceTexture = _texture.CreateDeviceTexture(_gs.Context.ResourceFactory);
+            _textureBinding = _gs.Context.ResourceFactory.CreateShaderTextureBinding(_deviceTexture);
+        }
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;

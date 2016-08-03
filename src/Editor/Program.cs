@@ -63,6 +63,9 @@ namespace Ge
             var editorSystem = new EditorSystem(game.SystemRegistry);
             // Editor system registers itself.
 
+            // Force-load prefs.
+            var prefs = EditorPreferences.Instance;
+
             game.RunMainLoop();
 
             EditorPreferences.Instance.Save();

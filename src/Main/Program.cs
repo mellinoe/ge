@@ -11,6 +11,7 @@ using Engine.Editor;
 using Engine.Assets;
 using Engine;
 using Veldrid.Assets;
+using System.Linq;
 
 namespace Ge
 {
@@ -69,14 +70,14 @@ namespace Ge
 
             LooseFileDatabase db = new LooseFileDatabase(AppContext.BaseDirectory);
 
-            //AddBinGameScene();
-            //SceneAsset scene = new SceneAsset();
-            //var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
-            //scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
-            //db.SaveDefinition(scene, "BINSCENE.scene");
+            AddBinGameScene();
+            SceneAsset scene = new SceneAsset();
+            var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
+            scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
+            db.SaveDefinition(scene, "BINSCENE.scene");
 
-            var scene = db.LoadAsset<SceneAsset>("BINSCENE.scene");
-            scene.GenerateGameObjects();
+            //var scene = db.LoadAsset<SceneAsset>("BINSCENE.scene");
+            //scene.GenerateGameObjects();
 
             game.RunMainLoop();
         }
@@ -85,7 +86,7 @@ namespace Ge
         {
             GameObject camera = new GameObject("Camera");
             camera.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(0.3f, 0.3f, 0f);
-            //camera.AddComponent(new Camera());
+            camera.AddComponent(new Camera());
 
             GameObject character = new GameObject("Character");
             character.AddComponent(new CharacterController());
@@ -100,7 +101,7 @@ namespace Ge
             var lightComponent = new DirectionalLight(RgbaFloat.White, new Vector3(0.3f, -1f, -1f));
             light.AddComponent(lightComponent);
 
-            var woodTexture = Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png");
+            var woodTexture = Path.Combine("Textures", "Wood.png");
             for (int x = 0; x < 7; x++)
             {
                 for (int z = 0; z < 7; z++)
@@ -148,7 +149,7 @@ namespace Ge
                 }));
 
             GameObject sphere = new GameObject("Sphere1");
-            var stoneTexture = Path.Combine(AppContext.BaseDirectory, "Textures", "Stone.png");
+            var stoneTexture = Path.Combine("Textures", "Stone.png");
             sphere.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, stoneTexture));
             sphere.Transform.Position = new Vector3(0, 2f, 0f);
             sphere.Transform.Scale = new Vector3(1f);
@@ -186,7 +187,7 @@ namespace Ge
             plane.Transform.Position = new Vector3(0, -3.5f, 0f);
             plane.Transform.Scale = new Vector3(30f);
             plane.Transform.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.05f);
-            var woodTexture = Path.Combine(AppContext.BaseDirectory, "Textures", "Wood.png");
+            var woodTexture = Path.Combine("Textures", "Wood.png");
             plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
             plane.AddComponent(new BoxCollider(1f, 0.1f / 30f, 1f, -1.0f));
 

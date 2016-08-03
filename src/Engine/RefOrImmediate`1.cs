@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using Veldrid.Assets;
 
 namespace Engine
@@ -9,6 +10,18 @@ namespace Engine
         private AssetRef<T> _ref;
         [JsonProperty]
         private T _value;
+
+        public bool HasValue => _ref == null;
+
+        public AssetRef<T> GetRef()
+        {
+            if (_ref == null)
+            {
+                throw new InvalidOperationException("Ref is null, there is an immediate value.");
+            }
+
+            return _ref;
+        }
 
         [JsonConstructor]
         public RefOrImmediate(AssetRef<T> reference, T value)

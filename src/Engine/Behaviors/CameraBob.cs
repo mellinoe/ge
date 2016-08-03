@@ -47,9 +47,7 @@ namespace Engine.Behaviors
                 }
             }
 
-            float currentDisplacement =
-                (_displacementMax * -.5f)
-                + Math.Abs((float)Math.Sin(_currentPhase)) * _displacementMax * _currentDirection;
+            float currentDisplacement = Math.Abs((float)Math.Sin(_currentPhase)) * _displacementMax * _currentDirection;
             Transform.LocalPosition = _origin + Vector3.UnitY * currentDisplacement;
         }
     }

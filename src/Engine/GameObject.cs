@@ -179,6 +179,7 @@ namespace Engine
                     component.Attached(_registry);
                 }
             }
+            _enabled = state;
         }
 
         public override string ToString()
