@@ -72,7 +72,6 @@ namespace Engine.Graphics
         {
             if (MainCamera == null || Light == null)
             {
-                Console.WriteLine("No directional light and/or camera in the scene, aborting light projection updates.");
                 return;
             }
 

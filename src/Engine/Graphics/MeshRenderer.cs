@@ -257,7 +257,7 @@ namespace Engine.Graphics
             {
                 if (_boundsRenderer == null)
                 {
-                    _boundsRenderer = new BoundsRenderItemWireframeRenderer(this, _ad, _gs.Context);
+                    _boundsRenderer = new BoundsRenderItemWireframeRenderer(this, _gs.Context);
                 }
 
                 _gs.AddRenderItem(_boundsRenderer, Transform);

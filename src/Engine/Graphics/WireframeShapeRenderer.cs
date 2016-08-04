@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reflection;
 using Veldrid;
 using Veldrid.Assets;
 using Veldrid.Graphics;
@@ -27,33 +28,49 @@ namespace Engine.Graphics
         private DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private ConstantBufferDataProvider[] _perObjectProviders;
 
-        public WireframeShapeRenderer(AssetDatabase ad, RenderContext rc, RgbaFloat color)
+        public WireframeShapeRenderer(RenderContext rc, RgbaFloat color)
         {
-            _materialAsset = ad.LoadAsset<MaterialAsset>("MaterialAsset/Wireframe.json");
             _textureData = new RawTextureDataArray<RgbaFloat>(new RgbaFloat[] { color }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
 
             _worldProvider = new DynamicDataProvider<Matrix4x4>(Matrix4x4.Identity);
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, Utilities.CalculateInverseTranspose);
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider };
 
-            InitializeContextObjects(ad, rc);
+            InitializeContextObjects(rc);
         }
 
-        public void ChangeRenderContext(AssetDatabase ad, RenderContext rc)
+        public void ChangeRenderContext(RenderContext rc)
         {
             Dispose();
-            InitializeContextObjects(ad, rc);
+            InitializeContextObjects(rc);
         }
 
-        private void InitializeContextObjects(AssetDatabase ad, RenderContext rc)
+        private void InitializeContextObjects(RenderContext rc)
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(1024, true);
             _ib = factory.CreateIndexBuffer(1024, true);
-            _material = _materialAsset.Create(ad, rc);
+            _material = CreateWireframeMaterial(rc);
             _texture = _textureData.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(_texture);
             _wireframeState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+        }
+
+        private Material CreateWireframeMaterial(RenderContext rc)
+        {
+            return rc.ResourceFactory.CreateMaterial(rc, "textured-vertex", "lit-frag",
+                new MaterialVertexInput(
+                    32,
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)),
+                new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix")),
+                new MaterialInputs<MaterialPerObjectInputElement>(
+                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 16),
+                    new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, 16)),
+                new MaterialTextureInputs(new ManualTextureInput("surfaceTexture")));
         }
 
         public abstract bool Cull(ref BoundingFrustum visibleFrustum);
@@ -122,7 +139,7 @@ namespace Engine.Graphics
     {
         private Octree<T> _octree;
 
-        public OctreeRenderer(Octree<T> octree, AssetDatabase ad, RenderContext rc) : base(ad, rc, RgbaFloat.Red)
+        public OctreeRenderer(Octree<T> octree, RenderContext rc) : base(rc, RgbaFloat.Red)
         {
             _octree = octree;
         }
@@ -214,8 +231,8 @@ namespace Engine.Graphics
     {
         private BoundingFrustum _frustum;
 
-        public FrustumWireframeRenderer(BoundingFrustum frustum, AssetDatabase ad, RenderContext rc)
-            : base(ad, rc, RgbaFloat.Cyan)
+        public FrustumWireframeRenderer(BoundingFrustum frustum, RenderContext rc)
+            : base(rc, RgbaFloat.Cyan)
         {
             _frustum = frustum;
         }
@@ -292,8 +309,8 @@ namespace Engine.Graphics
     {
         private BoundingBox _box;
 
-        public BoundingBoxWireframeRenderer(BoundingBox box, AssetDatabase ad, RenderContext rc)
-            : base(ad, rc, RgbaFloat.Cyan)
+        public BoundingBoxWireframeRenderer(BoundingBox box, RenderContext rc)
+            : base(rc, RgbaFloat.Cyan)
         {
             _box = box;
         }
@@ -371,8 +388,8 @@ namespace Engine.Graphics
     {
         private BoundsRenderItem _bri;
 
-        public BoundsRenderItemWireframeRenderer(BoundsRenderItem bri, AssetDatabase ad, RenderContext rc)
-            : base(bri.Bounds, ad, rc)
+        public BoundsRenderItemWireframeRenderer(BoundsRenderItem bri, RenderContext rc)
+            : base(bri.Bounds,  rc)
         {
             _bri = bri;
         }

@@ -33,10 +33,6 @@ namespace Ge
                 {
                     game.Exit();
                 }
-                if (input.GetKeyDown(Key.F11))
-                {
-                    window.WindowState = window.WindowState == WindowState.Normal ? WindowState.FullScreen : WindowState.Normal;
-                }
             });
 
             game.SystemRegistry.Register(inputSystem);

@@ -87,20 +87,24 @@ namespace Engine.Editor
         {
             _bus.Enabled = true;
             _physics.Enabled = true;
-            _editorCameraGO.Enabled = false;
-
-            _sceneCam.GameObject.Enabled = true;
-            _gs.SetMainCamera(_sceneCam);
+            if (_sceneCam != null)
+            {
+                _editorCameraGO.Enabled = false;
+                _sceneCam.GameObject.Enabled = true;
+                _gs.SetMainCamera(_sceneCam);
+            }
         }
 
         public void PauseSimulation()
         {
             _bus.Enabled = false;
             _physics.Enabled = false;
-            _sceneCam.GameObject.Enabled = false;
-
-            _editorCameraGO.Enabled = true;
-            _gs.SetMainCamera(_editorCamera);
+            if (_sceneCam != null)
+            {
+                _sceneCam.GameObject.Enabled = false;
+                _editorCameraGO.Enabled = true;
+                _gs.SetMainCamera(_editorCamera);
+            }
         }
 
         private void GenericDrawer(Component obj)
@@ -229,6 +233,14 @@ namespace Engine.Editor
             {
                 _windowOpen = !_windowOpen;
             }
+            if (_input.GetKeyDown(Key.F11))
+            {
+                ToggleWindowFullscreenState();
+            }
+            if (_input.GetKeyDown(Key.F12))
+            {
+                _gs.ToggleOctreeVisualizer();
+            }
 
             if (_windowOpen)
             {
@@ -332,6 +344,18 @@ namespace Engine.Editor
 
                     ImGui.EndMenu();
                 }
+                if (ImGui.BeginMenu("View"))
+                {
+                    if (ImGui.MenuItem("Full Screen", "F11"))
+                    {
+                        ToggleWindowFullscreenState();
+                    }
+                    if (ImGui.MenuItem("Scene Octree Visualizer", "F12"))
+                    {
+                        _gs.ToggleOctreeVisualizer();
+                    }
+                    ImGui.EndMenu();
+                }
                 if (ImGui.BeginMenu("Game"))
                 {
                     if (!_bus.Enabled)
@@ -351,6 +375,7 @@ namespace Engine.Editor
 
                     ImGui.EndMenu();
                 }
+
 
                 ImGui.EndMainMenuBar();
             }
@@ -399,6 +424,13 @@ namespace Engine.Editor
 
                 ImGui.EndPopup();
             }
+        }
+
+        private void ToggleWindowFullscreenState()
+        {
+            Window window = _gs.Context.Window;
+            WindowState state = window.WindowState;
+            window.WindowState = state != WindowState.FullScreen ? WindowState.FullScreen : WindowState.Normal;
         }
 
         private void ExitEditor()

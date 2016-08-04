@@ -23,6 +23,7 @@ namespace Engine.Graphics
         private OctreeRenderer<RenderItem> _octreeRenderer;
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
+
         public ShadowMapStage ShadowMapStage { get; }
 
         public MaterialCache MaterialCache { get; }
@@ -70,7 +71,7 @@ namespace Engine.Graphics
 
         private static RenderContext CreatePlatformDefaultContext(OpenTKWindow window)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return new D3DRenderContext(window);
             }
@@ -131,7 +132,7 @@ namespace Engine.Graphics
         {
             if (_octreeRenderer == null)
             {
-                _octreeRenderer = new OctreeRenderer<RenderItem>(_visiblityManager.Octree, new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets")), Context);
+                _octreeRenderer = new OctreeRenderer<RenderItem>(_visiblityManager.Octree, Context);
                 AddFreeRenderItem(_octreeRenderer);
             }
             else
