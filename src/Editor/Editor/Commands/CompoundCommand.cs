@@ -1,4 +1,4 @@
-﻿namespace Ge.Editor.Commands
+﻿namespace Engine.Editor.Commands
 {
     public class CompoundCommand : Command
     {

@@ -10,25 +10,27 @@
     <ProjectGuid>{AE9BC745-284F-569F-82AA-C43AB9425DF2}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AssemblyName>ge.Editor</AssemblyName>
-    <RootNamespace>Ge</RootNamespace>
+    <RootNamespace>Engine</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
     <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Editor\Commands\SetValueActionCommand.cs" />
     <Compile Include="Editor\Commands\Command.cs" />
     <Compile Include="Editor\Commands\CompoundCommand.cs" />
-    <Compile Include="Editor\Commands\SetPropertyCommand.cs" />
+    <Compile Include="Editor\Commands\ReflectionSetCommand.cs" />
+    <Compile Include="Editor\EditorDrawer.cs" />
     <Compile Include="Editor\EditorPreferences.cs" />
-    <Compile Include="Editor\AssetEditorWindow.cs" />
+    <Compile Include="Editor\Drawers.cs" />
     <Compile Include="Editor\AssetRefDrawer.cs" />
     <Compile Include="Editor\EditorBehavior.cs" />
     <Compile Include="Editor\EditorCameraMovement.cs" />
     <Compile Include="Editor\EditorSystem.cs" />
     <Compile Include="Editor\TextureDrawer.cs" />
     <Compile Include="Editor\UndoRedoStack.cs" />
-    <Compile Include="Preferences.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Editor\Preferences.cs" />
+    <Compile Include="Editor\Program.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />

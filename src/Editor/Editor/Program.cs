@@ -13,7 +13,7 @@ using Engine;
 using Veldrid.Assets;
 using ImGuiNET;
 
-namespace Ge
+namespace Engine.Editor
 {
     public class Program
     {

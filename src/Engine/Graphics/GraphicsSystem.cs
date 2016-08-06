@@ -71,7 +71,7 @@ namespace Engine.Graphics
 
         private static RenderContext CreatePlatformDefaultContext(OpenTKWindow window)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return new D3DRenderContext(window);
             }

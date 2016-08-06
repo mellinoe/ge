@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Ge.Editor.Commands
+namespace Engine.Editor.Commands
 {
     public class ReflectionSetCommand : Command
     {

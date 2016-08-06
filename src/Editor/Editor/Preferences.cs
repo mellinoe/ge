@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Engine
+namespace Engine.Editor
 {
     public abstract class Preferences<T, TInfo> where T : new() where TInfo : PreferencesInfo, new()
     {

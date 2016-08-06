@@ -15,6 +15,7 @@ using System.Reflection;
 using Veldrid.Graphics;
 using Veldrid.Platform;
 using Veldrid.Assets;
+using Engine.Editor.Commands;
 
 namespace Engine.Editor
 {
@@ -46,6 +47,7 @@ namespace Engine.Editor
         private Camera _sceneCam;
         private readonly GameObject _editorCameraGO;
         private readonly Camera _editorCamera;
+        private readonly UndoRedoStack _undoRedo = new UndoRedoStack();
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -57,10 +59,10 @@ namespace Engine.Editor
             _as = registry.GetSystem<AssetSystem>();
             _bus = registry.GetSystem<BehaviorUpdateSystem>();
 
-            DrawerCache.AddDrawer(new FuncDrawer<Transform>(DrawTransform));
-            DrawerCache.AddDrawer(new FuncDrawer<Collider>(DrawCollider));
-            DrawerCache.AddDrawer(new FuncDrawer<MeshRenderer>(DrawMeshRenderer));
-            DrawerCache.AddDrawer(new FuncDrawer<Component>(GenericDrawer));
+            EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Transform>(DrawTransform));
+            EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Collider>(DrawCollider));
+            EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
+            EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Component>(GenericDrawer));
 
             _registry.Register(this);
 
@@ -107,8 +109,10 @@ namespace Engine.Editor
             }
         }
 
-        private void GenericDrawer(Component obj)
+        private Command GenericDrawer(string label, Component obj, RenderContext rc)
         {
+            Command c = null;
+
             TypeInfo t = obj.GetType().GetTypeInfo();
             var props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(pi => !pi.IsDefined(typeof(JsonIgnoreAttribute)));
@@ -120,7 +124,8 @@ namespace Engine.Editor
                 }
 
                 Drawer drawer;
-                object value = prop.GetValue(obj);
+                object currentValue = prop.GetValue(obj);
+                object value = currentValue;
                 if (value == null)
                 {
                     drawer = DrawerCache.GetDrawer(prop.PropertyType);
@@ -133,50 +138,61 @@ namespace Engine.Editor
                 {
                     if (prop.SetMethod != null)
                     {
-                        prop.SetValue(obj, value);
+                        c = new ReflectionSetCommand(new PropertySettable(prop), obj, currentValue, value);
                     }
                 }
             }
+
+            return c;
         }
 
-        private void DrawMeshRenderer(Component c)
+        private Command DrawMeshRenderer(string label, Component component, RenderContext rc)
         {
-            MeshRenderer mr = (MeshRenderer)c;
+            Command c = null;
+
+            MeshRenderer mr = (MeshRenderer)component;
             bool wf = mr.Wireframe;
             if (ImGui.Checkbox("Wireframe", ref wf))
             {
-                mr.Wireframe = wf;
+                c = SetValueActionCommand.New<bool>(val => mr.Wireframe = val, mr.Wireframe, wf);
             }
 
             bool dcbf = mr.DontCullBackFace;
             if (ImGui.Checkbox("Don't Cull Backface", ref dcbf))
             {
-                mr.DontCullBackFace = dcbf;
+                c = SetValueActionCommand.New<bool>(val => mr.DontCullBackFace = val, mr.DontCullBackFace, dcbf);
             }
 
             if (!mr.Texture.HasValue)
             {
-                var result = DrawTextureRef(mr.Texture.GetRef(), _as.Database);
+                AssetRef<TextureData> result = DrawTextureRef("Surface Texture", mr.Texture.GetRef(), _as.Database);
                 if (result != null)
                 {
+                    c = SetValueActionCommand.New<AssetRef<TextureData>>(val => mr.Texture = val, mr.Texture.GetRef(), result);
                     mr.Texture = result;
                 }
             }
+
+            return c;
         }
 
-        private AssetRef<TextureData> DrawTextureRef(AssetRef<TextureData> tex, LooseFileDatabase database)
+        private AssetRef<TextureData> DrawTextureRef(string label, AssetRef<TextureData> existingRef, LooseFileDatabase database)
         {
             AssetID result = default(AssetID);
-            var assets = database.GetAssetsOfType(typeof(TextureData));
-            foreach (var id in assets)
+            AssetID[] assets = database.GetAssetsOfType(typeof(TextureData));
+
+            string[] items = assets.Select(id => id.Value).ToArray();
+            int selected = 0;
+            for (int i = 1; i < items.Length; i++)
             {
-                if (ImGui.Button(id.Value))
-                {
-                    result = id;
-                }
+                if (existingRef.ID == items[i]) { selected = i; break; }
+            }
+            if (ImGui.Combo(label, ref selected, items))
+            {
+                result = assets[selected];
             }
 
-            if (result != default(AssetID))
+            if (result != default(AssetID) && result != existingRef.ID)
             {
                 return new AssetRef<TextureData>(result);
             }
@@ -186,41 +202,50 @@ namespace Engine.Editor
             }
         }
 
-        private static void DrawCollider(Component c)
+        private static Command DrawCollider(string label, Component component, RenderContext rc)
         {
-            Collider collider = (Collider)c;
+            Command c = null;
+
+            Collider collider = (Collider)component;
             float mass = collider.Entity.Mass;
             if (ImGui.DragFloat("Mass", ref mass, 0f, 1000f, .1f))
             {
-                collider.Entity.Mass = mass;
+                c = SetValueActionCommand.New<float>((val) => collider.Entity.Mass = val, collider.Entity.Mass, mass);
             }
 
             bool trigger = collider.IsTrigger;
             if (ImGui.Checkbox("Is Trigger", ref trigger))
             {
-                collider.IsTrigger = trigger;
+                c = SetValueActionCommand.New<bool>(val => collider.IsTrigger = val, collider.IsTrigger, trigger);
             }
+
+            return c;
         }
 
-        private static void DrawTransform(Transform t)
+        private static Command DrawTransform(string label, Transform t, RenderContext rc)
         {
+            Command c = null;
+
             Vector3 pos = t.LocalPosition;
             if (ImGui.DragVector3("Position", ref pos, -50f, 50f, 0.05f))
             {
-                t.LocalPosition = pos;
+                c = SetValueActionCommand.New<Vector3>((val) => t.LocalPosition = val, t.LocalPosition, pos);
             }
+
             object rotation = t.LocalRotation;
             var drawer = DrawerCache.GetDrawer(typeof(Quaternion));
             if (drawer.Draw("Rotation", ref rotation, null))
             {
-                t.Rotation = (Quaternion)rotation;
+                c = SetValueActionCommand.New<Quaternion>((val) => t.LocalRotation = val, t.LocalRotation, rotation);
             }
 
             float scale = t.LocalScale.X;
             if (ImGui.DragFloat("Scale", ref scale, .01f, 50f, 0.05f))
             {
-                t.LocalScale = new Vector3(scale);
+                c = SetValueActionCommand.New<Vector3>((val) => t.LocalScale = val, t.LocalScale, new Vector3(scale));
             }
+
+            return c;
         }
 
         protected override void UpdateCore(float deltaSeconds)
@@ -240,6 +265,16 @@ namespace Engine.Editor
             if (_input.GetKeyDown(Key.F12))
             {
                 _gs.ToggleOctreeVisualizer();
+            }
+
+            // Undo-Redo
+            if (_input.GetKeyDown(Key.Z) && _input.GetKey(Key.ControlLeft))
+            {
+                _undoRedo.UndoLatest();
+            }
+            if (_input.GetKeyDown(Key.Y) && _input.GetKey(Key.ControlLeft))
+            {
+                _undoRedo.RedoLatest();
             }
 
             if (_windowOpen)
@@ -620,20 +655,30 @@ namespace Engine.Editor
             {
                 foreach (var component in _selectedObject.GetComponents<Component>())
                 {
-                    DrawComponent(component);
+                    Command c = DrawComponent(component);
+                    if (c != null)
+                    {
+                        _undoRedo.CommitCommand(c);
+                    }
                 }
             }
         }
 
-        private void DrawComponent(Component component)
+        private Command DrawComponent(Component component)
         {
+            Command c = null;
+
             var type = component.GetType();
-            var drawer = DrawerCache.GetDrawer(type);
+            var drawer = EditorDrawerCache.GetDrawer(type);
             object componentAsObject = component;
-            if (ImGui.CollapsingHeader(type.Name, type.Name, false, true))
+            ImGui.PushStyleColor(ColorTarget.Header, RgbaFloat.CornflowerBlue.ToVector4());
+            if (ImGui.CollapsingHeader(type.Name, type.Name, true, true))
             {
-                drawer.Draw(type.Name, ref componentAsObject, _gs.Context);
+                c = drawer.Draw(type.Name, componentAsObject, _gs.Context);
             }
+            ImGui.PopStyleColor();
+
+            return c;
         }
 
         public void RegisterBehavior(IUpdateable behavior)
