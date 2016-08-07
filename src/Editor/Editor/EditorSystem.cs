@@ -32,22 +32,28 @@ namespace Engine.Editor
             '\''
         };
 
-        private readonly SystemRegistry _registry;
-        private PhysicsSystem _physics;
-        private InputSystem _input;
-        private GameObjectQuerySystem _goQuery;
-        private GameObject _selectedObject;
-        private AssetSystem _as;
-        private GraphicsSystem _gs;
         private bool _windowOpen = false;
+
+        private readonly SystemRegistry _registry;
+        private readonly PhysicsSystem _physics;
+        private readonly InputSystem _input;
+        private readonly GameObjectQuerySystem _goQuery;
+        private readonly AssetSystem _as;
+        private readonly GraphicsSystem _gs;
+        private BehaviorUpdateSystem _bus;
+
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
         private readonly List<EditorBehavior> _newStarts = new List<EditorBehavior>();
+
         private readonly TextInputBuffer _filenameInputBuffer = new TextInputBuffer(256);
-        private BehaviorUpdateSystem _bus;
+
         private Camera _sceneCam;
         private readonly GameObject _editorCameraGO;
         private readonly Camera _editorCamera;
+
+        private HashSet<GameObject> _selectedObjects = new HashSet<GameObject>();
         private readonly UndoRedoStack _undoRedo = new UndoRedoStack();
+        private Transform _multiTransformDummy = new Transform();
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -76,7 +82,7 @@ namespace Engine.Editor
             _editorCameraGO.AddComponent(_editorCamera);
             _editorCameraGO.AddComponent(new EditorCameraMovement());
 
-            _physics.Update(1f / 60f);
+            DoFakePhysicsUpdate();
             _physics.Enabled = false;
             _bus.Enabled = false;
 
@@ -251,6 +257,7 @@ namespace Engine.Editor
         protected override void UpdateCore(float deltaSeconds)
         {
             UpdateUpdateables(deltaSeconds);
+            DoFakePhysicsUpdate();
 
             DrawMainMenu();
 
@@ -265,6 +272,10 @@ namespace Engine.Editor
             if (_input.GetKeyDown(Key.F12))
             {
                 _gs.ToggleOctreeVisualizer();
+            }
+            if (_input.GetKeyDown(Key.F3))
+            {
+                DoFakePhysicsUpdate();
             }
 
             // Undo-Redo
@@ -292,12 +303,20 @@ namespace Engine.Editor
                             Collider c = rcr.HitObject.Tag as Collider;
                             if (c != null)
                             {
-                                if (_selectedObject == c.GameObject && _input.GetKey(Key.ControlLeft))
+                                if (_input.GetKey(Key.ControlLeft))
                                 {
-                                    ClearSelection();
+                                    if (_selectedObjects.Contains(c.GameObject))
+                                    {
+                                        Deselect(c.GameObject);
+                                    }
+                                    else
+                                    {
+                                        SelectObject(c.GameObject);
+                                    }
                                 }
                                 else
                                 {
+                                    ClearSelection();
                                     SelectObject(c.GameObject);
                                 }
                             }
@@ -309,9 +328,9 @@ namespace Engine.Editor
                     }
                 }
 
-                if (_selectedObject != null && _input.GetKeyDown(Key.Delete))
+                if (_selectedObjects.Any() && _input.GetKeyDown(Key.Delete))
                 {
-                    DeleteGameObject(_selectedObject);
+                    DeleteGameObjects(_selectedObjects);
                 }
 
                 // Hierarchy Editor
@@ -343,14 +362,31 @@ namespace Engine.Editor
 
                     if (ImGui.BeginWindow("Component Viewer", WindowFlags.NoCollapse | WindowFlags.NoMove | WindowFlags.NoResize))
                     {
-                        if (_selectedObject != null)
+                        if (_selectedObjects.Count > 1)
                         {
-                            DrawObject(_selectedObject);
+                            MultiDrawObjects(_selectedObjects);
+                        }
+                        else if (_selectedObjects.Count == 1)
+                        {
+                            DrawSingleObject(_selectedObjects.Single());
                         }
                     }
                     ImGui.EndWindow();
                 }
             }
+        }
+
+        private void DoFakePhysicsUpdate()
+        {
+            //Vector3 gravity = _physics.Space.ForceUpdater.Gravity;
+            //_physics.Space.ForceUpdater.Gravity = Vector3.Zero;
+            //_physics.Space.Update();
+            //_physics.Space.ForceUpdater.Gravity = gravity;
+
+            var space = _physics.Space;
+            space.BroadPhase.Update();
+            space.NarrowPhase.Update();
+            space.BoundingBoxUpdater.Update();
         }
 
         private void DrawMainMenu()
@@ -489,18 +525,13 @@ namespace Engine.Editor
             _as.Database.RootPath = Path.Combine(projectRoot, "Assets");
 
             sa.GenerateGameObjects();
-            DoPhysicsTick();
+            DoFakePhysicsUpdate();
 
             _sceneCam = _gs.MainCamera;
 
             _gs.SetMainCamera(_editorCamera);
 
             EditorPreferences.Instance.LastOpenedScene = path;
-        }
-
-        private void DoPhysicsTick()
-        {
-            _physics.Space.Update();
         }
 
         private void UpdateUpdateables(float deltaSeconds)
@@ -528,7 +559,7 @@ namespace Engine.Editor
 
         private void DrawNode(Transform t)
         {
-            bool isSelected = t.GameObject == _selectedObject;
+            bool isSelected = _selectedObjects.Contains(t.GameObject);
             if (isSelected)
             {
                 ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
@@ -560,6 +591,7 @@ namespace Engine.Editor
             {
                 if (ImGui.Selectable(t.GameObject.Name))
                 {
+                    ClearSelection();
                     SelectObject(t.GameObject);
                 }
                 if (isSelected)
@@ -581,7 +613,15 @@ namespace Engine.Editor
             }
         }
 
-        private void DeleteGameObject(GameObject go)
+        private void DeleteGameObjects(IEnumerable<GameObject> gos)
+        {
+            foreach (var go in gos)
+            {
+                DeleteGameObject(go);
+            }
+        }
+
+        private static void DeleteGameObject(GameObject go)
         {
             go.Destroy();
         }
@@ -617,43 +657,121 @@ namespace Engine.Editor
 
         private void SelectObject(GameObject go)
         {
-            ClearSelection();
-
-            _selectedObject = go;
-            _selectedObject.Destroyed += OnSelectedDestroyed;
-            var mrs = _selectedObject.GetComponents<MeshRenderer>();
+            _selectedObjects.Add(go);
+            go.Destroyed += OnSelectedDestroyed;
+            var mrs = go.GetComponents<MeshRenderer>();
             foreach (var mr in mrs)
             {
                 mr.Tint = new TintInfo(new Vector3(1.0f), 0.6f);
             }
         }
 
+        private void Deselect(GameObject go)
+        {
+            UntintAndUnsubscribe(go);
+            _selectedObjects.Remove(go);
+        }
+
         private void ClearSelection()
         {
-            if (_selectedObject != null)
+            if (_selectedObjects.Any())
             {
-                _selectedObject.Destroyed -= OnSelectedDestroyed;
-                var mrs = _selectedObject.GetComponents<MeshRenderer>();
-                foreach (var mr in mrs)
+                foreach (var go in _selectedObjects)
                 {
-                    mr.Tint = new TintInfo();
+                    UntintAndUnsubscribe(go);
                 }
 
-                _selectedObject = null;
+                _selectedObjects.Clear();
+            }
+        }
+
+        private void UntintAndUnsubscribe(GameObject go)
+        {
+            go.Destroyed -= OnSelectedDestroyed;
+            var mrs = go.GetComponents<MeshRenderer>();
+            foreach (var mr in mrs)
+            {
+                mr.Tint = new TintInfo();
             }
         }
 
         void OnSelectedDestroyed(GameObject go)
         {
-            Debug.Assert(go == _selectedObject);
-            _selectedObject = null;
+            Debug.Assert(_selectedObjects.Contains(go));
+            _selectedObjects.Remove(go);
         }
 
-        private void DrawObject(GameObject _selectedObject)
+        private void MultiDrawObjects(ICollection<GameObject> gos)
         {
-            if (ImGui.CollapsingHeader(_selectedObject.Name, _selectedObject.Name, true, true))
+            if (ImGui.CollapsingHeader($"Editing {gos.Count} selected GameObjects", "MultiDraw", true, true))
             {
-                foreach (var component in _selectedObject.GetComponents<Component>())
+                MultiDrawTransform(gos);
+
+                var componentGroups = gos.SelectMany(go => go.GetComponents<Component>())
+                    .Where(c => c.GetType() != typeof(Transform))
+                    .GroupBy(c => c.GetType()).Where(group => group.Count() == gos.Count);
+                ImGui.Text("Shared Components:");
+                foreach (var group in componentGroups)
+                {
+                    MultiDrawComponentGroup(group);
+                }
+            }
+        }
+
+        private void MultiDrawTransform(ICollection<GameObject> gos)
+        {
+            Command c = null;
+            Transform t = _multiTransformDummy;
+            Vector3 startPos = t.LocalPosition;
+            Vector3 startScale = t.LocalScale;
+            Quaternion startRotation = t.LocalRotation;
+
+            Vector3 pos = t.LocalPosition;
+            if (ImGui.DragVector3("Position", ref pos, -50f, 50f, 0.05f, "multi"))
+            {
+                t.LocalPosition = pos;
+                c = new CompoundCommand(gos.Select(go => go.Transform)
+                    .Select(transform => SetValueActionCommand.New<Vector3>(
+                        val => transform.LocalPosition = val, transform.LocalPosition, transform.LocalPosition + pos - startPos))
+                    .ToArray());
+            }
+
+            object rotation = t.LocalRotation;
+            var drawer = DrawerCache.GetDrawer(typeof(Quaternion));
+            if (drawer.Draw("Rotation", ref rotation, null))
+            {
+                t.LocalRotation = (Quaternion)rotation;
+                c = new CompoundCommand(gos.Select(go => go.Transform)
+                    .Select(transform => SetValueActionCommand.New<Quaternion>(
+                        val => transform.LocalRotation = val, transform.LocalRotation, transform.LocalRotation + (Quaternion)rotation - startRotation))
+                    .ToArray());
+            }
+
+            float scale = t.LocalScale.X;
+            if (ImGui.DragFloat("Scale", ref scale, .01f, 50f, 0.05f))
+            {
+                t.LocalScale = new Vector3(scale);
+                c = new CompoundCommand(gos.Select(go => go.Transform)
+                    .Select(transform => SetValueActionCommand.New<float>(
+                        val => transform.LocalScale = new Vector3(val), transform.LocalScale.X, transform.LocalScale.X + scale - startScale.X))
+                    .ToArray());
+            }
+
+            if (c != null)
+            {
+                _undoRedo.CommitCommand(c);
+            }
+        }
+
+        private void MultiDrawComponentGroup(IGrouping<Type, Component> group)
+        {
+        }
+
+        private void DrawSingleObject(GameObject go)
+        {
+            if (ImGui.CollapsingHeader(go.Name, go.Name, true, true))
+            {
+                foreach (var component in go.GetComponents<Component>())
                 {
                     Command c = DrawComponent(component);
                     if (c != null)
