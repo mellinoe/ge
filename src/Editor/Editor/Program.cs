@@ -12,6 +12,7 @@ using Engine.Assets;
 using Engine;
 using Veldrid.Assets;
 using ImGuiNET;
+using System.Reflection;
 
 namespace Engine.Editor
 {
@@ -57,6 +58,7 @@ namespace Engine.Editor
             window.Closed += game.Exit;
 
             var editorSystem = new EditorSystem(game.SystemRegistry);
+            editorSystem.DiscoverComponentsFromAssembly(typeof(Program).GetTypeInfo().Assembly);
             // Editor system registers itself.
 
             // Force-load prefs.

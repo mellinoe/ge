@@ -55,6 +55,8 @@ namespace Engine.Editor
         private readonly UndoRedoStack _undoRedo = new UndoRedoStack();
         private Transform _multiTransformDummy = new Transform();
 
+        private readonly List<Type> _newComponentOptions = new List<Type>();
+
         public EditorSystem(SystemRegistry registry)
         {
             _registry = registry;
@@ -89,6 +91,19 @@ namespace Engine.Editor
             var imGuiRenderer = _bus.Updateables.Single(u => u is ImGuiRenderer);
             _bus.Remove(imGuiRenderer);
             RegisterBehavior(imGuiRenderer);
+
+            DiscoverComponentsFromAssembly(typeof(Game).GetTypeInfo().Assembly);
+        }
+
+        public void DiscoverComponentsFromAssembly(Assembly assembly)
+        {
+            _newComponentOptions.AddRange(
+                assembly.GetTypes().Where(t => typeof(Component).IsAssignableFrom(t) && HasParameterlessConstructor(t)));
+        }
+
+        private bool HasParameterlessConstructor(Type t)
+        {
+            return t.GetConstructor(Array.Empty<Type>()) != null;
         }
 
         public void StartSimulation()
@@ -335,7 +350,7 @@ namespace Engine.Editor
 
                 // Hierarchy Editor
                 {
-                    Vector2 displaySize = ImGui.GetIO().DisplaySize / ImGui.GetIO().DisplayFramebufferScale;
+                    Vector2 displaySize = ImGui.GetIO().DisplaySize;
                     Vector2 size = new Vector2(
                         Math.Min(350, displaySize.X * 0.275f),
                         Math.Min(600, displaySize.Y * 0.75f));
@@ -352,7 +367,7 @@ namespace Engine.Editor
 
                 // Component Editor
                 {
-                    Vector2 displaySize = ImGui.GetIO().DisplaySize / ImGui.GetIO().DisplayFramebufferScale;
+                    Vector2 displaySize = ImGui.GetIO().DisplaySize;
                     Vector2 size = new Vector2(
                         Math.Min(350, displaySize.X * 0.275f),
                         Math.Min(600, displaySize.Y * 0.75f));
@@ -771,14 +786,44 @@ namespace Engine.Editor
         {
             if (ImGui.CollapsingHeader(go.Name, go.Name, true, true))
             {
+                int id = 0;
                 foreach (var component in go.GetComponents<Component>())
                 {
+                    ImGui.PushID(id++);
                     Command c = DrawComponent(component);
                     if (c != null)
                     {
                         _undoRedo.CommitCommand(c);
                     }
+                    ImGui.PopID();
                 }
+
+                DrawNewComponentAdder(go);
+            }
+        }
+
+        private void DrawNewComponentAdder(GameObject go)
+        {
+            ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Red.ToVector4());
+            if (ImGui.Button("Add New Component"))
+            {
+                ImGui.OpenPopup("###NewComponentAdder");
+            }
+            ImGui.PopStyleColor();
+
+            if (ImGui.BeginPopup("###NewComponentAdder"))
+            {
+                foreach (Type option in _newComponentOptions)
+                {
+                    if (ImGui.Button(option.Name))
+                    {
+                        Component c = (Component)Activator.CreateInstance(option);
+                        Command command = new RawCommand(() => go.AddComponent(c), () => go.RemoveComponent(c));
+                        _undoRedo.CommitCommand(command);
+                        ImGui.CloseCurrentPopup();
+                    }
+                }
+                ImGui.EndPopup();
             }
         }
 
@@ -792,7 +837,30 @@ namespace Engine.Editor
             ImGui.PushStyleColor(ColorTarget.Header, RgbaFloat.CornflowerBlue.ToVector4());
             if (ImGui.CollapsingHeader(type.Name, type.Name, true, true))
             {
+                if (ImGui.BeginPopupContextItem(type.Name + "_Context"))
+                {
+                    if (ImGui.MenuItem("Remove"))
+                    {
+                        var go = component.GameObject;
+                        Command command = new RawCommand(() => go.RemoveComponent(component), () => go.AddComponent(component));
+                        _undoRedo.CommitCommand(command);
+                    }
+                    ImGui.EndPopup();
+                }
                 c = drawer.Draw(type.Name, componentAsObject, _gs.Context);
+            }
+            else
+            {
+                if (ImGui.BeginPopupContextItem(type.Name + "_Context"))
+                {
+                    if (ImGui.MenuItem("Remove"))
+                    {
+                        var go = component.GameObject;
+                        Command command = new RawCommand(() => go.RemoveComponent(component), () => go.AddComponent(component));
+                        _undoRedo.CommitCommand(command);
+                    }
+                    ImGui.EndPopup();
+                }
             }
             ImGui.PopStyleColor();
 

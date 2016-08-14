@@ -18,7 +18,7 @@ namespace Engine.Graphics
         private readonly Renderer _renderer;
         private readonly PipelineStage[] _pipelineStages;
         private readonly Window _window;
-        private readonly Dictionary<BoundsRenderItem, OctreeItem<RenderItem>> _octreeItems = new Dictionary<BoundsRenderItem, OctreeItem<RenderItem>>();
+        private readonly Dictionary<BoundsRenderItem, BoundsRenderItemEntry> _boundsRenderItemEntries = new Dictionary<BoundsRenderItem, BoundsRenderItemEntry>();
 
         private OctreeRenderer<RenderItem> _octreeRenderer;
         private BoundingFrustum _frustum;
@@ -94,22 +94,23 @@ namespace Engine.Graphics
         public void AddRenderItem(BoundsRenderItem bri, Transform transform)
         {
             var octreeItem = _visiblityManager.AddRenderItem(bri.Bounds, bri);
-            _octreeItems.Add(bri, octreeItem);
-            transform.TransformChanged += (t) =>
-            {
-                octreeItem.Container.MarkItemAsMoved(octreeItem, bri.Bounds);
-            };
+            BoundsRenderItemEntry brie = new BoundsRenderItemEntry(bri, transform, octreeItem);
+            _boundsRenderItemEntries.Add(bri, brie);
+            brie.Transform.TransformChanged += brie.OnTransformChanged;
         }
 
         public void RemoveRenderItem(BoundsRenderItem bri)
         {
-            OctreeItem<RenderItem> octreeItem;
-            if (!_octreeItems.TryGetValue(bri, out octreeItem))
+            BoundsRenderItemEntry brie;
+            if (!_boundsRenderItemEntries.TryGetValue(bri, out brie))
             {
                 throw new InvalidOperationException("Couldn't remove render item " + bri + ". It was not contained in the visibility manager.");
             }
 
-            _visiblityManager.Octree.RemoveItem(octreeItem);
+            _visiblityManager.Octree.RemoveItem(brie.BoundsRenderItem);
+            brie.Transform.TransformChanged -= brie.OnTransformChanged;
+
+            _boundsRenderItemEntries.Remove(bri);
         }
 
         protected override void UpdateCore(float deltaSeconds)
@@ -141,6 +142,25 @@ namespace Engine.Graphics
                 RemoveFreeRenderItem(_octreeRenderer);
                 _octreeRenderer = null;
             }
+        }
+    }
+
+    public class BoundsRenderItemEntry
+    {
+        public BoundsRenderItem BoundsRenderItem { get; private set; }
+        public Transform Transform { get; private set; }
+        public OctreeItem<RenderItem> OctreeItem { get; private set; }
+
+        public BoundsRenderItemEntry(BoundsRenderItem bri, Transform transform, OctreeItem<RenderItem> oi)
+        {
+            BoundsRenderItem = bri;
+            Transform = transform;
+            OctreeItem = oi;
+        }
+
+        public void OnTransformChanged(Transform t)
+        {
+            OctreeItem.Container.MoveContainedItem(OctreeItem, BoundsRenderItem.Bounds);
         }
     }
 }

@@ -107,11 +107,11 @@ namespace Engine
             IReadOnlyCollection<Component> components;
             if (!_components.TryGetValue(typeof(T), out components))
             {
-                foreach (var kvp in _components)
+                foreach (var kvp in _components.ToArray())
                 {
                     if (typeof(T).GetTypeInfo().IsAssignableFrom(kvp.Key))
                     {
-                        foreach (var comp in kvp.Value)
+                        foreach (var comp in kvp.Value.ToArray())
                         {
                             yield return (T)comp;
                         }

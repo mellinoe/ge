@@ -117,8 +117,8 @@ namespace Engine.Graphics
         {
             IO io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(
-                rc.Window.Width,
-                rc.Window.Height);
+                rc.Window.Width / rc.Window.ScaleFactor.X,
+                rc.Window.Height / rc.Window.ScaleFactor.Y);
             io.DisplayFramebufferScale = rc.Window.ScaleFactor;
             io.DeltaTime = deltaSeconds / 1000; // DeltaTime is in seconds.
         }
@@ -266,8 +266,8 @@ namespace Engine.Graphics
 
                 Matrix4x4 mvp = Matrix4x4.CreateOrthographicOffCenter(
                     0f,
-                    io.DisplaySize.X / io.DisplayFramebufferScale.X,
-                    io.DisplaySize.Y / io.DisplayFramebufferScale.Y,
+                    io.DisplaySize.X,
+                    io.DisplaySize.Y,
                     0.0f,
                     -1.0f,
                     1.0f);
