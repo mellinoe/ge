@@ -16,6 +16,9 @@ namespace Engine
 
         private Entity _physicsEntity;
 
+        public delegate void ParentChangedHandler(Transform t, Transform oldParent, Transform newParent);
+        public event ParentChangedHandler ParentChanged;
+
         internal void SetPhysicsEntity(Entity entity)
         {
             Debug.Assert(_physicsEntity == null);
@@ -279,8 +282,10 @@ namespace Engine
                     _parent._children.Remove(this);
                 }
 
+                Transform oldParent = _parent;
                 _parent = value;
                 _parent._children.Add(this);
+                ParentChanged?.Invoke(this, oldParent, _parent);
             }
         }
 
@@ -332,12 +337,30 @@ namespace Engine
         }
 
 
-        public override void Attached(SystemRegistry registry)
+        protected override void Attached(SystemRegistry registry)
         {
         }
 
-        public override void Removed(SystemRegistry registry)
+        protected override void Removed(SystemRegistry registry)
         {
+            if (Parent != null)
+            {
+                bool result = Parent._children.Remove(this);
+                Debug.Assert(result);
+            }
+        }
+
+        protected override void OnEnabled()
+        {
+        }
+
+        protected override void OnDisabled()
+        {
+        }
+
+        public override string ToString()
+        {
+            return $"[Transform] {GameObject.ToString()}";
         }
     }
 }

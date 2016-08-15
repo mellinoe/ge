@@ -1,6 +1,7 @@
 ﻿using BEPUutilities;
 using System.Numerics;
 using Veldrid.Graphics;
+using System;
 
 namespace Engine.Graphics
 {
@@ -21,21 +22,30 @@ namespace Engine.Graphics
         public ConstantBufferDataProvider ViewProvider => _viewProvider;
         public ConstantBufferDataProvider ProjectionProvider => _projectionProvider;
 
-        public override void Attached(SystemRegistry registry)
+        protected override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
-
-            GameObject.Transform.TransformChanged += SetViewMatrix;
-            SetViewMatrix(GameObject.Transform);
-
-            _gs.SetMainCamera(this);
-
-            _gs.Context.WindowResized += SetProjectionMatrix;
-            SetProjectionMatrix();
         }
 
-        public override void Removed(SystemRegistry registry)
+        protected override void Removed(SystemRegistry registry)
         {
+        }
+
+        protected override void OnEnabled()
+        {
+            GameObject.Transform.TransformChanged += SetViewMatrix;
+            _gs.Context.WindowResized += SetProjectionMatrix;
+            _gs.SetMainCamera(this);
+
+            SetViewMatrix(GameObject.Transform);
+            SetProjectionMatrix();
+            UpdateViewFrustum();
+        }
+
+        protected override void OnDisabled()
+        {
+            GameObject.Transform.TransformChanged -= SetViewMatrix;
+            _gs.Context.WindowResized -= SetProjectionMatrix;
         }
 
         public Ray GetRayFromScreenPoint(float screenX, float screenY)

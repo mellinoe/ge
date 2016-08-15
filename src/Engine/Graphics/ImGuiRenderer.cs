@@ -5,12 +5,11 @@ using OpenTK.Input;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Platform;
 
 using Key = Veldrid.Platform.Key;
-using Veldrid;
-using System.IO;
 
 namespace Engine.Graphics
 {
@@ -179,21 +178,16 @@ namespace Engine.Graphics
             io.CtrlPressed = _controlDown;
             io.AltPressed = _altDown;
             io.ShiftPressed = _shiftDown;
+
+            if (ImGui.IsMouseDoubleClicked(0))
+            {
+                Console.WriteLine("Double0: " + ImGui.IsMouseDoubleClicked(0));
+            }
         }
 
         private unsafe void CreateFontsTexture(RenderContext rc)
         {
-            if (File.Exists(@"C:\Windows\Fonts\consola.ttf"))
-            {
-                unsafe
-                {
-                    ImGuiNET.ImGuiNative.ImFontAtlas_AddFontFromFileTTF(ImGuiNET.ImGuiNative.igGetIO()->FontAtlas, @"C:\Windows\Fonts\consola.ttf", 14, IntPtr.Zero, null);
-                }
-            }
-            else
-            {
-                ImGui.LoadDefaultFont();
-            }
+            ImGui.LoadDefaultFont();
             IO io = ImGui.GetIO();
 
             // Build

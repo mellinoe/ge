@@ -160,7 +160,7 @@ namespace Engine.Graphics
 
         public void OnTransformChanged(Transform t)
         {
-            OctreeItem.Container.MoveContainedItem(OctreeItem, BoundsRenderItem.Bounds);
+            OctreeItem.Container.MarkItemAsMoved(OctreeItem, BoundsRenderItem.Bounds);
         }
     }
 }

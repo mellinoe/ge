@@ -92,7 +92,7 @@ namespace Engine.Editor
                         InputTextFlags.AutoSelectAll | InputTextFlags.EnterReturnsTrue,
                         null))
                     {
-                        _ccs.SubmitCommand(_inputBuffer.GetString());
+                        _ccs.SubmitCommand(_inputBuffer.StringValue);
                         _inputBuffer.ClearData();
                         _focusInput = true;
                     }

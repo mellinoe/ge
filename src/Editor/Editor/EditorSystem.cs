@@ -31,8 +31,10 @@ namespace Engine.Editor
             '\"',
             '\''
         };
+        private readonly List<Type> _newComponentOptions = new List<Type>();
 
-        private bool _windowOpen = false;
+        private bool _windowOpen = true;
+        private PlayState _playState = PlayState.Stopped;
 
         private readonly SystemRegistry _registry;
         private readonly PhysicsSystem _physics;
@@ -40,12 +42,13 @@ namespace Engine.Editor
         private readonly GameObjectQuerySystem _goQuery;
         private readonly AssetSystem _as;
         private readonly GraphicsSystem _gs;
-        private BehaviorUpdateSystem _bus;
+        private readonly BehaviorUpdateSystem _bus;
 
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
         private readonly List<EditorBehavior> _newStarts = new List<EditorBehavior>();
 
         private readonly TextInputBuffer _filenameInputBuffer = new TextInputBuffer(256);
+        private readonly TextInputBuffer _filenameBuffer = new TextInputBuffer(100);
 
         private Camera _sceneCam;
         private readonly GameObject _editorCameraGO;
@@ -55,7 +58,13 @@ namespace Engine.Editor
         private readonly UndoRedoStack _undoRedo = new UndoRedoStack();
         private Transform _multiTransformDummy = new Transform();
 
-        private readonly List<Type> _newComponentOptions = new List<Type>();
+        private InMemoryAsset<SceneAsset> _currentScene;
+        private string _currentScenePath;
+        private readonly Vector4 _disabledGrey = new Vector4(0.65f, 0.65f, 0.65f, 0.35f);
+
+        // Asset editor stuff
+        private string _loadedAssetPath;
+        private object _selectedAsset;
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -108,25 +117,59 @@ namespace Engine.Editor
 
         public void StartSimulation()
         {
-            _bus.Enabled = true;
-            _physics.Enabled = true;
-            if (_sceneCam != null)
+            if (_playState != PlayState.Playing)
             {
-                _editorCameraGO.Enabled = false;
-                _sceneCam.GameObject.Enabled = true;
-                _gs.SetMainCamera(_sceneCam);
+                if (_sceneCam != null)
+                {
+                    _editorCameraGO.Enabled = false;
+                    _sceneCam.Enabled = true;
+                }
+                else
+                {
+                    Console.WriteLine("No camera in the current scene.");
+                }
+
+                if (_playState == PlayState.Stopped)
+                {
+                    SerializeGameObjectsToScene();
+                }
+
+                _playState = PlayState.Playing;
+
+                _bus.Enabled = true;
+                _physics.Enabled = true;
             }
         }
 
         public void PauseSimulation()
         {
-            _bus.Enabled = false;
-            _physics.Enabled = false;
-            if (_sceneCam != null)
+            if (_playState != PlayState.Paused)
             {
-                _sceneCam.GameObject.Enabled = false;
-                _editorCameraGO.Enabled = true;
-                _gs.SetMainCamera(_editorCamera);
+                _playState = PlayState.Paused;
+
+                _bus.Enabled = false;
+                _physics.Enabled = false;
+                if (_sceneCam != null)
+                {
+                    _sceneCam.Enabled = false;
+                    _editorCameraGO.Enabled = true;
+                }
+            }
+        }
+
+        public void StopSimulation()
+        {
+            if (_playState != PlayState.Stopped)
+            {
+                _playState = PlayState.Stopped;
+
+                _bus.Enabled = false;
+                _physics.Enabled = false;
+                if (_currentScene != null)
+                {
+                    DestroyNonEditorGameObjects();
+                    ActivateCurrentScene();
+                }
             }
         }
 
@@ -136,7 +179,7 @@ namespace Engine.Editor
 
             TypeInfo t = obj.GetType().GetTypeInfo();
             var props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(pi => !pi.IsDefined(typeof(JsonIgnoreAttribute)));
+                .Where(pi => !pi.IsDefined(typeof(JsonIgnoreAttribute)) && pi.SetMethod != null);
             foreach (var prop in props)
             {
                 if (s_ignoredGenericProps.Contains(prop.Name))
@@ -318,22 +361,8 @@ namespace Engine.Editor
                             Collider c = rcr.HitObject.Tag as Collider;
                             if (c != null)
                             {
-                                if (_input.GetKey(Key.ControlLeft))
-                                {
-                                    if (_selectedObjects.Contains(c.GameObject))
-                                    {
-                                        Deselect(c.GameObject);
-                                    }
-                                    else
-                                    {
-                                        SelectObject(c.GameObject);
-                                    }
-                                }
-                                else
-                                {
-                                    ClearSelection();
-                                    SelectObject(c.GameObject);
-                                }
+                                GameObject go = c.GameObject;
+                                GameObjectClicked(go);
                             }
                         }
                     }
@@ -348,13 +377,30 @@ namespace Engine.Editor
                     DeleteGameObjects(_selectedObjects);
                 }
 
+                // Project Asset Editor
+                {
+                    Vector2 displaySize = ImGui.GetIO().DisplaySize;
+                    Vector2 size = new Vector2(
+                        Math.Min(350, displaySize.X * 0.275f),
+                        Math.Min(600, displaySize.Y * 0.6f));
+                    Vector2 pos = new Vector2(0, 20);
+                    ImGui.SetNextWindowSize(size, SetCondition.Always);
+                    ImGui.SetNextWindowPos(pos, SetCondition.Always);
+
+                    if (ImGui.BeginWindow("Project Assets", WindowFlags.NoCollapse | WindowFlags.NoMove | WindowFlags.NoResize))
+                    {
+                        DrawProjectAssets();
+                    }
+                    ImGui.EndWindow();
+                }
+
                 // Hierarchy Editor
                 {
                     Vector2 displaySize = ImGui.GetIO().DisplaySize;
                     Vector2 size = new Vector2(
                         Math.Min(350, displaySize.X * 0.275f),
-                        Math.Min(600, displaySize.Y * 0.75f));
-                    Vector2 pos = new Vector2(0, 20);
+                        Math.Min(600, displaySize.Y * 0.35f));
+                    Vector2 pos = new Vector2(0, displaySize.Y * 0.6f + 20);
                     ImGui.SetNextWindowSize(size, SetCondition.Always);
                     ImGui.SetNextWindowPos(pos, SetCondition.Always);
 
@@ -375,19 +421,119 @@ namespace Engine.Editor
                     ImGui.SetNextWindowSize(size, SetCondition.Always);
                     ImGui.SetNextWindowPos(pos, SetCondition.Always);
 
-                    if (ImGui.BeginWindow("Component Viewer", WindowFlags.NoCollapse | WindowFlags.NoMove | WindowFlags.NoResize))
+                    if (ImGui.BeginWindow("Viewer", WindowFlags.NoCollapse | WindowFlags.NoMove | WindowFlags.NoResize))
                     {
-                        if (_selectedObjects.Count > 1)
-                        {
-                            MultiDrawObjects(_selectedObjects);
-                        }
-                        else if (_selectedObjects.Count == 1)
-                        {
-                            DrawSingleObject(_selectedObjects.Single());
-                        }
+                        DrawComponentViewer();
                     }
                     ImGui.EndWindow();
                 }
+            }
+        }
+
+        private void DrawComponentViewer()
+        {
+            if (_selectedAsset != null)
+            {
+                Drawer d = DrawerCache.GetDrawer(_selectedAsset.GetType());
+                d.Draw(_selectedAsset.GetType().Name, ref _selectedAsset, _gs.Context);
+
+                ImGui.Text("Asset Name:");
+                ImGui.PushItemWidth(220);
+                ImGui.SameLine();
+                if (ImGui.InputText(" ", _filenameBuffer.Buffer, _filenameBuffer.Length, InputTextFlags.Default, null))
+                {
+                    _loadedAssetPath = _filenameBuffer.StringValue;
+                }
+                ImGui.PopItemWidth();
+                ImGui.SameLine();
+                if (ImGui.Button("Save"))
+                {
+                    string path = _as.Database.GetAssetPath(_loadedAssetPath);
+                    using (var fs = File.CreateText(path))
+                    {
+                        var serializer = JsonSerializer.CreateDefault();
+                        serializer.TypeNameHandling = TypeNameHandling.All;
+                        serializer.Serialize(fs, _selectedAsset);
+                    }
+                }
+            }
+            else if (_selectedObjects.Count > 1)
+            {
+                MultiDrawObjects(_selectedObjects);
+            }
+            else if (_selectedObjects.Count == 1)
+            {
+                DrawSingleObject(_selectedObjects.Single());
+            }
+        }
+
+        private void DrawProjectAssets()
+        {
+            DrawRecursiveNode(_as.Database.GetRootDirectoryGraph(), false);
+        }
+
+        private void DrawRecursiveNode(DirectoryNode node, bool pushTreeNode)
+        {
+            if (!pushTreeNode || ImGui.TreeNode(node.FolderName))
+            {
+                foreach (DirectoryNode child in node.Children)
+                {
+                    DrawRecursiveNode(child, pushTreeNode: true);
+                }
+
+                foreach (AssetInfo asset in node.AssetInfos)
+                {
+                    if (ImGui.Selectable(asset.Name) && _loadedAssetPath != asset.Path)
+                    {
+                        ClearSelection();
+                        _selectedAsset = _as.Database.LoadAsset(asset.Path);
+                        _loadedAssetPath = asset.Path;
+                        _filenameBuffer.StringValue = asset.Name;
+                    }
+                    if (ImGui.IsLastItemHovered())
+                    {
+                        ImGui.SetTooltip(asset.Path);
+                    }
+                    if (ImGui.BeginPopupContextItem(asset.Name + "_context"))
+                    {
+                        if (ImGui.Button("Clone"))
+                        {
+                            _as.Database.CloneAsset(asset.Path);
+                            ImGui.CloseCurrentPopup();
+                        }
+                        if (ImGui.Button("Delete"))
+                        {
+                            _as.Database.DeleteAsset(asset.Path);
+                            ImGui.CloseCurrentPopup();
+                        }
+                        ImGui.EndPopup();
+                    }
+                }
+
+                if (pushTreeNode)
+                {
+                    ImGui.TreePop();
+                }
+            }
+        }
+
+        private void GameObjectClicked(GameObject go)
+        {
+            if (_input.GetKey(Key.ControlLeft))
+            {
+                if (_selectedObjects.Contains(go))
+                {
+                    Deselect(go);
+                }
+                else
+                {
+                    SelectObject(go);
+                }
+            }
+            else
+            {
+                ClearSelection();
+                SelectObject(go);
             }
         }
 
@@ -416,13 +562,34 @@ namespace Engine.Editor
                     {
                         openPopup = true;
                     }
-                    if (!string.IsNullOrEmpty(EditorPreferences.Instance.LastOpenedScene))
                     {
-                        if (ImGui.MenuItem($"Last Opened: {EditorPreferences.Instance.LastOpenedScene}"))
+                        string[] history = EditorPreferences.Instance.OpenedSceneHistory.ToArray();
+                        if (ImGui.BeginMenu($"Recently Opened", history.Any()))
                         {
-                            LoadScene(EditorPreferences.Instance.LastOpenedScene);
+                            foreach (string path in history.Reverse())
+                            {
+                                if (ImGui.MenuItem(path))
+                                {
+                                    LoadScene(path);
+                                }
+                            }
+
+                            ImGui.EndMenu();
                         }
                     }
+
+                    ImGui.Separator();
+                    if (ImGui.MenuItem("Save Scene", "Ctrl+S", false, _currentScene != null && _playState == PlayState.Stopped))
+                    {
+                        SaveCurrentScene();
+                    }
+                    if (ImGui.MenuItem("Close Scene", string.Empty, false, _currentScene != null))
+                    {
+                        StopSimulation();
+                        DestroyNonEditorGameObjects();
+                        _currentScene = null;
+                    }
+
                     if (ImGui.MenuItem("Exit"))
                     {
                         ExitEditor();
@@ -444,24 +611,22 @@ namespace Engine.Editor
                 }
                 if (ImGui.BeginMenu("Game"))
                 {
-                    if (!_bus.Enabled)
+                    if (ImGui.MenuItem("Play", "Ctrl+P", _playState == PlayState.Playing, _playState != PlayState.Playing && _currentScene != null)
+                        || (ImGui.GetIO().KeysDown[(int)Key.P] && ImGui.GetIO().CtrlPressed) && _currentScene != null)
                     {
-                        if (ImGui.MenuItem("Play", "Ctrl-P") || (ImGui.GetIO().KeysDown[(int)Key.P] && ImGui.GetIO().CtrlPressed))
-                        {
-                            StartSimulation();
-                        }
+                        StartSimulation();
                     }
-                    else
+                    if (ImGui.MenuItem("Pause", "Ctrl+Shift+P", _playState == PlayState.Paused, _playState == PlayState.Playing))
                     {
-                        if (ImGui.MenuItem("Pause", "Ctrl-P"))
-                        {
-                            PauseSimulation();
-                        }
+                        PauseSimulation();
+                    }
+                    if (ImGui.MenuItem("Stop", "Ctrl+P", _playState == PlayState.Stopped, _playState != PlayState.Stopped))
+                    {
+                        StopSimulation();
                     }
 
                     ImGui.EndMenu();
                 }
-
 
                 ImGui.EndMainMenuBar();
             }
@@ -472,12 +637,20 @@ namespace Engine.Editor
                 {
                     StartSimulation();
                 }
-                else
+                else if (_input.GetKey(Key.ShiftLeft) || _input.GetKey(Key.ShiftRight))
                 {
                     PauseSimulation();
                 }
+                else
+                {
+                    StopSimulation();
+                }
             }
 
+            if (_playState == PlayState.Stopped && _input.GetKeyDown(Key.S) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
+            {
+                SaveCurrentScene();
+            }
 
             if (openPopup)
             {
@@ -526,27 +699,103 @@ namespace Engine.Editor
 
         private void LoadScene(string path)
         {
+            StopSimulation();
+            DestroyNonEditorGameObjects();
+
             path = path.Trim(s_pathTrimChar);
-            Console.WriteLine("Open scene: " + path);
-            SceneAsset sa = null;
+            Console.WriteLine("Opening scene: " + path);
             using (var fs = File.OpenRead(path))
             {
                 var jtr = new JsonTextReader(new StreamReader(fs));
-                sa = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
+                SceneAsset loadedAsset = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
+                if (_currentScene == null)
+                {
+                    _currentScene = new InMemoryAsset<SceneAsset>();
+                }
+                _currentScene.UpdateAsset(_as.Database.DefaultSerializer, loadedAsset);
             }
 
             string projectRoot = Path.GetDirectoryName(path);
             _gs.Context.ResourceFactory.ShaderAssetRootPath = projectRoot;
             _as.Database.RootPath = Path.Combine(projectRoot, "Assets");
 
-            sa.GenerateGameObjects();
-            DoFakePhysicsUpdate();
+            ActivateCurrentScene();
 
+            EditorPreferences.Instance.SetLatestScene(path);
+            _currentScenePath = path;
+        }
+
+        private void ActivateScene(SceneAsset asset)
+        {
+            asset.GenerateGameObjects();
             _sceneCam = _gs.MainCamera;
+            if (_sceneCam == _editorCamera)
+            {
+                Console.WriteLine("There was no camera in the scene.");
+                _sceneCam = null;
+            }
 
+            if (_sceneCam != null)
+            {
+                _sceneCam.Enabled = false;
+            }
+
+            _editorCameraGO.Enabled = true;
             _gs.SetMainCamera(_editorCamera);
+        }
 
-            EditorPreferences.Instance.LastOpenedScene = path;
+        private void ActivateCurrentScene()
+        {
+            ActivateScene(_currentScene.GetAsset(_as.Database.DefaultSerializer));
+        }
+
+        private void SaveScene(SceneAsset scene, string path)
+        {
+            path = path.Trim(s_pathTrimChar);
+            Console.WriteLine("Saving scene: " + path);
+            using (var fs = File.CreateText(path))
+            {
+                var jtw = new JsonTextWriter(fs);
+                _as.Database.DefaultSerializer.Serialize(jtw, scene);
+            }
+        }
+
+        private void SaveCurrentScene()
+        {
+            if (_sceneCam != null)
+            {
+                _sceneCam.Enabled = true;
+            }
+
+            SerializeGameObjectsToScene();
+            SaveScene(_currentScene.GetAsset(_as.Database.DefaultSerializer), _currentScenePath);
+
+            if (_sceneCam != null)
+            {
+                _sceneCam.Enabled = false;
+            }
+        }
+
+        private void SerializeGameObjectsToScene()
+        {
+            SerializedGameObject[] sGos = _goQuery.GetAllGameObjects().Where(go => !IsEditorObject(go))
+                .Select(go => new SerializedGameObject(go)).ToArray();
+            _currentScene.UpdateAsset(_as.Database.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
+        }
+
+        private void DestroyNonEditorGameObjects()
+        {
+            foreach (var nonEditorGo in _goQuery.GetUnparentedGameObjects().Where(go => !IsEditorObject(go)))
+            {
+                nonEditorGo.Destroy();
+            }
+
+            _sceneCam = null;
+        }
+
+        private bool IsEditorObject(GameObject go)
+        {
+            return go.Name.StartsWith("__");
         }
 
         private void UpdateUpdateables(float deltaSeconds)
@@ -574,23 +823,25 @@ namespace Engine.Editor
 
         private void DrawNode(Transform t)
         {
-            bool isSelected = _selectedObjects.Contains(t.GameObject);
-            if (isSelected)
+            Vector4 color = RgbaFloat.White.ToVector4();
+            if (_selectedObjects.Contains(t.GameObject))
             {
-                ImGui.PushStyleColor(ColorTarget.Text, RgbaFloat.Cyan.ToVector4());
+                color = RgbaFloat.Cyan.ToVector4();
             }
+            if (!t.GameObject.EnabledInHierarchy)
+            {
+                color = Vector4.Lerp(color, _disabledGrey, 0.5f);
+            }
+            ImGui.PushStyleColor(ColorTarget.Text, color);
             if (t.Children.Count > 0)
             {
                 bool opened = ImGui.TreeNode($"##{t.GameObject.Name}");
                 ImGui.SameLine();
                 if (ImGui.Selectable(t.GameObject.Name))
                 {
-                    SelectObject(t.GameObject);
+                    GameObjectClicked(t.GameObject);
                 }
-                if (isSelected)
-                {
-                    ImGui.PopStyleColor();
-                }
+                ImGui.PopStyleColor();
 
                 if (opened)
                 {
@@ -606,15 +857,22 @@ namespace Engine.Editor
             {
                 if (ImGui.Selectable(t.GameObject.Name))
                 {
-                    ClearSelection();
-                    SelectObject(t.GameObject);
+                    GameObjectClicked(t.GameObject);
                 }
-                if (isSelected)
-                {
-                    ImGui.PopStyleColor();
-                }
+                ImGui.PopStyleColor();
+
                 if (ImGui.BeginPopupContextItem($"{t.GameObject.Name}_Context"))
                 {
+                    if (ImGui.MenuItem("Focus Camera"))
+                    {
+                        ClearSelection();
+                        SelectObject(t.GameObject);
+                        MoveCameraTo(t);
+                    }
+                    if (ImGui.MenuItem("Enabled", string.Empty, t.GameObject.Enabled, true))
+                    {
+                        t.GameObject.Enabled = !t.GameObject.Enabled;
+                    }
                     if (ImGui.MenuItem("Clone", string.Empty))
                     {
                         CloneGameObject(t.GameObject);
@@ -626,6 +884,11 @@ namespace Engine.Editor
                     ImGui.EndPopup();
                 }
             }
+        }
+
+        private void MoveCameraTo(Transform t)
+        {
+            _editorCameraGO.Transform.Position = t.Position - _editorCameraGO.Transform.Forward * 5.0f;
         }
 
         private void DeleteGameObjects(IEnumerable<GameObject> gos)
@@ -698,6 +961,9 @@ namespace Engine.Editor
 
                 _selectedObjects.Clear();
             }
+
+            _selectedAsset = null;
+            _loadedAssetPath = null;
         }
 
         private void UntintAndUnsubscribe(GameObject go)
@@ -834,11 +1100,20 @@ namespace Engine.Editor
             var type = component.GetType();
             var drawer = EditorDrawerCache.GetDrawer(type);
             object componentAsObject = component;
-            ImGui.PushStyleColor(ColorTarget.Header, RgbaFloat.CornflowerBlue.ToVector4());
+            Vector4 color = RgbaFloat.CornflowerBlue.ToVector4();
+            if (!component.EnabledInHierarchy)
+            {
+                color = Vector4.Lerp(color, _disabledGrey, 0.85f);
+            }
+            ImGui.PushStyleColor(ColorTarget.Header, color);
             if (ImGui.CollapsingHeader(type.Name, type.Name, true, true))
             {
                 if (ImGui.BeginPopupContextItem(type.Name + "_Context"))
                 {
+                    if (ImGui.MenuItem("Enabled", string.Empty, component.Enabled, true))
+                    {
+                        component.Enabled = !component.Enabled;
+                    }
                     if (ImGui.MenuItem("Remove"))
                     {
                         var go = component.GameObject;
@@ -880,5 +1155,12 @@ namespace Engine.Editor
         {
             _updateables.Remove(behavior);
         }
+    }
+
+    public enum PlayState
+    {
+        Stopped,
+        Paused,
+        Playing
     }
 }

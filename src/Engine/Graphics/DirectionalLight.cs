@@ -19,17 +19,25 @@ namespace Engine.Graphics
         {
             _diffuseColor = diffuseColor;
             _direction = direction;
-            SetProvider();
         }
 
-        public override void Attached(SystemRegistry registry)
+        protected override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _gs.Context.RegisterGlobalDataProvider("LightBuffer", _lightProvider);
-            _gs.SetDirectionalLight(this);
         }
 
-        public override void Removed(SystemRegistry registry)
+        protected override void Removed(SystemRegistry registry)
+        {
+        }
+
+        protected override void OnEnabled()
+        {
+            _gs.SetDirectionalLight(this);
+            SetProvider();
+        }
+
+        protected override void OnDisabled()
         {
         }
 

@@ -36,19 +36,28 @@ namespace Engine.Physics
             get { return _isTrigger; }
             set
             {
-                if (Entity != null)
+                if (_isTrigger != value)
                 {
-                    if (!_isTrigger && value)
-                    {
-                        SetEntityTrigger();
-                    }
-                    else if (_isTrigger && !value)
-                    {
-                        UnsetEntityTrigger();
-                    }
+                    SetIsTrigger(value);
                 }
+            }
+        }
 
-                _isTrigger = value;
+        private void SetIsTrigger(bool value)
+        {
+            Debug.Assert(_isTrigger != value);
+            _isTrigger = value;
+
+            if (Entity != null && EnabledInHierarchy)
+            {
+                if (_isTrigger)
+                {
+                    SetEntityTrigger();
+                }
+                else
+                {
+                    UnsetEntityTrigger();
+                }
             }
         }
 
@@ -82,14 +91,36 @@ namespace Engine.Physics
             Entity.CollisionInformation.Events.PairRemoved += OnCollisionPairRemoved;
         }
 
-        public sealed override void Attached(SystemRegistry registry)
+        protected sealed override void Attached(SystemRegistry registry)
         {
             _physicsSystem = registry.GetSystem<PhysicsSystem>();
-
             Entity = CreateEntity();
-            AddAndInitializeEntity();
+        }
 
+        protected sealed override void Removed(SystemRegistry registry)
+        {
+        }
+
+        protected override void OnEnabled()
+        {
+            AddAndInitializeEntity();
             GameObject.Transform.ScaleChanged += ScaleChanged;
+        }
+
+        protected override void OnDisabled()
+        {
+            _physicsSystem.RemoveObject(Entity);
+            GameObject.Transform.ScaleChanged -= ScaleChanged;
+            Transform.RemovePhysicsEntity();
+            if (_parentCollider != null)
+            {
+                _parentCollider.Transform.PositionManuallyChanged -= OnAttachedParentManuallyMoved;
+            }
+
+            if (_isTrigger)
+            {
+                UnsetEntityTrigger();
+            }
         }
 
         private void AddAndInitializeEntity()
@@ -131,17 +162,6 @@ namespace Engine.Physics
         private void OnAttachedParentManuallyMoved(Vector3 oldParentPos, Vector3 newParentPos)
         {
             Entity.Position += (newParentPos - oldParentPos);
-        }
-
-        public sealed override void Removed(SystemRegistry registry)
-        {
-            _physicsSystem.RemoveObject(Entity);
-            Transform.RemovePhysicsEntity();
-            if (_parentCollider != null)
-            {
-                _parentCollider.Transform.PositionManuallyChanged -= OnAttachedParentManuallyMoved;
-            }
-
         }
 
         protected abstract void ScaleChanged(Vector3 scale);

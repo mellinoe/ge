@@ -22,6 +22,7 @@ namespace Engine.Editor
         {
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
             window.Title = "ge.Editor";
+            window.WindowState = WindowState.Maximized;
             window.Visible = true;
             Game game = new Game();
             GraphicsSystem gs = new GraphicsSystem(window);

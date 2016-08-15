@@ -70,14 +70,16 @@ namespace Ge
 
             LooseFileDatabase db = new LooseFileDatabase(AppContext.BaseDirectory);
 
-            AddBinGameScene();
-            SceneAsset scene = new SceneAsset();
-            var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
-            scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
-            db.SaveDefinition(scene, "BINSCENE.scene");
+            //AddBinGameScene();
+            //SceneAsset scene = new SceneAsset();
+            //var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
+            //scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
+            //db.SaveDefinition(scene, "BINSCENE.scene");
+            //var loaded = db.LoadAsset<SceneAsset>("BINSCENE.scene");
+            //db.SaveDefinition(loaded, "BINSCENE.scene");
 
-            //var scene = db.LoadAsset<SceneAsset>("BINSCENE.scene");
-            //scene.GenerateGameObjects();
+            var scene = db.LoadAsset<SceneAsset>("BINSCENE.scene_New");
+            scene.GenerateGameObjects();
 
             game.RunMainLoop();
         }

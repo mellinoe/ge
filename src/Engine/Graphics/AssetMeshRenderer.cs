@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
 using Veldrid;
 using Veldrid.Graphics;
-using Veldrid.Graphics.OpenGL;
 using Veldrid.Assets;
 
 namespace Engine.Graphics
@@ -69,12 +67,11 @@ namespace Engine.Graphics
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _tintInfoProvider };
         }
 
-        public override void Attached(SystemRegistry registry)
+        protected override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _ad = registry.GetSystem<AssetSystem>().Database;
             InitializeContextObjects(_gs.Context, _gs.MaterialCache);
-            _gs.AddRenderItem(this, Transform);
 
             var objFile = _ad.LoadAsset(MeshFileRef);
             ConstructedMeshInfo firstMesh = objFile.GetFirstMesh();
@@ -86,10 +83,19 @@ namespace Engine.Graphics
             _centeredBoundingBox = BoundingBox.CreateFromVertices(_vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
         }
 
-        public override void Removed(SystemRegistry registry)
+        protected override void Removed(SystemRegistry registry)
+        {
+            ClearDeviceResources();
+        }
+
+        protected override void OnEnabled()
+        {
+            _gs.AddRenderItem(this, Transform);
+        }
+
+        protected override void OnDisabled()
         {
             _gs.RemoveRenderItem(this);
-            ClearDeviceResources();
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)

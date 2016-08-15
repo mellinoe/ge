@@ -68,6 +68,7 @@ namespace Engine.Graphics
 
         public Matrix4x4 RenderOffset { get; set; } = Matrix4x4.Identity;
 
+        [JsonIgnore]
         public BoundingBox Bounds
         {
             get
@@ -139,19 +140,27 @@ namespace Engine.Graphics
             rc.DrawIndexedPrimitives(_indices.Length, 0);
         }
 
-        public override void Attached(SystemRegistry registry)
+        protected override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
             InitializeContextObjects(_gs.Context, _gs.MaterialCache);
+        }
+
+        protected override void Removed(SystemRegistry registry)
+        {
+            ClearDeviceResources();
+        }
+
+        protected override void OnEnabled()
+        {
             _gs.AddRenderItem(this, Transform);
         }
 
-        public override void Removed(SystemRegistry registry)
+        protected override void OnDisabled()
         {
             _gs.RemoveRenderItem(this);
-            ClearDeviceResources();
         }
 
         private unsafe void InitializeContextObjects(RenderContext context, MaterialCache cache)

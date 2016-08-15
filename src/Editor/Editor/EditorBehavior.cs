@@ -1,18 +1,30 @@
-﻿using Engine.Behaviors;
+﻿using System;
+using Engine.Behaviors;
 
 namespace Engine.Editor
 {
     public abstract class EditorBehavior : Component, IUpdateable
     {
-        public override void Attached(SystemRegistry registry)
+        private EditorSystem _es;
+
+        protected sealed override void Attached(SystemRegistry registry)
         {
-            registry.GetSystem<EditorSystem>().RegisterBehavior(this);
+            _es = registry.GetSystem<EditorSystem>();
             Start(registry);
         }
 
-        public override void Removed(SystemRegistry registry)
+        protected sealed override void Removed(SystemRegistry registry)
         {
-            registry.GetSystem<EditorSystem>().RemoveBehavior(this);
+        }
+
+        protected override void OnEnabled()
+        {
+            _es.RegisterBehavior(this);
+        }
+
+        protected override void OnDisabled()
+        {
+            _es.RemoveBehavior(this);
         }
 
         internal virtual void Start(SystemRegistry registry)

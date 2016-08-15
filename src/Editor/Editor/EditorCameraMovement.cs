@@ -17,6 +17,8 @@ namespace Engine.Editor
 
         private float _turboMultiplier = 3f;
         private bool _draggingOffWindow;
+        private float _middleClickDragSpeed = 1f;
+        private float _wheelZoomSpeed = 9f;
 
         internal override void Start(SystemRegistry registry)
         {
@@ -58,11 +60,11 @@ namespace Engine.Editor
                 GameObject.Transform.Position += Vector3.Normalize(moveDirection) * totalSpeed * deltaSeconds;
             }
 
-            HandleMouseMovement();
+            HandleMouseMovement(deltaSeconds);
         }
 
 
-        void HandleMouseMovement()
+        void HandleMouseMovement(float deltaSeconds)
         {
             float newMouseX = _input.MousePosition.X;
             float newMouseY = _input.MousePosition.Y;
@@ -70,28 +72,41 @@ namespace Engine.Editor
             float xDelta = newMouseX - _previousMouseX;
             float yDelta = newMouseY - _previousMouseY;
 
-            if (!_draggingOffWindow && ((_input.GetMouseButtonDown(MouseButton.Left) || _input.GetMouseButtonDown(MouseButton.Right)) && !ImGui.IsMouseHoveringAnyWindow()))
+            if (!_draggingOffWindow
+                && ((_input.GetMouseButtonDown(MouseButton.Left) || _input.GetMouseButtonDown(MouseButton.Middle) || _input.GetMouseButtonDown(MouseButton.Right))
+                && !ImGui.IsMouseHoveringAnyWindow()))
             {
                 _draggingOffWindow = true;
             }
 
             if (_draggingOffWindow)
             {
-                if (!(_input.GetMouseButton(MouseButton.Left) || _input.GetMouseButton(MouseButton.Right)))
+                if (!(_input.GetMouseButton(MouseButton.Left) || _input.GetMouseButton(MouseButton.Middle) || _input.GetMouseButton(MouseButton.Right)))
                 {
                     _draggingOffWindow = false;
                 }
                 else
                 {
-                    _currentYaw += -xDelta * 0.01f;
-                    _currentPitch += -yDelta * 0.01f;
-
-                    GameObject.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(_currentYaw, _currentPitch, 0f);
+                    if (_input.GetMouseButton(MouseButton.Middle))
+                    {
+                        GameObject.Transform.Position += (GameObject.Transform.Right * -xDelta + GameObject.Transform.Up * yDelta) * _middleClickDragSpeed * deltaSeconds;
+                    }
+                    else
+                    {
+                        _currentYaw += -xDelta * 0.01f;
+                        _currentPitch += -yDelta * 0.01f;
+                        GameObject.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(_currentYaw, _currentPitch, 0f);
+                    }
                 }
             }
 
             _previousMouseX = newMouseX;
             _previousMouseY = newMouseY;
+
+            if (!ImGui.IsMouseHoveringAnyWindow())
+            {
+                GameObject.Transform.Position += _input.CurrentSnapshot.WheelDelta * GameObject.Transform.Forward * _wheelZoomSpeed * deltaSeconds;
+            }
         }
     }
 }

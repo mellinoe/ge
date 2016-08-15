@@ -36,12 +36,18 @@ namespace Engine.Behaviors
         {
             _behaviors = _behaviors.Add(behavior);
             if (behavior is Behavior)
-            _newStarts.Add((Behavior)behavior);
+            {
+                _newStarts.Add((Behavior)behavior);
+            }
         }
 
         public void Remove(IUpdateable behavior)
         {
             _behaviors = _behaviors.Remove(behavior);
+            if (behavior is Behavior)
+            {
+                _newStarts.Remove((Behavior)behavior);
+            }
         }
     }
 }

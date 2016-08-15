@@ -2,14 +2,25 @@
 {
     public abstract class Behavior : Component, IUpdateable
     {
-        public sealed override void Attached(SystemRegistry registry)
+        private BehaviorUpdateSystem _bus;
+
+        protected sealed override void Attached(SystemRegistry registry)
         {
-            registry.GetSystem<BehaviorUpdateSystem>().Register(this);
+            _bus = registry.GetSystem<BehaviorUpdateSystem>();
         }
 
-        public sealed override void Removed(SystemRegistry registry)
+        protected sealed override void Removed(SystemRegistry registry)
         {
-            registry.GetSystem<BehaviorUpdateSystem>().Remove(this);
+        }
+
+        protected override void OnEnabled()
+        {
+            _bus.Register(this);
+        }
+
+        protected override void OnDisabled()
+        {
+            _bus.Remove(this);
         }
 
         public abstract void Update(float deltaSeconds);

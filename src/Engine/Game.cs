@@ -19,8 +19,9 @@ namespace Engine
         public Game()
         {
             SystemRegistry.Register(new GameObjectQuerySystem(_gameObjects));
-            GameObject.GameObjectConstructed += OnGameObjectConstructed;
-            GameObject.GameObjectDestroyed += OnGameObjectDestroyed;
+            GameObject.InternalConstructed += OnGameObjectConstructed;
+            GameObject.InternalDestroyRequested += OnGameObjectDestroyRequested;
+            GameObject.InternalDestroyCommitted += OnGameObjectDestroyCommitted;
         }
 
         private void OnGameObjectConstructed(GameObject go)
@@ -29,9 +30,14 @@ namespace Engine
             _gameObjects.Add(go);
         }
 
-        private void OnGameObjectDestroyed(GameObject go)
+        private void OnGameObjectDestroyRequested(GameObject go)
         {
             _destroyList.Add(go);
+        }
+
+        private void OnGameObjectDestroyCommitted(GameObject go)
+        {
+            _gameObjects.Remove(go);
         }
 
         public void RunMainLoop()
@@ -64,7 +70,6 @@ namespace Engine
                 foreach (GameObject go in _destroyList)
                 {
                     go.CommitDestroy();
-                    _gameObjects.Remove(go);
                 }
                 _destroyList.Clear();
             }

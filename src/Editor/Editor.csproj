@@ -28,6 +28,7 @@
     <Compile Include="Editor\EditorBehavior.cs" />
     <Compile Include="Editor\EditorCameraMovement.cs" />
     <Compile Include="Editor\EditorSystem.cs" />
+    <Compile Include="Editor\InMemoryAsset.cs" />
     <Compile Include="Editor\TextureDrawer.cs" />
     <Compile Include="Editor\UndoRedoStack.cs" />
     <Compile Include="Editor\Preferences.cs" />

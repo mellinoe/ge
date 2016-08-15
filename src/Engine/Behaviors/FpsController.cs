@@ -32,6 +32,16 @@ namespace Engine.Behaviors
             HandleKeyboardMovement(deltaSeconds);
         }
 
+        protected override void OnEnabled()
+        {
+            base.OnEnabled();
+        }
+
+        protected override void OnDisabled()
+        {
+            base.OnDisabled();
+        }
+
         void HandleMouseMovement()
         {
             float newMouseX = _input.MousePosition.X;
