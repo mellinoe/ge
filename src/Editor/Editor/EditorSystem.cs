@@ -17,6 +17,7 @@ using Veldrid.Platform;
 using Veldrid.Assets;
 using Engine.Editor.Commands;
 using Engine.GUI;
+using Engine.Editor.Graphics;
 
 namespace Engine.Editor
 {
@@ -62,6 +63,7 @@ namespace Engine.Editor
         private HashSet<GameObject> _selectedObjects = new HashSet<GameObject>();
         private readonly UndoRedoStack _undoRedo = new UndoRedoStack();
         private Transform _multiTransformDummy = new Transform();
+        private AxesRenderer _axesRenderer;
 
         private InMemoryAsset<SceneAsset> _currentScene;
         private string _currentScenePath;
@@ -111,6 +113,9 @@ namespace Engine.Editor
             var imGuiRenderer = _bus.Updateables.Single(u => u is ImGuiRenderer);
             _bus.Remove(imGuiRenderer);
             RegisterBehavior(imGuiRenderer);
+
+            _axesRenderer = new AxesRenderer(_gs.Context);
+            _gs.AddFreeRenderItem(_axesRenderer);
 
             DiscoverComponentsFromAssembly(typeof(Game).GetTypeInfo().Assembly);
         }
@@ -327,6 +332,16 @@ namespace Engine.Editor
         {
             UpdateUpdateables(deltaSeconds);
             DoFakePhysicsUpdate();
+
+            if (_selectedObjects.Any())
+            {
+                _axesRenderer.Scale = Vector3.One * 2;
+                _axesRenderer.Position = _selectedObjects.First().Transform.Position;
+            }
+            else
+            {
+                _axesRenderer.Scale = Vector3.Zero;
+            }
 
             DrawMainMenu();
 

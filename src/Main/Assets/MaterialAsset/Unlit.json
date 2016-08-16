@@ -1,0 +1,66 @@
+{
+  "$type": "Veldrid.Assets.MaterialAsset, Veldrid.Assets",
+  "Name": "Unlit",
+  "VertexShader": "unlit-vertex",
+  "FragmentShader": "unlit-frag",
+  "VertexInputs": {
+    "$type": "Veldrid.Graphics.MaterialVertexInput, Veldrid",
+    "VertexSizeInBytes": 32,
+    "Elements": {
+      "$type": "Veldrid.Graphics.MaterialVertexInputElement[], Veldrid",
+      "$values": [
+        {
+          "$type": "Veldrid.Graphics.MaterialVertexInputElement, Veldrid",
+          "Name": "in_position",
+          "SemanticType": 0,
+          "ElementFormat": 2,
+          "SizeInBytes": 12
+        },
+        {
+          "$type": "Veldrid.Graphics.MaterialVertexInputElement, Veldrid",
+          "Name": "in_texCoord",
+          "SemanticType": 1,
+          "ElementFormat": 1,
+          "SizeInBytes": 8
+        }
+      ]
+    }
+  },
+  "GlobalInputs": {
+    "$type": "Veldrid.Assets.MaterialGlobalInputDescription[], Veldrid.Assets",
+    "$values": [
+      {
+        "$type": "Veldrid.Assets.MaterialGlobalInputDescription, Veldrid.Assets",
+        "Name": "ProjectionMatrixBuffer",
+        "Type": 9,
+        "ProviderName": "ProjectionMatrix"
+      },
+      {
+        "$type": "Veldrid.Assets.MaterialGlobalInputDescription, Veldrid.Assets",
+        "Name": "ViewMatrixBuffer",
+        "Type": 9,
+        "ProviderName": "ViewMatrix"
+      }
+    ]
+  },
+  "PerObjectInputs": {
+    "$type": "Veldrid.Graphics.MaterialPerObjectInputElement[], Veldrid",
+    "$values": [
+      {
+        "$type": "Veldrid.Graphics.MaterialPerObjectInputElement, Veldrid",
+        "BufferSizeInBytes": 16,
+        "Name": "WorldMatrixBuffer",
+        "Type": 9
+      }
+    ]
+  },
+  "TextureInputs": {
+    "$type": "Veldrid.Assets.TextureAsset[], Veldrid.Assets",
+    "$values": [
+      {
+        "$type": "Veldrid.Assets.PlaceholderTexture, Veldrid.Assets",
+        "Name": "SurfaceTexture"
+      }
+    ]
+  }
+}
