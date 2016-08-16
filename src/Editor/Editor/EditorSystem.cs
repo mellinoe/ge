@@ -16,6 +16,7 @@ using Veldrid.Graphics;
 using Veldrid.Platform;
 using Veldrid.Assets;
 using Engine.Editor.Commands;
+using Engine.GUI;
 
 namespace Engine.Editor
 {
@@ -30,6 +31,10 @@ namespace Engine.Editor
         {
             '\"',
             '\''
+        };
+        private static readonly HashSet<Type> s_newComponentExclusions = new HashSet<Type>()
+        {
+            typeof(Transform)
         };
         private readonly List<Type> _newComponentOptions = new List<Type>();
 
@@ -65,6 +70,7 @@ namespace Engine.Editor
         // Asset editor stuff
         private string _loadedAssetPath;
         private object _selectedAsset;
+        private TypeCache<AssetMenuHandler> _assetMenuHandlers = new TypeCache<AssetMenuHandler>();
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -80,6 +86,11 @@ namespace Engine.Editor
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Collider>(DrawCollider));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Component>(GenericDrawer));
+
+            var genericHandler = new GenericAssetMenuHandler();
+            _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
+            var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, LoadScene);
+            _assetMenuHandlers.AddItem(sceneHandler.TypeHandled, sceneHandler);
 
             _registry.Register(this);
 
@@ -107,7 +118,7 @@ namespace Engine.Editor
         public void DiscoverComponentsFromAssembly(Assembly assembly)
         {
             _newComponentOptions.AddRange(
-                assembly.GetTypes().Where(t => typeof(Component).IsAssignableFrom(t) && HasParameterlessConstructor(t)));
+                assembly.GetTypes().Where(t => typeof(Component).IsAssignableFrom(t) && HasParameterlessConstructor(t) && !s_newComponentExclusions.Contains(t)));
         }
 
         private bool HasParameterlessConstructor(Type t)
@@ -483,12 +494,21 @@ namespace Engine.Editor
 
                 foreach (AssetInfo asset in node.AssetInfos)
                 {
-                    if (ImGui.Selectable(asset.Name) && _loadedAssetPath != asset.Path)
+                    if (ImGui.Selectable(asset.Name, _loadedAssetPath == asset.Path) && _loadedAssetPath != asset.Path)
                     {
                         ClearSelection();
                         _selectedAsset = _as.Database.LoadAsset(asset.Path);
                         _loadedAssetPath = asset.Path;
                         _filenameBuffer.StringValue = asset.Name;
+                    }
+                    if (_loadedAssetPath == asset.Path)
+                    {
+                        if (ImGui.GetIO().KeysDown[(int)Key.Enter])
+                        {
+                            Type assetType = _as.Database.GetAssetType(asset.Path);
+                            AssetMenuHandler handler = _assetMenuHandlers.GetItem(assetType);
+                            handler.HandleFileOpen(asset.Path);
+                        }
                     }
                     if (ImGui.IsLastItemHovered())
                     {
@@ -496,16 +516,24 @@ namespace Engine.Editor
                     }
                     if (ImGui.BeginPopupContextItem(asset.Name + "_context"))
                     {
-                        if (ImGui.Button("Clone"))
+                        Type assetType = _as.Database.GetAssetType(asset.Path);
+                        AssetMenuHandler handler = _assetMenuHandlers.GetItem(assetType);
+
+                        if (ImGui.MenuItem("Open"))
+                        {
+                            handler.HandleFileOpen(asset.Path);
+                        }
+                        if (ImGui.MenuItem("Clone"))
                         {
                             _as.Database.CloneAsset(asset.Path);
-                            ImGui.CloseCurrentPopup();
                         }
-                        if (ImGui.Button("Delete"))
+                        if (ImGui.MenuItem("Delete"))
                         {
                             _as.Database.DeleteAsset(asset.Path);
-                            ImGui.CloseCurrentPopup();
                         }
+
+                        handler.DrawMenuItems();
+
                         ImGui.EndPopup();
                     }
                 }
@@ -1081,7 +1109,7 @@ namespace Engine.Editor
             {
                 foreach (Type option in _newComponentOptions)
                 {
-                    if (ImGui.Button(option.Name))
+                    if (ImGui.MenuItem(option.Name))
                     {
                         Component c = (Component)Activator.CreateInstance(option);
                         Command command = new RawCommand(() => go.AddComponent(c), () => go.RemoveComponent(c));
@@ -1089,6 +1117,7 @@ namespace Engine.Editor
                         ImGui.CloseCurrentPopup();
                     }
                 }
+
                 ImGui.EndPopup();
             }
         }

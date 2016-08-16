@@ -70,8 +70,14 @@ namespace Engine.Graphics
 
         private void UpdateLightProjection()
         {
-            if (MainCamera == null || Light == null)
+            if (MainCamera == null)
             {
+                return;
+            }
+            if (Light == null)
+            {
+                _lightProjectionProvider.Data = Matrix4x4.Identity;
+                _lightViewProvider.Data = Matrix4x4.Identity;
                 return;
             }
 

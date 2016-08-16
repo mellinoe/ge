@@ -23,12 +23,12 @@ cbuffer LightInfoBuffer : register(b4)
     float4 lightPos;
 }
 
-cbuffer WorldMatrixBuffer : register(b5)
+cbuffer WorldMatrixBuffer : register(b7)
 {
     float4x4 world;
 }
 
-cbuffer InverseTransposeWorldMatrixBuffer : register(b6)
+cbuffer InverseTransposeWorldMatrixBuffer : register(b8)
 {
     float4x4 inverseTransposeWorld;
 }

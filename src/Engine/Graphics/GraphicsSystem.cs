@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using Veldrid;
-using Veldrid.Assets;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
 using Veldrid.Graphics.OpenGL;
@@ -15,8 +13,27 @@ namespace Engine.Graphics
     public class GraphicsSystem : GameSystem
     {
         private readonly OctreeVisibilityManager _visiblityManager = new OctreeVisibilityManager();
+
         private readonly Renderer _renderer;
         private readonly PipelineStage[] _pipelineStages;
+
+        internal void AddPointLight(PointLight pointLight)
+        {
+            _pointLights.Add(pointLight);
+            if (_pointLights.Count > PointLightsBuffer.MaxLights)
+            {
+                Console.WriteLine($"Only {PointLightsBuffer.MaxLights} point lights are supported. PointLight {pointLight} will not be active.");
+            }
+        }
+
+        internal void RemovePointLight(PointLight pointLight)
+        {
+            if (!_pointLights.Remove(pointLight))
+            {
+                throw new InvalidOperationException($"Couldn't remove point light {pointLight}, it wasn't added.");
+            }
+        }
+
         private readonly Window _window;
         private readonly Dictionary<BoundsRenderItem, BoundsRenderItemEntry> _boundsRenderItemEntries = new Dictionary<BoundsRenderItem, BoundsRenderItemEntry>();
 
@@ -32,6 +49,9 @@ namespace Engine.Graphics
 
         public Camera MainCamera => _mainCamera;
 
+        private DynamicDataProvider<PointLightsBuffer> _pointLightsProvider = new DynamicDataProvider<PointLightsBuffer>();
+        private readonly List<PointLight> _pointLights = new List<PointLight>();
+
         public void SetViewFrustum(ref BoundingFrustum frustum)
         {
             _frustum = frustum;
@@ -46,6 +66,7 @@ namespace Engine.Graphics
 
             Context.RegisterGlobalDataProvider("ViewMatrix", _mainCamera.ViewProvider);
             Context.RegisterGlobalDataProvider("ProjectionMatrix", _mainCamera.ProjectionProvider);
+            Context.RegisterGlobalDataProvider("CameraInfo", _mainCamera.CameraInfoProvider);
         }
 
         public void SetDirectionalLight(DirectionalLight directionalLight)
@@ -67,6 +88,8 @@ namespace Engine.Graphics
                 new StandardPipelineStage(Context, "Overlay")
             };
             _renderer = new Renderer(Context, _pipelineStages);
+
+            Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
         }
 
         private static RenderContext CreatePlatformDefaultContext(OpenTKWindow window)
@@ -115,18 +138,27 @@ namespace Engine.Graphics
 
         protected override void UpdateCore(float deltaSeconds)
         {
-            //float tickCount = Environment.TickCount / 10.0f;
-            //float r = 0.5f + (0.5f * (float)Math.Sin(tickCount / 300f));
-            //float g = 0.5f + (0.5f * (float)Math.Sin(tickCount / 750f));
-            //float b = 0.5f + (0.5f * (float)Math.Sin(tickCount / 50f));
-
             float r = 0.8f;
             float g = 0.8f;
             float b = 0.8f;
             Context.ClearColor = new RgbaFloat(r, g, b, 1.0f);
 
+            UpdatePointLightBuffer();
+
             _visiblityManager.Octree.ApplyPendingMoves();
             _renderer.RenderFrame(_visiblityManager, _mainCamera.Transform.Position);
+        }
+
+        private void UpdatePointLightBuffer()
+        {
+            PointLightsBuffer plb = new PointLightsBuffer();
+            plb.NumActivePointLights = Math.Min(PointLightsBuffer.MaxLights, _pointLights.Count);
+            for (int i = 0; i < plb.NumActivePointLights; i++)
+            {
+                plb[i] = _pointLights[i].GetLightInfo();
+            }
+
+            _pointLightsProvider.Data = plb;
         }
 
         public void ToggleOctreeVisualizer()

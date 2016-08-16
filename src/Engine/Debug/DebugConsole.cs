@@ -22,28 +22,27 @@ namespace Engine.Editor
         private bool _windowOpen;
         private int _previousFrameLines;
         private bool _focusInput;
+        private InputSystem _input;
 
         internal override void Start(SystemRegistry registry)
         {
             _ccs = registry.GetSystem<ConsoleCommandSystem>();
             _ccs.Print += AddLine;
             _gs = registry.GetSystem<GraphicsSystem>();
-
-            registry.GetSystem<InputSystem>().RegisterCallback(input =>
-            {
-                if (input.GetKeyDown(Veldrid.Platform.Key.Tilde))
-                {
-                    _windowOpen = !_windowOpen;
-                    if (_windowOpen)
-                    {
-                        _focusInput = true;
-                    }
-                }
-            });
+            _input = registry.GetSystem<InputSystem>();
         }
 
         public unsafe override void Update(float deltaSeconds)
         {
+            if (_input.GetKeyDown(Veldrid.Platform.Key.Tilde))
+            {
+                _windowOpen = !_windowOpen;
+                if (_windowOpen)
+                {
+                    _focusInput = true;
+                }
+            }
+
             if (_windowOpen)
             {
                 var window = _gs.Context.Window;

@@ -9,6 +9,7 @@ namespace Engine.Graphics
     {
         private DynamicDataProvider<Matrix4x4> _viewProvider = new DynamicDataProvider<Matrix4x4>();
         private DynamicDataProvider<Matrix4x4> _projectionProvider = new DynamicDataProvider<Matrix4x4>();
+        private DynamicDataProvider<Vector4> _cameraInfoProvider = new DynamicDataProvider<Vector4>();
         private GraphicsSystem _gs;
 
         private float _fov = 1.05f;
@@ -21,6 +22,7 @@ namespace Engine.Graphics
 
         public ConstantBufferDataProvider ViewProvider => _viewProvider;
         public ConstantBufferDataProvider ProjectionProvider => _projectionProvider;
+        public ConstantBufferDataProvider CameraInfoProvider => _cameraInfoProvider;
 
         protected override void Attached(SystemRegistry registry)
         {
@@ -82,6 +84,8 @@ namespace Engine.Graphics
                 GameObject.Transform.Position,
                 GameObject.Transform.Position + GameObject.Transform.Forward,
                 GameObject.Transform.Up);
+
+            _cameraInfoProvider.Data = new Vector4(Transform.Position, 1f);
 
             UpdateViewFrustum();
         }

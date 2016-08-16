@@ -183,7 +183,9 @@ namespace Engine.Graphics
                         new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
                         new MaterialGlobalInputElement("LightProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "LightProjMatrix"),
                         new MaterialGlobalInputElement("LightViewMatrixBuffer", MaterialInputType.Matrix4x4, "LightViewMatrix"),
-                        new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Custom, "LightBuffer")
+                        new MaterialGlobalInputElement("LightInfoBuffer", MaterialInputType.Custom, "LightBuffer"),
+                        new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo"),
+                        new MaterialGlobalInputElement("PointLightsBuffer", MaterialInputType.Custom, "PointLights")
                     });
             }
 

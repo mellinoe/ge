@@ -11,6 +11,8 @@ namespace Engine.Graphics
         private RgbaFloat _diffuseColor;
         private GraphicsSystem _gs;
         private DynamicDataProvider<LightInfo> _lightProvider = new DynamicDataProvider<LightInfo>();
+        private static readonly DynamicDataProvider<LightInfo> _noLightProvider
+            = new DynamicDataProvider<LightInfo>(new LightInfo(RgbaFloat.Black, Vector3.Zero));
 
         public RgbaFloat DiffuseColor { get { return _diffuseColor; } set { _diffuseColor = value; SetProvider(); } }
         public Vector3 Direction { get { return _direction; } set { _direction = Vector3.Normalize(value); SetProvider(); } }
@@ -24,7 +26,6 @@ namespace Engine.Graphics
         protected override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
-            _gs.Context.RegisterGlobalDataProvider("LightBuffer", _lightProvider);
         }
 
         protected override void Removed(SystemRegistry registry)
@@ -34,11 +35,14 @@ namespace Engine.Graphics
         protected override void OnEnabled()
         {
             _gs.SetDirectionalLight(this);
+            _gs.Context.RegisterGlobalDataProvider("LightBuffer", _lightProvider);
             SetProvider();
         }
 
         protected override void OnDisabled()
         {
+            _gs.Context.RegisterGlobalDataProvider("LightBuffer", _noLightProvider);
+            _gs.SetDirectionalLight(null);
         }
 
         private void SetProvider()

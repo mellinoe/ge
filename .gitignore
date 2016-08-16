@@ -254,3 +254,7 @@ Session.vim
 
 # ImGui
 imgui.ini
+
+# VC DB Stuff
+*.VC.db
+*.opendb
