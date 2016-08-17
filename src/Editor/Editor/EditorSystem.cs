@@ -73,6 +73,7 @@ namespace Engine.Editor
         private string _loadedAssetPath;
         private object _selectedAsset;
         private TypeCache<AssetMenuHandler> _assetMenuHandlers = new TypeCache<AssetMenuHandler>();
+        private int _statusBarHeight = 20;
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -114,7 +115,7 @@ namespace Engine.Editor
             _bus.Remove(imGuiRenderer);
             RegisterBehavior(imGuiRenderer);
 
-            _axesRenderer = new AxesRenderer(_gs.Context);
+            _axesRenderer = new AxesRenderer(_gs.Context, _gs);
             _gs.AddFreeRenderItem(_axesRenderer);
 
             DiscoverComponentsFromAssembly(typeof(Game).GetTypeInfo().Assembly);
@@ -337,6 +338,7 @@ namespace Engine.Editor
             {
                 _axesRenderer.Scale = Vector3.One * 2;
                 _axesRenderer.Position = _selectedObjects.First().Transform.Position;
+                _axesRenderer.Rotation = _selectedObjects.First().Transform.Rotation;
             }
             else
             {
@@ -344,6 +346,7 @@ namespace Engine.Editor
             }
 
             DrawMainMenu();
+            DrawStatusBar();
 
             if (_input.GetKeyDown(Key.F1))
             {
@@ -425,7 +428,7 @@ namespace Engine.Editor
                     Vector2 displaySize = ImGui.GetIO().DisplaySize;
                     Vector2 size = new Vector2(
                         Math.Min(350, displaySize.X * 0.275f),
-                        Math.Min(600, displaySize.Y * 0.35f));
+                        Math.Min(600, (displaySize.Y * 0.35f) - (_statusBarHeight + 20)));
                     Vector2 pos = new Vector2(0, displaySize.Y * 0.6f + 20);
                     ImGui.SetNextWindowSize(size, SetCondition.Always);
                     ImGui.SetNextWindowPos(pos, SetCondition.Always);
@@ -454,6 +457,30 @@ namespace Engine.Editor
                     ImGui.EndWindow();
                 }
             }
+        }
+
+        private void DrawStatusBar()
+        {
+            IO io = ImGui.GetIO();
+            Vector2 pos = new Vector2(0, io.DisplaySize.Y - _statusBarHeight);
+            ImGui.SetNextWindowPos(pos, SetCondition.Always);
+            ImGui.SetNextWindowSize(new Vector2(io.DisplaySize.X, _statusBarHeight), SetCondition.Always);
+            ImGui.PushStyleVar(StyleVar.WindowRounding, 0);
+            ImGui.PushStyleVar(StyleVar.WindowPadding, new Vector2());
+            ImGui.PushStyleVar(StyleVar.WindowMinSize, new Vector2());
+            Vector4 statusBarColor = _playState == PlayState.Playing ? RgbaFloat.Orange.ToVector4() : RgbaFloat.Black.ToVector4();
+            ImGui.PushStyleColor(ColorTarget.WindowBg, statusBarColor);
+            if (ImGui.BeginWindow(
+                string.Empty,
+                WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoScrollbar | WindowFlags.NoCollapse))
+            {
+                ImGui.Text("State: ");
+                ImGui.SameLine();
+                ImGui.Text(_playState.ToString());
+            }
+            ImGui.PopStyleVar(3);
+            ImGui.PopStyleColor();
+            ImGui.EndWindow();
         }
 
         private void DrawComponentViewer()
@@ -674,7 +701,7 @@ namespace Engine.Editor
                 ImGui.EndMainMenuBar();
             }
 
-            if (_input.GetKeyDown(Key.P) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
+            if (_currentScene != null && _input.GetKeyDown(Key.P) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
             {
                 if (!_bus.Enabled)
                 {
