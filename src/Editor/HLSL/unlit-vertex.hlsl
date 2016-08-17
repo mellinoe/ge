@@ -29,9 +29,14 @@ PixelInput VS(VertexInput input)
 {
     PixelInput output;
 
-    float4 worldPosition = mul(world, float4(input.position, 1));
-    float4 viewPosition = mul(view, worldPosition);
-    output.position = mul(projection, viewPosition);
+	// This keeps the size of the object the same regardless of view position.
+	// Approach taken from here:
+    // https://www.opengl.org/discussion_boards/showthread.php/177936-draw-an-object-that-looks-the-same-size-regarles-the-distance-in-perspective-view
+	float reciprScaleOnscreen = 0.075;
+	float w = mul(projection, mul(view, mul(world, float4(0, 0, 0, 1)))).w;
+	w *= reciprScaleOnscreen;
+
+	output.position = mul(projection, mul(view, mul(world, float4(input.position * w, 1))));
 
     output.color = input.color;
 

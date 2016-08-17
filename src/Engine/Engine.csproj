@@ -44,6 +44,7 @@
     <Compile Include="Graphics\MaterialCache.cs" />
     <Compile Include="Graphics\PointLight.cs" />
     <Compile Include="Graphics\PointLightInfo.cs" />
+    <Compile Include="Graphics\Skybox.cs" />
     <Compile Include="GUI\FilePicker.cs" />
     <Compile Include="ProjectSystem\ProjectManifest.cs" />
     <Compile Include="RefOrImmediate`1.cs" />

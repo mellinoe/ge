@@ -15,11 +15,6 @@ namespace Engine
 
         public AssetRef<T> GetRef()
         {
-            if (_ref == null)
-            {
-                throw new InvalidOperationException("Ref is null, there is an immediate value.");
-            }
-
             return _ref;
         }
 

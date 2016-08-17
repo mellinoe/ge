@@ -73,7 +73,11 @@ namespace Engine.Editor
         private string _loadedAssetPath;
         private object _selectedAsset;
         private TypeCache<AssetMenuHandler> _assetMenuHandlers = new TypeCache<AssetMenuHandler>();
+
+        // Status Bar
         private int _statusBarHeight = 20;
+        private string _statusBarText = string.Empty;
+        private Vector4 _statusBarColor;
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -90,9 +94,11 @@ namespace Engine.Editor
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Component>(GenericDrawer));
 
+            DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<ImageProcessorTexture>>(DrawTextureRef));
+
             var genericHandler = new GenericAssetMenuHandler();
             _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
-            var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, LoadScene);
+            var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
             _assetMenuHandlers.AddItem(sceneHandler.TypeHandled, sceneHandler);
 
             _registry.Register(this);
@@ -246,7 +252,7 @@ namespace Engine.Editor
 
             if (!mr.Texture.HasValue)
             {
-                AssetRef<TextureData> result = DrawTextureRef("Surface Texture", mr.Texture.GetRef(), _as.Database);
+                AssetRef<TextureData> result = DrawAssetRef("Surface Texture", mr.Texture.GetRef(), _as.Database);
                 if (result != null)
                 {
                     c = SetValueActionCommand.New<AssetRef<TextureData>>(val => mr.Texture = val, mr.Texture.GetRef(), result);
@@ -257,10 +263,23 @@ namespace Engine.Editor
             return c;
         }
 
-        private AssetRef<TextureData> DrawTextureRef(string label, AssetRef<TextureData> existingRef, LooseFileDatabase database)
+        private bool DrawTextureRef(string label, ref RefOrImmediate<ImageProcessorTexture> obj, RenderContext rc)
+        {
+            AssetRef<ImageProcessorTexture> oldRef = obj.GetRef() ?? new AssetRef<ImageProcessorTexture>();
+            AssetRef<ImageProcessorTexture> newRef = DrawAssetRef(label, oldRef, _as.Database);
+            if (newRef != null)
+            {
+                obj = new RefOrImmediate<ImageProcessorTexture>(new AssetRef<ImageProcessorTexture>(newRef.ID), null);
+                return true;
+            }
+
+            return false;
+        }
+
+        private AssetRef<T> DrawAssetRef<T>(string label, AssetRef<T> existingRef, LooseFileDatabase database)
         {
             AssetID result = default(AssetID);
-            AssetID[] assets = database.GetAssetsOfType(typeof(TextureData));
+            AssetID[] assets = database.GetAssetsOfType(typeof(T));
 
             string[] items = assets.Select(id => id.Value).ToArray();
             int selected = 0;
@@ -275,7 +294,7 @@ namespace Engine.Editor
 
             if (result != default(AssetID) && result != existingRef.ID)
             {
-                return new AssetRef<TextureData>(result);
+                return new AssetRef<T>(result);
             }
             else
             {
@@ -474,9 +493,15 @@ namespace Engine.Editor
                 string.Empty,
                 WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoScrollbar | WindowFlags.NoCollapse))
             {
-                ImGui.Text("State: ");
+                ImGui.PushStyleColor(ColorTarget.Text, _statusBarColor);
+                ImGui.Text(_statusBarText);
+                ImGui.PopStyleColor();
                 ImGui.SameLine();
-                ImGui.Text(_playState.ToString());
+                var available = ImGui.GetContentRegionAvailableWidth();
+                string stateText = $"State: {_playState.ToString()}";
+                float start = available - ImGui.GetTextSize(stateText).X - 10;
+                ImGui.SameLine(0, start);
+                ImGui.Text(stateText);
             }
             ImGui.PopStyleVar(3);
             ImGui.PopStyleColor();
@@ -640,7 +665,15 @@ namespace Engine.Editor
                             {
                                 if (ImGui.MenuItem(path))
                                 {
-                                    LoadScene(path);
+                                    if (!LoadScene(path))
+                                    {
+                                        StatusBarText("[!] Couldn't load scene: " + path, RgbaFloat.Red);
+                                        EditorPreferences.Instance.OpenedSceneHistory.Remove(path);
+                                    }
+                                    else
+                                    {
+                                        StatusBarText("Successfully loaded scene: " + path, RgbaFloat.Green);
+                                    }
                                 }
                             }
 
@@ -755,6 +788,13 @@ namespace Engine.Editor
             }
         }
 
+        private void StatusBarText(string text) => StatusBarText(text, RgbaFloat.White);
+        private void StatusBarText(string text, RgbaFloat color)
+        {
+            _statusBarText = text;
+            _statusBarColor = color.ToVector4();
+        }
+
         private void ToggleWindowFullscreenState()
         {
             Window window = _gs.Context.Window;
@@ -767,23 +807,38 @@ namespace Engine.Editor
             _gs.Context.Window.Close();
         }
 
-        private void LoadScene(string path)
+        private bool LoadScene(string path)
         {
-            StopSimulation();
-            DestroyNonEditorGameObjects();
+            if (!File.Exists(path))
+            {
+                return false;
+            }
 
             path = path.Trim(s_pathTrimChar);
             Console.WriteLine("Opening scene: " + path);
-            using (var fs = File.OpenRead(path))
+
+            try
             {
-                var jtr = new JsonTextReader(new StreamReader(fs));
-                SceneAsset loadedAsset = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
+                SceneAsset loadedAsset;
+                using (var fs = File.OpenRead(path))
+                {
+                    var jtr = new JsonTextReader(new StreamReader(fs));
+                    loadedAsset = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
+                }
+
                 if (_currentScene == null)
                 {
                     _currentScene = new InMemoryAsset<SceneAsset>();
                 }
                 _currentScene.UpdateAsset(_as.Database.DefaultSerializer, loadedAsset);
             }
+            catch
+            {
+                return false;
+            }
+
+            StopSimulation();
+            DestroyNonEditorGameObjects();
 
             string projectRoot = Path.GetDirectoryName(path);
             _gs.Context.ResourceFactory.ShaderAssetRootPath = projectRoot;
@@ -793,6 +848,8 @@ namespace Engine.Editor
 
             EditorPreferences.Instance.SetLatestScene(path);
             _currentScenePath = path;
+
+            return true;
         }
 
         private void ActivateScene(SceneAsset asset)

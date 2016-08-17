@@ -137,7 +137,7 @@ namespace Engine
         {
             T component;
             GameObject parent = this;
-            while ((parent = parent.Transform.Parent?.GameObject) != null)
+            do
             {
                 component = parent.GetComponent<T>();
                 if (component != null)
@@ -145,6 +145,7 @@ namespace Engine
                     return component;
                 }
             }
+            while ((parent = parent.Transform.Parent?.GameObject) != null);
 
             return null;
         }
