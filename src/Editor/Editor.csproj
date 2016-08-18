@@ -35,7 +35,6 @@
     <Compile Include="Editor\UndoRedoStack.cs" />
     <Compile Include="Editor\Preferences.cs" />
     <Compile Include="Editor\Program.cs" />
-    <Compile Include="ProjectSystem\Project.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />

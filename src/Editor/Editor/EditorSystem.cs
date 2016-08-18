@@ -24,6 +24,8 @@ namespace Engine.Editor
 {
     public class EditorSystem : GameSystem
     {
+        private const string NewProjectManifestName = "NewProject.manifest";
+
         private static HashSet<string> s_ignoredGenericProps = new HashSet<string>()
         {
             "Transform",
@@ -67,6 +69,7 @@ namespace Engine.Editor
         private AxesRenderer _axesRenderer;
 
         private string _loadedProjectRoot;
+        private ProjectManifest _loadedProjectManifest;
 
         private InMemoryAsset<SceneAsset> _currentScene;
         private string _currentScenePath;
@@ -673,7 +676,7 @@ namespace Engine.Editor
                         openPopup = true;
                     }
                     {
-                        string[] history = 
+                        string[] history =
                             !string.IsNullOrEmpty(_loadedProjectRoot)
                                 ? EditorPreferences.Instance.GetProjectSceneHistory(_loadedProjectRoot).ToArray()
                                 : Array.Empty<string>();
@@ -806,12 +809,46 @@ namespace Engine.Editor
             }
         }
 
-        private void LoadProject(string rootPath)
+        private bool LoadProject(string rootPathOrManifest)
         {
-            _loadedProjectRoot = rootPath;
-            _gs.Context.ResourceFactory.ShaderAssetRootPath = rootPath;
-            _as.Database.RootPath = Path.Combine(rootPath, "Assets");
-            EditorPreferences.Instance.LastOpenedProjectRoot = rootPath;
+            if (File.Exists(rootPathOrManifest))
+            {
+                _loadedProjectRoot = new FileInfo(rootPathOrManifest).DirectoryName;
+                _gs.Context.ResourceFactory.ShaderAssetRootPath = _loadedProjectRoot;
+                EditorPreferences.Instance.LastOpenedProjectRoot = rootPathOrManifest;
+                _loadedProjectManifest = _as.Database.LoadAsset<ProjectManifest>(rootPathOrManifest);
+                _as.Database.RootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
+
+                return true;
+            }
+            else if (Directory.Exists(rootPathOrManifest))
+            {
+                string manifestPath = Path.Combine(rootPathOrManifest, NewProjectManifestName);
+                _loadedProjectManifest = CreateNewManifest(manifestPath);
+                _loadedProjectRoot = rootPathOrManifest;
+                _gs.Context.ResourceFactory.ShaderAssetRootPath = rootPathOrManifest;
+                EditorPreferences.Instance.LastOpenedProjectRoot = manifestPath;
+                _as.Database.RootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
+                return true;
+            }
+
+            StatusBarText("Couldn't load project from " + rootPathOrManifest, RgbaFloat.Red);
+            return false;
+        }
+
+        private ProjectManifest CreateNewManifest(string manifestPath)
+        {
+            var manifest = new ProjectManifest()
+            {
+                Name = "NewProject"
+            };
+            using (var sw = File.CreateText(manifestPath))
+            using (var jtw = new JsonTextWriter(sw))
+            {
+                _as.Database.DefaultSerializer.Serialize(jtw, manifest);
+            }
+
+            return manifest;
         }
 
         private void StatusBarText(string text) => StatusBarText(text, RgbaFloat.White);
