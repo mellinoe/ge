@@ -47,7 +47,9 @@ namespace Engine.Graphics
 
             SetPerFrameImGuiData(rc, 1f / 60f);
 
-            NewFrame();
+            ImGui.NewFrame();
+
+            input.RegisterCallback(OnInputUpdated);
         }
 
         private void InitializeContextObjects(RenderContext rc)
@@ -89,11 +91,6 @@ namespace Engine.Graphics
             yield return "Overlay";
         }
 
-        public void NewFrame()
-        {
-            ImGui.NewFrame();
-        }
-
         public unsafe void Render(RenderContext rc, string pipelineStage)
         {
             ImGui.Render();
@@ -108,8 +105,6 @@ namespace Engine.Graphics
         public void Update(float deltaSeconds)
         {
             SetPerFrameImGuiData(_rc, deltaSeconds);
-            UpdateImGuiInput((OpenTKWindow)_rc.Window, _input.CurrentSnapshot);
-            NewFrame();
         }
 
         public unsafe void SetPerFrameImGuiData(RenderContext rc, float deltaSeconds)
@@ -122,7 +117,13 @@ namespace Engine.Graphics
             io.DeltaTime = deltaSeconds / 1000; // DeltaTime is in seconds.
         }
 
-        public unsafe void UpdateImGuiInput(OpenTKWindow window, InputSnapshot snapshot)
+        private void OnInputUpdated(InputSystem input)
+        {
+            UpdateImGuiInput((OpenTKWindow)_rc.Window, input.CurrentSnapshot);
+            ImGui.NewFrame();
+        }
+
+        private unsafe void UpdateImGuiInput(OpenTKWindow window, InputSnapshot snapshot)
         {
             IO io = ImGui.GetIO();
             MouseState cursorState = Mouse.GetCursorState();

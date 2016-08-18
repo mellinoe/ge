@@ -12,6 +12,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\AssetSystem.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
@@ -24,6 +27,7 @@
     <Compile Include="Behaviors\FreeFlyMovement.cs" />
     <Compile Include="Behaviors\IUpdateable.cs" />
     <Compile Include="Behaviors\ObjectRain.cs" />
+    <Compile Include="Behaviors\TestBehavior.cs" />
     <Compile Include="Behaviors\TimedDeath.cs" />
     <Compile Include="Debug\ConsoleCommand.cs" />
     <Compile Include="Debug\DebugConsole.cs" />

@@ -20,7 +20,7 @@ namespace Engine.Behaviors
 
         internal override void Start(SystemRegistry registry)
         {
-            _cc = GameObject.GetComponentInParent<CharacterController>();
+            _cc = GameObject.GetComponentInParentOrSelf<CharacterController>();
             _origin = Transform.LocalPosition;
         }
 

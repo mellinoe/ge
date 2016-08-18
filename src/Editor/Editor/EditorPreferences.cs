@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -6,20 +7,39 @@ namespace Engine.Editor
 {
     public class EditorPreferences : Preferences<EditorPreferences, EditorPreferences.Info>
     {
-        public List<string> OpenedSceneHistory { get; set; } = new List<string>();
+        public Dictionary<string, List<string>> OpenedSceneHistory { get; set; } = new Dictionary<string, List<string>>();
 
-        public string LastOpenedScene => OpenedSceneHistory.LastOrDefault();
+        public string LastOpenedProjectRoot { get; set; }
+
+        public string GetLastOpenedScene(string project)
+        {
+            var list = GetProjectSceneHistory(project);
+            return list.LastOrDefault();
+        }
+
+        public List<string> GetProjectSceneHistory(string project)
+        {
+            List<string> list;
+            if (!OpenedSceneHistory.TryGetValue(project, out list))
+            {
+                list = new List<string>();
+                OpenedSceneHistory.Add(project, list);
+            }
+
+            return list;
+        }
 
         private const int OpenedSceneHistoryLimit = 10;
 
-        public void SetLatestScene(string path)
+        public void SetLatestScene(string project, string path)
         {
-            OpenedSceneHistory.Remove(path);
-            OpenedSceneHistory.Add(path);
+            var list = GetProjectSceneHistory(project);
+            list.Remove(path);
+            list.Add(path);
 
-            if (OpenedSceneHistory.Count > OpenedSceneHistoryLimit)
+            if (list.Count > OpenedSceneHistoryLimit)
             {
-                OpenedSceneHistory.RemoveAt(0);
+                list.RemoveAt(0);
             }
         }
 

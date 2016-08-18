@@ -22,7 +22,7 @@ namespace Engine.Behaviors
         internal override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
-            _cc = GameObject.GetComponentInParent<CharacterController>();
+            _cc = GameObject.GetComponentInParentOrSelf<CharacterController>();
             _cc.Controller.ViewDirection = Transform.Forward;
         }
 

@@ -18,6 +18,7 @@ using Veldrid.Assets;
 using Engine.Editor.Commands;
 using Engine.GUI;
 using Engine.Editor.Graphics;
+using Engine.ProjectSystem;
 
 namespace Engine.Editor
 {
@@ -65,6 +66,8 @@ namespace Engine.Editor
         private Transform _multiTransformDummy = new Transform();
         private AxesRenderer _axesRenderer;
 
+        private string _loadedProjectRoot;
+
         private InMemoryAsset<SceneAsset> _currentScene;
         private string _currentScenePath;
         private readonly Vector4 _disabledGrey = new Vector4(0.65f, 0.65f, 0.65f, 0.35f);
@@ -77,7 +80,7 @@ namespace Engine.Editor
         // Status Bar
         private int _statusBarHeight = 20;
         private string _statusBarText = string.Empty;
-        private Vector4 _statusBarColor;
+        private Vector4 _statusBarTextColor;
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -125,6 +128,16 @@ namespace Engine.Editor
             _gs.AddFreeRenderItem(_axesRenderer);
 
             DiscoverComponentsFromAssembly(typeof(Game).GetTypeInfo().Assembly);
+
+            if (!string.IsNullOrEmpty(EditorPreferences.Instance.LastOpenedProjectRoot))
+            {
+                LoadProject(EditorPreferences.Instance.LastOpenedProjectRoot);
+                var latestScene = EditorPreferences.Instance.GetLastOpenedScene(_loadedProjectRoot);
+                if (!string.IsNullOrEmpty(latestScene))
+                {
+                    LoadScene(latestScene);
+                }
+            }
         }
 
         public void DiscoverComponentsFromAssembly(Assembly assembly)
@@ -487,13 +500,14 @@ namespace Engine.Editor
             ImGui.PushStyleVar(StyleVar.WindowRounding, 0);
             ImGui.PushStyleVar(StyleVar.WindowPadding, new Vector2());
             ImGui.PushStyleVar(StyleVar.WindowMinSize, new Vector2());
-            Vector4 statusBarColor = _playState == PlayState.Playing ? RgbaFloat.Orange.ToVector4() : RgbaFloat.Black.ToVector4();
+            Vector4 statusBarColor = _playState == PlayState.Playing ? RgbaFloat.Orange.ToVector4()
+                : _playState == PlayState.Paused ? RgbaFloat.Cyan.ToVector4() : RgbaFloat.Black.ToVector4();
             ImGui.PushStyleColor(ColorTarget.WindowBg, statusBarColor);
             if (ImGui.BeginWindow(
                 string.Empty,
                 WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoScrollbar | WindowFlags.NoCollapse))
             {
-                ImGui.PushStyleColor(ColorTarget.Text, _statusBarColor);
+                ImGui.PushStyleColor(ColorTarget.Text, _statusBarTextColor);
                 ImGui.Text(_statusBarText);
                 ImGui.PopStyleColor();
                 ImGui.SameLine();
@@ -503,9 +517,10 @@ namespace Engine.Editor
                 ImGui.SameLine(0, start);
                 ImGui.Text(stateText);
             }
-            ImGui.PopStyleVar(3);
-            ImGui.PopStyleColor();
             ImGui.EndWindow();
+
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar(3);
         }
 
         private void DrawComponentViewer()
@@ -653,12 +668,15 @@ namespace Engine.Editor
             {
                 if (ImGui.BeginMenu("File"))
                 {
-                    if (ImGui.MenuItem("Open Scene"))
+                    if (ImGui.MenuItem("Open Project"))
                     {
                         openPopup = true;
                     }
                     {
-                        string[] history = EditorPreferences.Instance.OpenedSceneHistory.ToArray();
+                        string[] history = 
+                            !string.IsNullOrEmpty(_loadedProjectRoot)
+                                ? EditorPreferences.Instance.GetProjectSceneHistory(_loadedProjectRoot).ToArray()
+                                : Array.Empty<string>();
                         if (ImGui.BeginMenu($"Recently Opened", history.Any()))
                         {
                             foreach (string path in history.Reverse())
@@ -762,20 +780,20 @@ namespace Engine.Editor
 
             if (ImGui.BeginPopup("###OpenScenePopup"))
             {
-                ImGui.Text("Path to scene file:");
+                ImGui.Text("Path to project root:");
                 if (openPopup)
                 {
                     ImGuiNative.igSetKeyboardFocusHere(0);
                 }
                 if (ImGui.InputText(string.Empty, _filenameInputBuffer.Buffer, _filenameInputBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
                 {
-                    LoadScene(_filenameInputBuffer.ToString());
+                    LoadProject(_filenameInputBuffer.ToString());
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("Open"))
                 {
-                    LoadScene(_filenameInputBuffer.ToString());
+                    LoadProject(_filenameInputBuffer.ToString());
                     ImGui.CloseCurrentPopup();
                 }
 
@@ -788,11 +806,19 @@ namespace Engine.Editor
             }
         }
 
+        private void LoadProject(string rootPath)
+        {
+            _loadedProjectRoot = rootPath;
+            _gs.Context.ResourceFactory.ShaderAssetRootPath = rootPath;
+            _as.Database.RootPath = Path.Combine(rootPath, "Assets");
+            EditorPreferences.Instance.LastOpenedProjectRoot = rootPath;
+        }
+
         private void StatusBarText(string text) => StatusBarText(text, RgbaFloat.White);
         private void StatusBarText(string text, RgbaFloat color)
         {
             _statusBarText = text;
-            _statusBarColor = color.ToVector4();
+            _statusBarTextColor = color.ToVector4();
         }
 
         private void ToggleWindowFullscreenState()
@@ -839,14 +865,9 @@ namespace Engine.Editor
 
             StopSimulation();
             DestroyNonEditorGameObjects();
-
-            string projectRoot = Path.GetDirectoryName(path);
-            _gs.Context.ResourceFactory.ShaderAssetRootPath = projectRoot;
-            _as.Database.RootPath = Path.Combine(projectRoot, "Assets");
-
             ActivateCurrentScene();
 
-            EditorPreferences.Instance.SetLatestScene(path);
+            EditorPreferences.Instance.SetLatestScene(_loadedProjectRoot, path);
             _currentScenePath = path;
 
             return true;
@@ -1213,7 +1234,6 @@ namespace Engine.Editor
                         Component c = (Component)Activator.CreateInstance(option);
                         Command command = new RawCommand(() => go.AddComponent(c), () => go.RemoveComponent(c));
                         _undoRedo.CommitCommand(command);
-                        ImGui.CloseCurrentPopup();
                     }
                 }
 

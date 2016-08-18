@@ -40,22 +40,25 @@ namespace Engine.Editor
             System.Diagnostics.Debug.WriteLine("Loading preferences from " + preferencesFile);
             if (File.Exists(preferencesFile))
             {
-                string json = File.ReadAllText(preferencesFile);
-                return JsonConvert.DeserializeObject<T>(json);
+                string existingJson = File.ReadAllText(preferencesFile);
+                try
+                {
+                    return JsonConvert.DeserializeObject<T>(existingJson);
+                }
+                catch (JsonSerializationException)
+                {
+                }
             }
 
-            else
+            var ret = new T();
+            string json = JsonConvert.SerializeObject(ret);
+            string directory = Path.GetDirectoryName(preferencesFile);
+            if (!Directory.Exists(directory))
             {
-                var ret = new T();
-                string json = JsonConvert.SerializeObject(ret);
-                string directory = Path.GetDirectoryName(preferencesFile);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-                File.WriteAllText(preferencesFile, json);
-                return ret;
+                Directory.CreateDirectory(directory);
             }
+            File.WriteAllText(preferencesFile, json);
+            return ret;
         }
 
         internal void Save()

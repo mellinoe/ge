@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Reflection;
+using Veldrid.Graphics;
 
 namespace Engine.Editor
 {
@@ -51,7 +52,7 @@ namespace Engine.Editor
                 ImGui.SetNextWindowPos(new Vector2(15, 15), SetCondition.Always);
                 ImGui.SetNextWindowSize(new Vector2(width - 30, height - 30), SetCondition.Always);
                 ImGui.PushStyleVar(StyleVar.WindowRounding, 0.1f);
-                ImGui.BeginWindow("Debug Console", WindowFlags.NoResize | WindowFlags.NoCollapse | WindowFlags.NoMove);
+                ImGui.BeginWindow("Debug Console", ref _windowOpen, 0.98f, WindowFlags.NoResize | WindowFlags.NoCollapse | WindowFlags.NoMove);
                 {
                     Vector2 size;
                     size.X = ImGui.GetWindowWidth() - 20;
