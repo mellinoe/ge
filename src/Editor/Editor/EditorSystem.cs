@@ -733,6 +733,19 @@ namespace Engine.Editor
                     }
                     ImGui.EndMenu();
                 }
+                if (ImGui.BeginMenu("GameObject"))
+                {
+                    if (ImGui.MenuItem("Create Empty"))
+                    {
+                        CreateEmptyGameObject();
+                    }
+                    if (ImGui.MenuItem("Create Empty Child", _selectedObjects.Any()))
+                    {
+                        CreateEmptyGameObject(_selectedObjects.First().Transform);
+                    }
+
+                    ImGui.EndMenu();
+                }
                 if (ImGui.BeginMenu("Game"))
                 {
                     if (ImGui.MenuItem("Play", "Ctrl+P", _playState == PlayState.Playing, _playState != PlayState.Playing && _currentScene != null)
@@ -807,6 +820,19 @@ namespace Engine.Editor
 
                 ImGui.EndPopup();
             }
+        }
+
+        private void CreateEmptyGameObject(Transform parent = null)
+        {
+            string prefix = "GameObject";
+            int suffix = 0;
+            while (_goQuery.FindByName(prefix + suffix) != null)
+            {
+                suffix += 1;
+            }
+
+            Command c = new CreateGameObjectCommand(prefix + suffix, parent);
+            _undoRedo.CommitCommand(c);
         }
 
         private bool LoadProject(string rootPathOrManifest)
