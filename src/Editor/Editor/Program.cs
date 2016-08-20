@@ -27,7 +27,7 @@ namespace Engine.Editor
             Game game = new Game();
             GraphicsSystem gs = new GraphicsSystem(window);
             game.SystemRegistry.Register(gs);
-
+            game.LimitFrameRate = false;
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
             {

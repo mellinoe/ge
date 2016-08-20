@@ -42,6 +42,7 @@ namespace Engine.Editor
         };
         private readonly List<Type> _newComponentOptions = new List<Type>();
 
+        private readonly FrameTimeAverager _fta = new FrameTimeAverager(666);
         private bool _windowOpen = true;
         private PlayState _playState = PlayState.Stopped;
 
@@ -58,6 +59,7 @@ namespace Engine.Editor
 
         private readonly TextInputBuffer _filenameInputBuffer = new TextInputBuffer(256);
         private readonly TextInputBuffer _filenameBuffer = new TextInputBuffer(100);
+        private readonly TextInputBuffer _goNameBuffer = new TextInputBuffer(100);
 
         private Camera _sceneCam;
         private readonly GameObject _editorCameraGO;
@@ -291,7 +293,7 @@ namespace Engine.Editor
         private bool DrawTextureRef(string label, ref RefOrImmediate<ImageProcessorTexture> obj, RenderContext rc)
         {
             AssetRef<ImageProcessorTexture> oldRef = obj.GetRef() ?? new AssetRef<ImageProcessorTexture>();
-            AssetRef<ImageProcessorTexture> newRef = DrawAssetRef(label, oldRef, _as.ProjectDatabase);
+            AssetRef<ImageProcessorTexture> newRef = DrawAssetRef(label, oldRef, _as.Database);
             if (newRef != null)
             {
                 obj = new RefOrImmediate<ImageProcessorTexture>(new AssetRef<ImageProcessorTexture>(newRef.ID), null);
@@ -313,7 +315,7 @@ namespace Engine.Editor
             int selected = 0;
             for (int i = 1; i < items.Length; i++)
             {
-                if (existingRef.ID == items[i]) { selected = i; break; }
+                if (existingRef.ID == assets[i]) { selected = i; break; }
             }
             if (ImGui.Combo(label, ref selected, items))
             {
@@ -358,6 +360,8 @@ namespace Engine.Editor
 
         protected override void UpdateCore(float deltaSeconds)
         {
+            _fta.AddTime(deltaSeconds * 1000.0);
+            _gs.Context.Window.Title = $"ge.Editor " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
             UpdateUpdateables(deltaSeconds);
             DoFakePhysicsUpdate();
 
@@ -528,7 +532,7 @@ namespace Engine.Editor
                 ImGui.Text("Asset Name:");
                 ImGui.PushItemWidth(220);
                 ImGui.SameLine();
-                if (ImGui.InputText(" ", _filenameBuffer.Buffer, _filenameBuffer.Length, InputTextFlags.Default, null))
+                if (ImGui.InputText("###AssetNameInput", _filenameBuffer.Buffer, _filenameBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
                 {
                     _loadedAssetPath = _filenameBuffer.StringValue;
                 }
@@ -757,6 +761,16 @@ namespace Engine.Editor
                     ImGui.EndMenu();
                 }
 
+                if (_gs.Context.Window.WindowState == WindowState.FullScreen)
+                {
+                    float xStart = ImGui.GetWindowWidth() - ImGui.GetLastItemRectMax().X - 6;
+                    ImGui.SameLine(0, xStart);
+                    if (ImGui.Button("X"))
+                    {
+                        ExitEditor();
+                    }
+                }
+
                 ImGui.EndMainMenuBar();
             }
 
@@ -976,6 +990,7 @@ namespace Engine.Editor
             if (_sceneCam != null)
             {
                 _sceneCam.Enabled = false;
+                _gs.SetMainCamera(_editorCamera);
             }
         }
 
@@ -1066,27 +1081,32 @@ namespace Engine.Editor
 
                 if (ImGui.BeginPopupContextItem($"{t.GameObject.Name}_Context"))
                 {
-                    if (ImGui.MenuItem("Focus Camera"))
-                    {
-                        ClearSelection();
-                        SelectObject(t.GameObject);
-                        MoveCameraTo(t);
-                    }
-                    if (ImGui.MenuItem("Enabled", string.Empty, t.GameObject.Enabled, true))
-                    {
-                        t.GameObject.Enabled = !t.GameObject.Enabled;
-                    }
-                    if (ImGui.MenuItem("Clone", string.Empty))
-                    {
-                        CloneGameObject(t.GameObject);
-                    }
-                    if (ImGui.MenuItem("Delete", string.Empty))
-                    {
-                        DeleteGameObject(t.GameObject);
-                    }
-                    ImGui.EndPopup();
+                    DrawContextMenuForGameObject(t.GameObject);
                 }
             }
+        }
+
+        private void DrawContextMenuForGameObject(GameObject go)
+        {
+            if (ImGui.MenuItem("Focus Camera"))
+            {
+                ClearSelection();
+                SelectObject(go);
+                MoveCameraTo(go.Transform);
+            }
+            if (ImGui.MenuItem("Enabled", string.Empty, go.Enabled, true))
+            {
+                go.Enabled = !go.Enabled;
+            }
+            if (ImGui.MenuItem("Clone", string.Empty))
+            {
+                CloneGameObject(go);
+            }
+            if (ImGui.MenuItem("Delete", string.Empty))
+            {
+                DeleteGameObject(go);
+            }
+            ImGui.EndPopup();
         }
 
         private void MoveCameraTo(Transform t)
@@ -1253,22 +1273,38 @@ namespace Engine.Editor
 
         private void DrawSingleObject(GameObject go)
         {
-            if (ImGui.CollapsingHeader(go.Name, go.Name, true, true))
+            ImGui.PushStyleVar(StyleVar.FramePadding, new Vector2());
+            if (ImGui.BeginChildFrame((uint)"GoHeader".GetHashCode(), new Vector2(0, 25), WindowFlags.ShowBorders))
             {
-                int id = 0;
-                foreach (var component in go.GetComponents<Component>())
+                bool enabled = go.Enabled;
+                if (ImGui.Checkbox("###GameObjectEnabled", ref enabled))
                 {
-                    ImGui.PushID(id++);
-                    Command c = DrawComponent(component);
-                    if (c != null)
-                    {
-                        _undoRedo.CommitCommand(c);
-                    }
-                    ImGui.PopID();
+                    go.Enabled = enabled;
+                }
+                ImGui.SameLine(0, 5);
+                _goNameBuffer.StringValue = go.Name;
+                if (ImGui.InputText("###GoNameInput", _goNameBuffer.Buffer, _goNameBuffer.Length, InputTextFlags.Default, null))
+                {
+                    go.Name = _goNameBuffer.ToString();
                 }
 
-                DrawNewComponentAdder(go);
+                ImGui.EndChildFrame();
             }
+            ImGui.PopStyleVar();
+
+            int id = 0;
+            foreach (var component in go.GetComponents<Component>())
+            {
+                ImGui.PushID(id++);
+                Command c = DrawComponent(component);
+                if (c != null)
+                {
+                    _undoRedo.CommitCommand(c);
+                }
+                ImGui.PopID();
+            }
+
+            DrawNewComponentAdder(go);
         }
 
         private void DrawNewComponentAdder(GameObject go)

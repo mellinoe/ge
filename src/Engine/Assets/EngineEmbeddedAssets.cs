@@ -59,7 +59,7 @@ namespace Engine.Assets
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_up.png"));
 
             RegisterAsset(SkyboxBackID, skyboxBack);
-            RegisterAsset(SkyboxFrontID, SkyboxFrontID);
+            RegisterAsset(SkyboxFrontID, skyboxFront);
             RegisterAsset(SkyboxLeftID, skyboxLeft);
             RegisterAsset(SkyboxRightID, skyboxRight);
             RegisterAsset(SkyboxBottomID, skyboxBottom);

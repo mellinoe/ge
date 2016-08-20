@@ -107,12 +107,12 @@ namespace Engine.Graphics
             _cubemapBinding?.BoundTexture.Dispose();
             _cubemapBinding?.Dispose();
 
-            var front = !_front.HasValue ? _front.Get(ad) : ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_ft.png");
-            var back = !_back.HasValue ? _back.Get(ad) : ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_bk.png");
-            var left = !_left.HasValue ? _left.Get(ad) : ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_lf.png");
-            var right = !_right.HasValue ? _right.Get(ad) : ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_rt.png");
-            var top = !_top.HasValue ? _top.Get(ad) : ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_up.png");
-            var bottom = !_bottom.HasValue ? _bottom.Get(ad) : ad.LoadAsset<ImageProcessorTexture>("Textures/cloudtop/cloudtop_dn.png");
+            var front = !_front.HasValue ? _front.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxFrontID);
+            var back = !_back.HasValue ? _back.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxBackID);
+            var left = !_left.HasValue ? _left.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxLeftID);
+            var right = !_right.HasValue ? _right.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxRightID);
+            var top = !_top.HasValue ? _top.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxTopID);
+            var bottom = !_bottom.HasValue ? _bottom.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxBottomID);
 
             using (var frontPin = front.Pixels.Pin())
             using (var backPin = back.Pixels.Pin())

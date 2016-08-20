@@ -346,10 +346,11 @@ namespace Engine.Editor
 
         internal static bool DrawQuaternion(string label, ref Quaternion obj, RenderContext rc)
         {
-            Vector4 v4 = new Vector4(obj.X, obj.Y, obj.Z, obj.W);
-            if (DrawVector4(label, ref v4, rc))
+            Vector3 euler = MathUtil.RadiansToDegrees(MathUtil.GetEulerAngles(obj));
+            if (DrawVector3(label, ref euler, rc))
             {
-                obj = new Quaternion(v4.X, v4.Y, v4.Z, v4.W);
+                var radians = MathUtil.DegreesToRadians(euler);
+                obj = Quaternion.CreateFromYawPitchRoll(radians.Y, radians.X, radians.Z);
                 return true;
             }
 
