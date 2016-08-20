@@ -37,7 +37,7 @@ namespace Engine.Behaviors
             var color = new RawTextureDataArray<RgbaFloat>(
                 new RgbaFloat[] { new RgbaFloat((float)_random.NextDouble(), (float)_random.NextDouble(), (float)_random.NextDouble(), 1.0f) },
                 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
-            ball.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, color) { Wireframe = _random.NextDouble() > .99 });
+            ball.AddComponent(new MeshRenderer(new SimpleMeshDataProvider(SphereModel.Vertices, SphereModel.Indices), color) { Wireframe = _random.NextDouble() > .99 });
             ball.Transform.Position = Transform.Position + Transform.Forward * 1.0f;
             ball.Transform.Scale = new Vector3(0.1f);
             sc.Entity.LinearVelocity = Transform.Forward * _launchSpeed;

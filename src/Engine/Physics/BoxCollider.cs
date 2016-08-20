@@ -14,25 +14,57 @@ namespace Engine.Physics
         private float _height;
         [JsonProperty]
         private float _depth;
-        [JsonProperty]
-        private float _mass;
+
+        public float Width
+        {
+            get { return _width; }
+            set
+            {
+                _width = value;
+                DimensionsChanged();
+                
+            }
+        }
+
+        public float Height
+        {
+            get { return _height; }
+            set
+            {
+                _height = value;
+                DimensionsChanged();
+
+            }
+        }
+
+        public float Depth
+        {
+            get { return _depth; }
+            set
+            {
+                _depth = value;
+                DimensionsChanged();
+            }
+        }
+
+        public BoxCollider() : this(1.0f, 1.0f, 1.0f, 1.0f) { }
 
         [JsonConstructor]
         public BoxCollider(float width, float height, float depth)
             : this(width, height, depth, 1.0f * (width * height * depth)) { }
 
         public BoxCollider(float width, float height, float depth, float mass)
+            : base(mass)
         {
             _width = width;
             _height = height;
             _depth = depth;
-            _mass = mass;
         }
 
         protected override Entity CreateEntity()
         {
             Vector3 scale = GameObject.Transform.Scale;
-            return new Box(Vector3.Zero, _width * scale.X, _height * scale.Y, _depth * scale.Z, _mass);
+            return new Box(Vector3.Zero, _width * scale.X, _height * scale.Y, _depth * scale.Z, Mass);
         }
 
         protected override void ScaleChanged(Vector3 scale)
@@ -41,6 +73,18 @@ namespace Engine.Physics
             box.Width = _width * scale.X;
             box.Height = _height * scale.Y;
             box.Length = _depth * scale.Z;
+        }
+
+        private void DimensionsChanged()
+        {
+            if (Entity != null)
+            {
+                Box box = (Box)Entity;
+                Vector3 scale = Transform.Scale;
+                box.Width = _width * scale.X;
+                box.Height = _height * scale.Y;
+                box.Length = _depth * scale.Z;
+            }
         }
     }
 }

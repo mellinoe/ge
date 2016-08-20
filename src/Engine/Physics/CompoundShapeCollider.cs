@@ -14,21 +14,19 @@ namespace Engine.Physics
     {
         [JsonProperty]
         private readonly IList<BoxShapeDescription> _shapes;
-        [JsonProperty]
-        private readonly float _mass;
 
         public Vector3 EntityCenter { get; private set; }
 
         [JsonConstructor]
         public CompoundShapeCollider(IList<BoxShapeDescription> shapes, float mass)
+            : base(mass)
         {
             _shapes = shapes;
-            _mass = mass;
         }
 
         protected override Entity CreateEntity()
         {
-            CompoundBody cb = new CompoundBody(_shapes.Select(bse => bse.GetShapeEntry()).ToList(), _mass);
+            CompoundBody cb = new CompoundBody(_shapes.Select(bse => bse.GetShapeEntry()).ToList(), Mass);
             EntityCenter = -cb.Position;
             return cb;
         }

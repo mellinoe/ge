@@ -23,7 +23,9 @@
     <Compile Include="Editor\Commands\Command.cs" />
     <Compile Include="Editor\Commands\CompoundCommand.cs" />
     <Compile Include="Editor\Commands\ReflectionSetCommand.cs" />
+    <Compile Include="Editor\EditorAssetSystem.cs" />
     <Compile Include="Editor\EditorDrawer.cs" />
+    <Compile Include="Editor\EditorEmbeddedAssets.cs" />
     <Compile Include="Editor\EditorPreferences.cs" />
     <Compile Include="Editor\Drawers.cs" />
     <Compile Include="Editor\AssetRefDrawer.cs" />
@@ -44,24 +46,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_bk.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_dn.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_ft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_lf.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_rt.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_up.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="HLSL\lit-frag.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

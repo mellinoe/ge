@@ -17,6 +17,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\AssetSystem.cs" />
+    <Compile Include="Assets\CompoundAssetDatabase.cs" />
+    <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
+    <Compile Include="Assets\EngineEmbeddedAssets.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Behaviors\BallLauncher.cs" />
     <Compile Include="Behaviors\Behavior.cs" />
@@ -92,8 +95,19 @@
       <Project>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</Project>
       <Name>BEPUutilities</Name>
     </ProjectReference>
-    <EmbeddedResource Include="Models\Sphere.obj" />
+    <EmbeddedResource Include="Assets\Models\Sphere.obj" />
     <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_bk.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_dn.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_ft.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_lf.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_rt.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_up.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Textures\Pink.png" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

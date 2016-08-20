@@ -51,24 +51,6 @@
       <Project>{9bfba3a1-21d4-4cbd-b0e1-a4f3ab80fd30}</Project>
       <Name>Engine</Name>
     </ProjectReference>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_bk.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_dn.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_ft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_lf.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_rt.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Textures\cloudtop\cloudtop_up.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="GLSL\shadowmap-frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

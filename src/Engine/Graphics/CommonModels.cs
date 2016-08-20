@@ -21,6 +21,9 @@ namespace Engine.Graphics
             0, 1, 2,
             0, 2, 3
         };
+
+        private static MeshData _meshData = new SimpleMeshDataProvider(Vertices, Indices);
+        public static MeshData MeshData => _meshData;
     }
 
     public static class CubeModel
@@ -68,23 +71,26 @@ namespace Engine.Graphics
             16,17,18, 16,18,19,
             20,21,22, 20,22,23,
         };
+
+        private static MeshData _meshData = new SimpleMeshDataProvider(Vertices, Indices);
+        public static MeshData MeshData => _meshData;
     }
 
     public static class SphereModel
     {
         private static readonly ConstructedMeshInfo s_sphereMeshInfo = LoadShereMesh();
+        public static MeshData SphereMeshData => s_sphereMeshInfo;
 
         private static ConstructedMeshInfo LoadShereMesh()
         {
             Assembly assembly = typeof(SphereModel).GetTypeInfo().Assembly;
-            using (var rs = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.Models.Sphere.obj"))
+            using (var rs = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.Assets.Models.Sphere.obj"))
             {
                 return new ObjParser().Parse(rs).GetFirstMesh();
             }
         }
 
         public static VertexPositionNormalTexture[] Vertices => s_sphereMeshInfo.Vertices;
-
         public static int[] Indices => s_sphereMeshInfo.Indices;
 
     }

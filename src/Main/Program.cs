@@ -75,8 +75,6 @@ namespace Ge
             var goqs = game.SystemRegistry.GetSystem<GameObjectQuerySystem>();
             scene.GameObjects = goqs.GetAllGameObjects().Select(go => new SerializedGameObject(go)).ToArray();
             db.SaveDefinition(scene, "BINSCENE.scene");
-            var loaded = db.LoadAsset<SceneAsset>("BINSCENE.scene");
-            db.SaveDefinition(loaded, "BINSCENE.scene");
 
             //var scene = db.LoadAsset<SceneAsset>("BINSCENE.scene_New");
             //scene.GenerateGameObjects();
@@ -111,7 +109,7 @@ namespace Ge
                     GameObject plane = new GameObject($"Plane{x},{z}");
                     plane.Transform.Position = new Vector3(-18 + (6 * x), -3.5f, -18 + (6 * z));
                     plane.Transform.Scale = new Vector3(6);
-                    plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
+                    plane.AddComponent(new MeshRenderer(EngineEmbeddedAssets.PlaneModelID, woodTexture));
                     plane.AddComponent(new BoxCollider(1f, 0.1f / 30f, 1f, -1.0f));
                 }
             }
@@ -121,7 +119,7 @@ namespace Ge
             var scaleBox = new GameObject("ScaleBox");
             scaleBox.Transform.Position = new Vector3(5f, 0f, 0f);
             scaleBox.Transform.Scale = new Vector3(3f);
-            scaleBox.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, woodTexture));
+            scaleBox.AddComponent(new MeshRenderer(new SimpleMeshDataProvider(CubeModel.Vertices, CubeModel.Indices), woodTexture));
             scaleBox.AddComponent(new BoxCollider(1.0f, 1.0f, 1.0f, 50.0f));
 
             camera.AddComponent(new BallLauncher());
@@ -152,20 +150,20 @@ namespace Ge
 
             GameObject sphere = new GameObject("Sphere1");
             var stoneTexture = Path.Combine("Textures", "Stone.png");
-            sphere.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, stoneTexture));
+            sphere.AddComponent(new MeshRenderer(new SimpleMeshDataProvider(SphereModel.Vertices, SphereModel.Indices), stoneTexture));
             sphere.Transform.Position = new Vector3(0, 2f, 0f);
             sphere.Transform.Scale = new Vector3(1f);
             sphere.AddComponent(new SphereCollider(1.0f, 1f));
 
             GameObject sphere2 = new GameObject("Sphere2");
-            sphere2.AddComponent(new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, stoneTexture));
+            sphere2.AddComponent(new MeshRenderer(new SimpleMeshDataProvider(SphereModel.Vertices, SphereModel.Indices), stoneTexture));
             sphere2.Transform.Scale = new Vector3(1f);
             sphere2.Transform.Parent = sphere.Transform;
             sphere2.Transform.LocalPosition = new Vector3(-1f, -1f, 0f);
             sphere2.AddComponent(new SphereCollider(1.0f, 1f));
 
             GameObject sphere3 = new GameObject("Cube3");
-            sphere3.AddComponent(new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, stoneTexture));
+            sphere3.AddComponent(new MeshRenderer(new SimpleMeshDataProvider(CubeModel.Vertices, CubeModel.Indices), stoneTexture));
             sphere3.Transform.Scale = new Vector3(1f);
             sphere3.Transform.Parent = sphere.Transform;
             sphere3.Transform.LocalPosition = new Vector3(1f, -1f, 0f);
@@ -176,7 +174,7 @@ namespace Ge
                 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
 
             GameObject upperTrigger = new GameObject("UpperTrigger");
-            var mr = new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, solidBlue) { Wireframe = true };
+            var mr = new MeshRenderer(new SimpleMeshDataProvider(CubeModel.Vertices, CubeModel.Indices), solidBlue) { Wireframe = true };
             upperTrigger.AddComponent(mr);
             upperTrigger.Transform.Parent = sphere.Transform;
             upperTrigger.Transform.LocalPosition = new Vector3(0f, 2f, 0f);
@@ -190,7 +188,7 @@ namespace Ge
             plane.Transform.Scale = new Vector3(30f);
             plane.Transform.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.05f);
             var woodTexture = Path.Combine("Textures", "Wood.png");
-            plane.AddComponent(new MeshRenderer(PlaneModel.Vertices, PlaneModel.Indices, woodTexture));
+            plane.AddComponent(new MeshRenderer(new SimpleMeshDataProvider(PlaneModel.Vertices, PlaneModel.Indices), woodTexture));
             plane.AddComponent(new BoxCollider(1f, 0.1f / 30f, 1f, -1.0f));
 
             camera.AddComponent(new ObjectRain());

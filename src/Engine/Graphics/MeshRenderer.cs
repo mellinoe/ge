@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using Veldrid;
@@ -18,16 +17,30 @@ namespace Engine.Graphics
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly DynamicDataProvider<TintInfo> _tintInfoProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
-        private VertexPositionNormalTexture[] _vertices;
-        private int[] _indices;
+        private int _indexCount;
         private RefOrImmediate<TextureData> _textureRef;
+        private RefOrImmediate<MeshData> _meshRef;
         private TextureData _texture;
-        private readonly BoundingSphere _centeredBoundingSphere;
-        private readonly BoundingBox _centeredBoundingBox;
+        private MeshData _mesh;
+        private BoundingSphere _centeredBoundingSphere;
+        private BoundingBox _centeredBoundingBox;
+
+        private GraphicsSystem _gs;
+        private AssetDatabase _ad;
 
         // Serialization Accessors
-        public VertexPositionNormalTexture[] Vertices { get { return _vertices; } set { _vertices = value; } }
-        public int[] Indices { get { return _indices; } set { _indices = value; } }
+        public RefOrImmediate<MeshData> Mesh
+        {
+            get { return _meshRef; }
+            set
+            {
+                _meshRef = value;
+                if (_vb != null)
+                {
+                    RecreateModel();
+                }
+            }
+        }
         public RefOrImmediate<TextureData> Texture
         {
             get { return _textureRef; }
@@ -39,6 +52,18 @@ namespace Engine.Graphics
                     RecreateTexture();
                 }
             }
+        }
+
+        private void RecreateModel()
+        {
+            _vb.Dispose();
+            _ib.Dispose();
+
+            _mesh = _meshRef.Get(_ad);
+            _vb = _mesh.CreateVertexBuffer(_gs.Context.ResourceFactory);
+            _ib = _mesh.CreateIndexBuffer(_gs.Context.ResourceFactory, out _indexCount);
+            _centeredBoundingSphere = _mesh.GetBoundingSphere();
+            _centeredBoundingBox = _mesh.GetBoundingBox();
         }
 
         private void RecreateTexture()
@@ -77,18 +102,17 @@ namespace Engine.Graphics
             }
         }
 
+        public MeshRenderer() : this(EngineEmbeddedAssets.CubeModelID, EngineEmbeddedAssets.PinkTextureID) { }
+
         [JsonConstructor]
-        public MeshRenderer(VertexPositionNormalTexture[] vertices, int[] indices, RefOrImmediate<TextureData> texture)
+        public MeshRenderer(RefOrImmediate<MeshData> meshData, RefOrImmediate<TextureData> texture)
         {
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _tintInfoProvider = new DynamicDataProvider<TintInfo>();
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _tintInfoProvider };
-            _vertices = vertices;
-            _indices = indices;
+            Mesh = meshData;
             Texture = texture;
-            _centeredBoundingSphere = BoundingSphere.CreateFromPoints(_vertices);
-            _centeredBoundingBox = BoundingBox.CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
         }
 
         public RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
@@ -137,7 +161,7 @@ namespace Engine.Graphics
             }
 
             _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
-            rc.DrawIndexedPrimitives(_indices.Length, 0);
+            rc.DrawIndexedPrimitives(_indexCount, 0);
         }
 
         protected override void Attached(SystemRegistry registry)
@@ -145,6 +169,7 @@ namespace Engine.Graphics
             _gs = registry.GetSystem<GraphicsSystem>();
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
+            _mesh = Mesh.Get(_ad);
             InitializeContextObjects(_gs.Context, _gs.MaterialCache);
         }
 
@@ -167,12 +192,10 @@ namespace Engine.Graphics
         {
             ResourceFactory factory = context.ResourceFactory;
 
-            _vb = factory.CreateVertexBuffer(VertexPositionNormalTexture.SizeInBytes * _vertices.Length, false);
-            VertexDescriptor desc = new VertexDescriptor(VertexPositionNormalTexture.SizeInBytes, VertexPositionNormalTexture.ElementCount, 0, IntPtr.Zero);
-            _vb.SetVertexData(_vertices, desc);
-
-            _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Length, false);
-            _ib.SetIndices(_indices);
+            _vb = _mesh.CreateVertexBuffer(factory);
+            _ib = _mesh.CreateIndexBuffer(factory, out _indexCount);
+            _centeredBoundingSphere = _mesh.GetBoundingSphere();
+            _centeredBoundingBox = _mesh.GetBoundingBox();
 
             if (s_regularGlobalInputs == null)
             {
@@ -318,7 +341,5 @@ namespace Engine.Graphics
             {
                 new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
-        private GraphicsSystem _gs;
-        private LooseFileDatabase _ad;
     }
 }

@@ -22,8 +22,28 @@ namespace Engine.Physics
         private WeldJoint _parentJoint;
         private Collider _parentCollider;
 
+        [JsonProperty]
+        private float _mass;
+        public float Mass
+        {
+            get { return _mass; }
+            set
+            {
+                _mass = value;
+                if (Entity != null)
+                {
+                    Entity.Mass = value;
+                }
+            }
+        }
+
         [JsonIgnore]
         public Entity Entity { get; private set; }
+
+        public Collider(float mass)
+        {
+            _mass = mass;
+        }
 
         protected abstract Entity CreateEntity();
 

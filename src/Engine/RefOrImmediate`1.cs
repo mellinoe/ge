@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using Veldrid.Assets;
+using Veldrid;
 
 namespace Engine
 {
@@ -39,6 +40,7 @@ namespace Engine
 
         public static implicit operator RefOrImmediate<T>(T value) => new RefOrImmediate<T>(null, value);
         public static implicit operator RefOrImmediate<T>(AssetRef<T> reference) => new RefOrImmediate<T>(reference, default(T));
+        public static implicit operator RefOrImmediate<T>(AssetID id) => new RefOrImmediate<T>(new AssetRef<T>(id), default(T));
         public static implicit operator RefOrImmediate<T>(string reference) => new RefOrImmediate<T>(new AssetRef<T>(reference), default(T));
     }
 }

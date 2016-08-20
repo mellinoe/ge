@@ -49,7 +49,7 @@ namespace Engine.Editor
         private readonly PhysicsSystem _physics;
         private readonly InputSystem _input;
         private readonly GameObjectQuerySystem _goQuery;
-        private readonly AssetSystem _as;
+        private readonly EditorAssetSystem _as;
         private readonly GraphicsSystem _gs;
         private readonly BehaviorUpdateSystem _bus;
 
@@ -92,11 +92,10 @@ namespace Engine.Editor
             _input = registry.GetSystem<InputSystem>();
             _goQuery = registry.GetSystem<GameObjectQuerySystem>();
             _gs = registry.GetSystem<GraphicsSystem>();
-            _as = registry.GetSystem<AssetSystem>();
+            _as = (EditorAssetSystem)registry.GetSystem<AssetSystem>();
             _bus = registry.GetSystem<BehaviorUpdateSystem>();
 
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Transform>(DrawTransform));
-            EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Collider>(DrawCollider));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Component>(GenericDrawer));
 
@@ -266,6 +265,16 @@ namespace Engine.Editor
                 c = SetValueActionCommand.New<bool>(val => mr.DontCullBackFace = val, mr.DontCullBackFace, dcbf);
             }
 
+            if (!mr.Mesh.HasValue)
+            {
+                AssetRef<MeshData> result = DrawAssetRef("Model", mr.Mesh.GetRef(), _as.Database);
+                if (result != null)
+                {
+                    c = SetValueActionCommand.New<AssetRef<MeshData>>(val => mr.Mesh = val, mr.Mesh.GetRef(), result);
+                    mr.Mesh = result;
+                }
+            }
+
             if (!mr.Texture.HasValue)
             {
                 AssetRef<TextureData> result = DrawAssetRef("Surface Texture", mr.Texture.GetRef(), _as.Database);
@@ -282,7 +291,7 @@ namespace Engine.Editor
         private bool DrawTextureRef(string label, ref RefOrImmediate<ImageProcessorTexture> obj, RenderContext rc)
         {
             AssetRef<ImageProcessorTexture> oldRef = obj.GetRef() ?? new AssetRef<ImageProcessorTexture>();
-            AssetRef<ImageProcessorTexture> newRef = DrawAssetRef(label, oldRef, _as.Database);
+            AssetRef<ImageProcessorTexture> newRef = DrawAssetRef(label, oldRef, _as.ProjectDatabase);
             if (newRef != null)
             {
                 obj = new RefOrImmediate<ImageProcessorTexture>(new AssetRef<ImageProcessorTexture>(newRef.ID), null);
@@ -292,12 +301,15 @@ namespace Engine.Editor
             return false;
         }
 
-        private AssetRef<T> DrawAssetRef<T>(string label, AssetRef<T> existingRef, LooseFileDatabase database)
+        private static AssetRef<T> DrawAssetRef<T>(string label, AssetRef<T> existingRef, AssetDatabase database)
         {
             AssetID result = default(AssetID);
             AssetID[] assets = database.GetAssetsOfType(typeof(T));
 
-            string[] items = assets.Select(id => id.Value).ToArray();
+            string[] items = assets.Select(id =>
+            {
+                return id.Value.Replace("Internal:", string.Empty);
+            }).ToArray();
             int selected = 0;
             for (int i = 1; i < items.Length; i++)
             {
@@ -316,26 +328,6 @@ namespace Engine.Editor
             {
                 return null;
             }
-        }
-
-        private static Command DrawCollider(string label, Component component, RenderContext rc)
-        {
-            Command c = null;
-
-            Collider collider = (Collider)component;
-            float mass = collider.Entity.Mass;
-            if (ImGui.DragFloat("Mass", ref mass, 0f, 1000f, .1f))
-            {
-                c = SetValueActionCommand.New<float>((val) => collider.Entity.Mass = val, collider.Entity.Mass, mass);
-            }
-
-            bool trigger = collider.IsTrigger;
-            if (ImGui.Checkbox("Is Trigger", ref trigger))
-            {
-                c = SetValueActionCommand.New<bool>(val => collider.IsTrigger = val, collider.IsTrigger, trigger);
-            }
-
-            return c;
         }
 
         private static Command DrawTransform(string label, Transform t, RenderContext rc)
@@ -544,7 +536,7 @@ namespace Engine.Editor
                 ImGui.SameLine();
                 if (ImGui.Button("Save"))
                 {
-                    string path = _as.Database.GetAssetPath(_loadedAssetPath);
+                    string path = _as.ProjectDatabase.GetAssetPath(_loadedAssetPath);
                     using (var fs = File.CreateText(path))
                     {
                         var serializer = JsonSerializer.CreateDefault();
@@ -565,7 +557,7 @@ namespace Engine.Editor
 
         private void DrawProjectAssets()
         {
-            DrawRecursiveNode(_as.Database.GetRootDirectoryGraph(), false);
+            DrawRecursiveNode(_as.ProjectDatabase.GetRootDirectoryGraph(), false);
         }
 
         private void DrawRecursiveNode(DirectoryNode node, bool pushTreeNode)
@@ -582,7 +574,7 @@ namespace Engine.Editor
                     if (ImGui.Selectable(asset.Name, _loadedAssetPath == asset.Path) && _loadedAssetPath != asset.Path)
                     {
                         ClearSelection();
-                        _selectedAsset = _as.Database.LoadAsset(asset.Path);
+                        _selectedAsset = _as.ProjectDatabase.LoadAsset(asset.Path);
                         _loadedAssetPath = asset.Path;
                         _filenameBuffer.StringValue = asset.Name;
                     }
@@ -590,7 +582,7 @@ namespace Engine.Editor
                     {
                         if (ImGui.GetIO().KeysDown[(int)Key.Enter])
                         {
-                            Type assetType = _as.Database.GetAssetType(asset.Path);
+                            Type assetType = _as.ProjectDatabase.GetAssetType(asset.Path);
                             AssetMenuHandler handler = _assetMenuHandlers.GetItem(assetType);
                             handler.HandleFileOpen(asset.Path);
                         }
@@ -601,7 +593,7 @@ namespace Engine.Editor
                     }
                     if (ImGui.BeginPopupContextItem(asset.Name + "_context"))
                     {
-                        Type assetType = _as.Database.GetAssetType(asset.Path);
+                        Type assetType = _as.ProjectDatabase.GetAssetType(asset.Path);
                         AssetMenuHandler handler = _assetMenuHandlers.GetItem(assetType);
 
                         if (ImGui.MenuItem("Open"))
@@ -610,11 +602,11 @@ namespace Engine.Editor
                         }
                         if (ImGui.MenuItem("Clone"))
                         {
-                            _as.Database.CloneAsset(asset.Path);
+                            _as.ProjectDatabase.CloneAsset(asset.Path);
                         }
                         if (ImGui.MenuItem("Delete"))
                         {
-                            _as.Database.DeleteAsset(asset.Path);
+                            _as.ProjectDatabase.DeleteAsset(asset.Path);
                         }
 
                         handler.DrawMenuItems();
@@ -842,8 +834,8 @@ namespace Engine.Editor
                 _loadedProjectRoot = new FileInfo(rootPathOrManifest).DirectoryName;
                 _gs.Context.ResourceFactory.ShaderAssetRootPath = _loadedProjectRoot;
                 EditorPreferences.Instance.LastOpenedProjectRoot = rootPathOrManifest;
-                _loadedProjectManifest = _as.Database.LoadAsset<ProjectManifest>(rootPathOrManifest);
-                _as.Database.RootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
+                _loadedProjectManifest = _as.ProjectDatabase.LoadAsset<ProjectManifest>(rootPathOrManifest);
+                _as.ProjectAssetRootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
 
                 return true;
             }
@@ -854,7 +846,7 @@ namespace Engine.Editor
                 _loadedProjectRoot = rootPathOrManifest;
                 _gs.Context.ResourceFactory.ShaderAssetRootPath = rootPathOrManifest;
                 EditorPreferences.Instance.LastOpenedProjectRoot = manifestPath;
-                _as.Database.RootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
+                _as.ProjectDatabase.RootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
                 return true;
             }
 
@@ -871,7 +863,7 @@ namespace Engine.Editor
             using (var sw = File.CreateText(manifestPath))
             using (var jtw = new JsonTextWriter(sw))
             {
-                _as.Database.DefaultSerializer.Serialize(jtw, manifest);
+                _as.ProjectDatabase.DefaultSerializer.Serialize(jtw, manifest);
             }
 
             return manifest;
@@ -912,14 +904,14 @@ namespace Engine.Editor
                 using (var fs = File.OpenRead(path))
                 {
                     var jtr = new JsonTextReader(new StreamReader(fs));
-                    loadedAsset = _as.Database.DefaultSerializer.Deserialize<SceneAsset>(jtr);
+                    loadedAsset = _as.ProjectDatabase.DefaultSerializer.Deserialize<SceneAsset>(jtr);
                 }
 
                 if (_currentScene == null)
                 {
                     _currentScene = new InMemoryAsset<SceneAsset>();
                 }
-                _currentScene.UpdateAsset(_as.Database.DefaultSerializer, loadedAsset);
+                _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
             }
             catch
             {
@@ -957,7 +949,7 @@ namespace Engine.Editor
 
         private void ActivateCurrentScene()
         {
-            ActivateScene(_currentScene.GetAsset(_as.Database.DefaultSerializer));
+            ActivateScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer));
         }
 
         private void SaveScene(SceneAsset scene, string path)
@@ -967,7 +959,7 @@ namespace Engine.Editor
             using (var fs = File.CreateText(path))
             {
                 var jtw = new JsonTextWriter(fs);
-                _as.Database.DefaultSerializer.Serialize(jtw, scene);
+                _as.ProjectDatabase.DefaultSerializer.Serialize(jtw, scene);
             }
         }
 
@@ -979,7 +971,7 @@ namespace Engine.Editor
             }
 
             SerializeGameObjectsToScene();
-            SaveScene(_currentScene.GetAsset(_as.Database.DefaultSerializer), _currentScenePath);
+            SaveScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer), _currentScenePath);
 
             if (_sceneCam != null)
             {
@@ -991,7 +983,7 @@ namespace Engine.Editor
         {
             SerializedGameObject[] sGos = _goQuery.GetAllGameObjects().Where(go => !IsEditorObject(go))
                 .Select(go => new SerializedGameObject(go)).ToArray();
-            _currentScene.UpdateAsset(_as.Database.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
+            _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
         }
 
         private void DestroyNonEditorGameObjects()
@@ -1121,11 +1113,11 @@ namespace Engine.Editor
             using (var fs = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096))
             {
                 var textWriter = new JsonTextWriter(new StreamWriter(fs));
-                _as.Database.DefaultSerializer.Serialize(textWriter, sgo);
+                _as.ProjectDatabase.DefaultSerializer.Serialize(textWriter, sgo);
                 textWriter.Flush();
                 fs.Seek(0, SeekOrigin.Begin);
                 var reader = new JsonTextReader(new StreamReader(fs));
-                sgo = _as.Database.DefaultSerializer.Deserialize<SerializedGameObject>(reader);
+                sgo = _as.ProjectDatabase.DefaultSerializer.Deserialize<SerializedGameObject>(reader);
             }
 
             GameObject newGo = new GameObject($"{go.Name} (Clone)");

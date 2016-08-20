@@ -1,4 +1,5 @@
-﻿using Engine.Graphics;
+﻿using Engine.Assets;
+using Engine.Graphics;
 using Engine.Physics;
 using System;
 using System.Numerics;
@@ -38,8 +39,8 @@ namespace Engine.Behaviors
             var newGo = new GameObject((isBox ? "Cube" : "Sphere") + (_totalObjects));
             newGo.Transform.Position = new Vector3((float)_random.NextDouble() * 29f - 14f, (float)_random.NextDouble() * 10f, (float)_random.NextDouble() * 29f - 14f);
             var mr = isBox
-                ? new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, color)
-                : new MeshRenderer(SphereModel.Vertices, SphereModel.Indices, color);
+                ? new MeshRenderer(new SimpleMeshDataProvider(CubeModel.Vertices, CubeModel.Indices), color)
+                : new MeshRenderer(EngineEmbeddedAssets.SphereModelID, color);
             mr.Wireframe = _random.NextDouble() > 0.9;
             newGo.AddComponent(mr);
             float radius = 0.3f + (float)_random.NextDouble() * .75f;

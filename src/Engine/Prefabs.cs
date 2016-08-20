@@ -3,6 +3,7 @@ using Engine.Physics;
 using System;
 using System.IO;
 using System.Numerics;
+using Veldrid.Graphics;
 
 namespace Engine
 {
@@ -29,7 +30,9 @@ namespace Engine
 
             foreach (var shape in shapes)
             {
-                var mc = new MeshRenderer(CubeModel.Vertices, CubeModel.Indices, Path.Combine("Textures", "Stone.png"));
+                var mc = new MeshRenderer(
+                    new SimpleMeshDataProvider(CubeModel.Vertices, CubeModel.Indices),
+                    Path.Combine("Textures", "Stone.png"));
                 mc.RenderOffset = Matrix4x4.CreateScale(3.0f, 0.5f, 3.0f)
                     * Matrix4x4.CreateFromQuaternion(shape.Orientation)
                     * Matrix4x4.CreateTranslation(csc.EntityCenter + shape.Position)
