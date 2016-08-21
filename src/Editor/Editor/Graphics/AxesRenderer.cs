@@ -74,7 +74,7 @@ namespace Engine.Editor.Graphics
         {
             return rc.ResourceFactory.CreateMaterial(rc, "unlit-vertex", "unlit-frag",
                 new MaterialVertexInput(
-                    32,
+                    28,
                     new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
                     new MaterialVertexInputElement("in_color", VertexSemanticType.Color, VertexElementFormat.Float4)),
                 new MaterialInputs<MaterialGlobalInputElement>(

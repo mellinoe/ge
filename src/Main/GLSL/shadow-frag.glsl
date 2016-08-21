@@ -7,6 +7,28 @@ uniform LightInfoBuffer
     float _padding;
 };
 
+uniform CameraInfoBuffer
+{
+	vec3 cameraPosition_worldSpace;
+	float _padding1;
+};
+
+#define MAX_POINT_LIGHTS 4
+
+struct PointLightInfo
+{
+	vec3 position;
+	float range;
+	vec3 color;
+	float intensity;
+};
+
+uniform PointLightsBuffer
+{
+	int numActiveLights;
+	PointLightInfo pointLights[MAX_POINT_LIGHTS];
+};
+
 uniform TintInfoBuffer
 {
     vec3 tintColor;
@@ -28,10 +50,55 @@ vec4 ApplyTintColor(vec4 beforeTint, vec3 tintColor, float tintFactor)
     return (beforeTint * (1 - tintFactor) + (tintFactor * vec4(tintColor, 1)));
 }
 
+float GetPointLightAttenuation(float distance, float radius, float cutoff)
+{
+	// Attenuation formula: https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/
+
+	// calculate basic attenuation
+	float denom = distance / radius + 1;
+	float attenuation = 1 / (denom * denom);
+
+	// scale and bias attenuation such that:
+	//   attenuation == 0 at extent of max influence
+	//   attenuation == 1 when distance == 0
+	attenuation = (attenuation - cutoff) / (1 - cutoff);
+	attenuation = max(attenuation, 0);
+
+	return attenuation;
+}
+
 void main()
 {
     vec4 surfaceColor = texture(surfaceTexture, out_texCoord);
-    vec4 ambient = vec4(.4, .4, .4, 1);
+    vec4 ambientLight = vec4(.4, .4, .4, 1);
+	float specularPower = 64;
+	float specularIntensity = .2;
+
+	// Point Diffuse
+
+	vec4 pointDiffuse = vec4(0, 0, 0, 1);
+	vec4 pointSpec = vec4(0, 0, 0, 1);
+	for (int i = 0; i < numActiveLights; i++)
+	{
+		PointLightInfo pli = pointLights[i];
+		vec3 lightDir = normalize(pli.position - out_position_worldSpace);
+		float intensity = clamp(dot(out_normal, lightDir), 0, 1);
+		float lightDistance = distance(pli.position, out_position_worldSpace);
+		float attenuation = GetPointLightAttenuation(lightDistance, pli.range, 0.001);
+
+		pointDiffuse += intensity * vec4(pli.color, 1) * surfaceColor * attenuation * pli.intensity;
+
+		// Specular
+		vec3 vertexToEye = normalize(cameraPosition_worldSpace - out_position_worldSpace);
+		vec3 lightReflect = normalize(reflect(lightDir, out_normal));
+
+		float specularFactor = dot(vertexToEye, lightReflect);
+		if (specularFactor > 0)
+		{
+			specularFactor = pow(abs(specularFactor), specularPower);
+			pointSpec += attenuation * (vec4(pli.color * specularIntensity * specularFactor, 1.0f));
+		}
+	}
 
 	// perform perspective divide
     vec3 projCoords = out_lightPosition.xyz / out_lightPosition.w;
@@ -42,7 +109,8 @@ void main()
         projCoords.y < -1.0f || projCoords.y > 1.0f ||
         projCoords.z < 0.0f || projCoords.z > 1.0f)
     {
-        outputColor = ApplyTintColor(ambient * surfaceColor, tintColor, tintFactor);
+		vec4 beforeTint = (ambientLight * surfaceColor) + pointDiffuse + pointSpec;
+        outputColor = ApplyTintColor(beforeTint, tintColor, tintFactor);
 		return;
     }
 
@@ -50,9 +118,9 @@ void main()
     projCoords = projCoords * 0.5 + 0.5;
 
     vec3 L = -1 * normalize(lightDir);
-    float ndotl = dot(normalize(out_normal), L);
+    float diffuseFactor = dot(normalize(out_normal), L);
 
-    float cosTheta = clamp(ndotl, 0, 1);
+    float cosTheta = clamp(diffuseFactor, 0, 1);
     float bias = 0.0015 * tan(acos(cosTheta));
     bias = clamp(bias, 0, 0.01);
     projCoords.z -= bias;
@@ -73,7 +141,8 @@ void main()
 	}
 
     //otherwise calculate ilumination at fragment
-    ndotl = clamp(ndotl, 0, 1);
-    outputColor = ApplyTintColor(ambient * surfaceColor + (surfaceColor * ndotl * visibility), tintColor, tintFactor);
+    diffuseFactor = clamp(diffuseFactor, 0, 1);
+	vec4 beforeTint = (ambientLight * surfaceColor + (surfaceColor * diffuseFactor * visibility)) + pointDiffuse + pointSpec;
+    outputColor = ApplyTintColor(beforeTint, tintColor, tintFactor);
 	return;
 }

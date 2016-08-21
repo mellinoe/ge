@@ -37,7 +37,7 @@ namespace Engine.Graphics
 
         public Camera MainCamera => _mainCamera;
 
-        public GraphicsSystem(OpenTKWindow window)
+        public GraphicsSystem(OpenTKWindow window, bool preferOpenGL = false)
         {
             if (window == null)
             {
@@ -45,7 +45,7 @@ namespace Engine.Graphics
             }
 
             _window = window;
-            Context = CreatePlatformDefaultContext(window);
+            Context = CreatePlatformDefaultContext(window, preferOpenGL);
             MaterialCache = new MaterialCache(Context.ResourceFactory);
 
             ShadowMapStage = new ShadowMapStage(Context);
@@ -218,9 +218,9 @@ namespace Engine.Graphics
             _renderer.RenderFrame(_visiblityManager, _mainCamera.Transform.Position);
         }
 
-        private static RenderContext CreatePlatformDefaultContext(OpenTKWindow window)
+        private static RenderContext CreatePlatformDefaultContext(OpenTKWindow window, bool preferOpenGL = false)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !preferOpenGL)
             {
                 return new D3DRenderContext(window);
             }

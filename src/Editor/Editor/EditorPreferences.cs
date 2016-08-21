@@ -11,6 +11,8 @@ namespace Engine.Editor
 
         public string LastOpenedProjectRoot { get; set; }
 
+        public bool PreferOpenGL { get; set; }
+
         public string GetLastOpenedScene(string project)
         {
             var list = GetProjectSceneHistory(project);
