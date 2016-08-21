@@ -135,11 +135,13 @@ namespace Engine.Editor
 
             if (!string.IsNullOrEmpty(EditorPreferences.Instance.LastOpenedProjectRoot))
             {
-                LoadProject(EditorPreferences.Instance.LastOpenedProjectRoot);
-                var latestScene = EditorPreferences.Instance.GetLastOpenedScene(_loadedProjectRoot);
-                if (!string.IsNullOrEmpty(latestScene))
+                if (LoadProject(EditorPreferences.Instance.LastOpenedProjectRoot))
                 {
-                    LoadScene(latestScene);
+                    var latestScene = EditorPreferences.Instance.GetLastOpenedScene(_loadedProjectRoot);
+                    if (!string.IsNullOrEmpty(latestScene))
+                    {
+                        LoadScene(latestScene);
+                    }
                 }
             }
         }
@@ -561,7 +563,10 @@ namespace Engine.Editor
 
         private void DrawProjectAssets()
         {
-            DrawRecursiveNode(_as.ProjectDatabase.GetRootDirectoryGraph(), false);
+            if (!string.IsNullOrEmpty(_loadedProjectRoot))
+            {
+                DrawRecursiveNode(_as.ProjectDatabase.GetRootDirectoryGraph(), false);
+            }
         }
 
         private void DrawRecursiveNode(DirectoryNode node, bool pushTreeNode)
