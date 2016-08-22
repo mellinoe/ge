@@ -75,6 +75,18 @@
     <Compile Include="VectorExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Assets\HLSL\imgui-frag.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\imgui-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\lit-frag.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\shadow-frag.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\shadow-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\shadowmap-frag.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\shadowmap-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\simple-2d-frag.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\simple-2d-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\skybox-frag.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\skybox-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\textured-vertex.hlsl" />
     <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{2665014F-0FEC-4268-8F77-7B029921AB09}</Project>
       <Name>ImGui.NET</Name>
@@ -96,6 +108,18 @@
       <Name>BEPUutilities</Name>
     </ProjectReference>
     <EmbeddedResource Include="Assets\Models\Sphere.obj" />
+    <EmbeddedResource Include="Assets\GLSL\imgui-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\imgui-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\lit-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\skybox-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\skybox-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\textured-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadow-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadow-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadowmap-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadowmap-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\simple-2d-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\simple-2d-vertex.glsl" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
@@ -105,9 +129,6 @@
     <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_lf.png" />
     <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_rt.png" />
     <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_up.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Textures\Pink.png" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

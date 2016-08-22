@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace Engine
@@ -76,6 +77,17 @@ namespace Engine
             }
 
             return new Vector3(bank, heading, attitude);
+        }
+
+        public static Vector3 SumAll(IEnumerable<Vector3> vectors)
+        {
+            Vector3 sum = Vector3.Zero;
+            foreach (var v in vectors)
+            {
+                sum += v;
+            }
+
+            return sum;
         }
     }
 }

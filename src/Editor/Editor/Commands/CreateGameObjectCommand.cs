@@ -8,6 +8,7 @@ namespace Engine.Editor.Commands
 
         public string Name { get; }
         public Transform Parent { get; }
+        public GameObject GameObject => _go;
 
         public CreateGameObjectCommand(string name, Transform parent = null)
         {

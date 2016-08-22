@@ -26,6 +26,8 @@ namespace Engine.Editor
             window.Title = "ge.Editor";
             Game game = new Game();
             GraphicsSystem gs = new GraphicsSystem(window, EditorPreferences.Instance.PreferOpenGL);
+            gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
+
             game.SystemRegistry.Register(gs);
             game.LimitFrameRate = false;
             InputSystem inputSystem = new InputSystem(window);

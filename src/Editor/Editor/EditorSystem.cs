@@ -744,6 +744,26 @@ namespace Engine.Editor
                     {
                         CreateEmptyGameObject(_selectedObjects.First().Transform);
                     }
+                    if (ImGui.MenuItem("Create Empty Parent", _selectedObjects.Any()))
+                    {
+                        Vector3 position = MathUtil.SumAll(_selectedObjects.Select(go => go.Transform.Position));
+                        var newParent = CreateEmptyGameObject();
+                        newParent.Transform.Position = position;
+                        Command c = new RawCommand(() =>
+                        {
+                            foreach (var selected in _selectedObjects)
+                            {
+                                selected.Transform.Parent = newParent.Transform;
+                            }
+                        }, () =>
+                        {
+                            foreach (var selected in _selectedObjects)
+                            {
+                                selected.Transform.Parent = null;
+                            }
+                        });
+                        _undoRedo.CommitCommand(c);
+                    }
 
                     ImGui.EndMenu();
                 }
@@ -833,7 +853,7 @@ namespace Engine.Editor
             }
         }
 
-        private void CreateEmptyGameObject(Transform parent = null)
+        private GameObject CreateEmptyGameObject(Transform parent = null)
         {
             string prefix = "GameObject";
             int suffix = 0;
@@ -842,8 +862,9 @@ namespace Engine.Editor
                 suffix += 1;
             }
 
-            Command c = new CreateGameObjectCommand(prefix + suffix, parent);
+            CreateGameObjectCommand c = new CreateGameObjectCommand(prefix + suffix, parent);
             _undoRedo.CommitCommand(c);
+            return c.GameObject;
         }
 
         private bool LoadProject(string rootPathOrManifest)
@@ -1159,6 +1180,9 @@ namespace Engine.Editor
             {
                 newGo.Transform.Parent = go.Transform.Parent;
             }
+
+            ClearSelection();
+            SelectObject(newGo);
         }
 
         private void SelectObject(GameObject go)

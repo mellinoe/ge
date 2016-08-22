@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Veldrid;
 using Veldrid.Graphics;
@@ -58,6 +59,7 @@ namespace Engine.Graphics
             _renderer = new Renderer(Context, _pipelineStages);
 
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
+            Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
