@@ -19,18 +19,18 @@ namespace Engine
         public delegate void ParentChangedHandler(Transform t, Transform oldParent, Transform newParent);
         public event ParentChangedHandler ParentChanged;
 
+        private void OnPhysicsEntityMoved(Entity entity)
+        {
+            OnPositionChanged();
+            OnRotationChanged();
+        }
+
         internal void SetPhysicsEntity(Entity entity)
         {
             Debug.Assert(_physicsEntity == null);
             Debug.Assert(entity != null);
             _physicsEntity = entity;
             _physicsEntity.PositionUpdated += OnPhysicsEntityMoved;
-        }
-
-        private void OnPhysicsEntityMoved(Entity entity)
-        {
-            OnPositionChanged();
-            OnRotationChanged();
         }
 
         internal void RemovePhysicsEntity()
@@ -41,7 +41,11 @@ namespace Engine
             Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
             _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.Orientation);
 
-            _physicsEntity.PositionUpdated -= OnPhysicsEntityMoved;
+            if (_parent != null)
+            {
+                _parent.PositionManuallyChanged -= OnParentPositionChanged;
+                _parent.RotationManuallyChanged -= OnParentRotationChanged;
+            }
 
             _physicsEntity = null;
         }
@@ -166,6 +170,7 @@ namespace Engine
             {
                 if (value != Rotation)
                 {
+                    Quaternion oldRotation = Rotation;
                     if (_physicsEntity == null)
                     {
                         Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
@@ -176,7 +181,7 @@ namespace Engine
                         _physicsEntity.Orientation = value;
                     }
 
-                    OnRotationManuallyChanged();
+                    OnRotationManuallyChanged(oldRotation);
                     OnRotationChanged();
                 }
             }
@@ -198,6 +203,7 @@ namespace Engine
             }
             set
             {
+                Quaternion oldRotation = Rotation;
                 if (_physicsEntity == null)
                 {
                     _localRotation = value;
@@ -206,18 +212,17 @@ namespace Engine
                 {
                     Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
                     _physicsEntity.Orientation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
-
                 }
 
-                OnRotationManuallyChanged();
+                OnRotationManuallyChanged(oldRotation);
                 OnRotationChanged();
             }
         }
 
-        public event Action<Quaternion> RotationManuallyChanged;
-        private void OnRotationManuallyChanged()
+        public event Action<Quaternion, Quaternion> RotationManuallyChanged;
+        private void OnRotationManuallyChanged(Quaternion oldRotation)
         {
-            RotationManuallyChanged?.Invoke(Rotation);
+            RotationManuallyChanged?.Invoke(oldRotation, Rotation);
         }
 
         public event Action<Quaternion> RotationChanged;
@@ -277,15 +282,54 @@ namespace Engine
                     throw new InvalidOperationException("Cannot set a Transform's parent to itself.");
                 }
 
-                if (_parent != null)
-                {
-                    _parent._children.Remove(this);
-                }
+                OnParentChanged(value);
+            }
+        }
 
-                Transform oldParent = _parent;
-                _parent = value;
-                _parent._children.Add(this);
-                ParentChanged?.Invoke(this, oldParent, _parent);
+        /// <summary>
+        /// Called when this transform's parent changes.
+        /// </summary>
+        /// <param name="newParent">The new parent. May be null.</param>
+        private void OnParentChanged(Transform newParent)
+        {
+            var oldParent = _parent;
+            if (oldParent != null)
+            {
+                oldParent._children.Remove(this);
+                oldParent.PositionManuallyChanged -= OnParentPositionChanged;
+                oldParent.RotationManuallyChanged -= OnParentRotationChanged;
+            }
+
+            _parent = newParent;
+            if (newParent != null)
+            {
+                newParent._children.Add(this);
+                newParent.PositionManuallyChanged += OnParentPositionChanged;
+                newParent.RotationManuallyChanged += OnParentRotationChanged;
+            }
+
+            ParentChanged?.Invoke(this, oldParent, _parent);
+
+        }
+
+        private void OnParentPositionChanged(Vector3 oldPos, Vector3 newPos)
+        {
+            OnPositionManuallyChanged(oldPos + _localPosition);
+            if (_physicsEntity != null)
+            {
+                var diff = newPos - oldPos;
+                _physicsEntity.Position += diff;
+            }
+        }
+
+        private void OnParentRotationChanged(Quaternion oldRot, Quaternion newRot)
+        {
+            OnRotationManuallyChanged(Quaternion.Concatenate(oldRot, _localRotation));
+            if (_physicsEntity != null)
+            {
+                var diff = newRot - oldRot;
+                _physicsEntity.Orientation += diff;
+                OnRotationChanged();
             }
         }
 
@@ -336,6 +380,15 @@ namespace Engine
             }
         }
 
+        public Vector3 GetLocalOrPhysicsEntityPosition()
+        {
+            return (_physicsEntity != null) ? _physicsEntity.Position : _localPosition;
+        }
+
+        public Quaternion GetLocalOrPhysicsEntityRotation()
+        {
+            return (_physicsEntity != null) ? _physicsEntity.Orientation : _localRotation;
+        }
 
         protected override void Attached(SystemRegistry registry)
         {

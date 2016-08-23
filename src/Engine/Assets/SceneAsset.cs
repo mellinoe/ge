@@ -81,8 +81,8 @@ namespace Engine.Assets
 
         public SerializedTransform(Transform transform)
         {
-            LocalPosition = transform.LocalPosition;
-            LocalRotation = transform.LocalRotation;
+            LocalPosition = transform.GetLocalOrPhysicsEntityPosition();
+            LocalRotation = transform.GetLocalOrPhysicsEntityRotation();
             LocalScale = transform.LocalScale;
 
             if (transform.Parent != null)
