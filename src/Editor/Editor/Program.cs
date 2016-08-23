@@ -43,7 +43,6 @@ namespace Engine.Editor
 
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
             gs.AddFreeRenderItem(imGuiRenderer);
-            ImGui.GetIO().FontAllowUserScaling = true;
 
             AssetSystem assetSystem = new EditorAssetSystem();
             game.SystemRegistry.Register(assetSystem);
