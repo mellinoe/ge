@@ -289,6 +289,11 @@ namespace Engine.Editor
                 }
             }
 
+            if (ImGui.Button("Toggle Bounds Renderer"))
+            {
+                mr.ToggleBoundsRenderer();
+            }
+
             return c;
         }
 
@@ -738,11 +743,15 @@ namespace Engine.Editor
                 {
                     if (ImGui.MenuItem("Create Empty"))
                     {
-                        CreateEmptyGameObject();
+                        var newGo = CreateEmptyGameObject();
+                        ClearSelection();
+                        SelectObject(newGo);
                     }
                     if (ImGui.MenuItem("Create Empty Child", _selectedObjects.Any()))
                     {
-                        CreateEmptyGameObject(_selectedObjects.First().Transform);
+                        var newChild = CreateEmptyGameObject(_selectedObjects.First().Transform);
+                        ClearSelection();
+                        SelectObject(newChild);
                     }
                     if (ImGui.MenuItem("Create Empty Parent", _selectedObjects.Any()))
                     {

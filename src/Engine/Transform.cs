@@ -59,7 +59,7 @@ namespace Engine
                     Vector3 pos = _localPosition;
                     if (Parent != null)
                     {
-                        pos += Parent.Position;
+                        pos = Vector3.Transform(pos, Parent.GetWorldMatrix());
                     }
 
                     return pos;
@@ -135,17 +135,6 @@ namespace Engine
             PositionChanged?.Invoke(Position);
             TransformChanged?.Invoke(this);
         }
-
-        //internal void OnPhysicsUpdated(Entity obj)
-        //{
-        //    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
-        //    _localPosition = obj.Position - parentPos;
-        //    OnPositionChanged();
-
-        //    Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
-        //    _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), obj.Orientation);
-        //    OnRotationChanged();
-        //}
 
         public Quaternion Rotation
         {
@@ -335,6 +324,10 @@ namespace Engine
             {
                 var diff = newRot - oldRot;
                 _physicsEntity.Orientation += diff;
+                Vector3 basisDirection = Vector3.Transform(_physicsEntity.Position - _parent.Position, Quaternion.Inverse(oldRot));
+                float distance = basisDirection.Length();
+                Vector3 newDirection = Vector3.Transform(basisDirection, newRot);
+                _physicsEntity.Position = _parent.Position + Vector3.Normalize(newDirection) * distance;
             }
         }
 
@@ -344,14 +337,14 @@ namespace Engine
         {
             if (_physicsEntity != null)
             {
-                return Matrix4x4.CreateScale(Scale)
+                return Matrix4x4.CreateScale(_localScale)
                 * Matrix4x4.CreateFromQuaternion(_physicsEntity.Orientation)
                 * Matrix4x4.CreateTranslation(_physicsEntity.Position);
             }
 
             Matrix4x4 mat = Matrix4x4.CreateScale(_localScale)
-                * Matrix4x4.CreateFromQuaternion(_localRotation)
-                * Matrix4x4.CreateTranslation(_localPosition);
+                * Matrix4x4.CreateFromQuaternion(LocalRotation)
+                * Matrix4x4.CreateTranslation(LocalPosition);
 
             if (Parent != null)
             {
