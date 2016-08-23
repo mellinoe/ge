@@ -746,7 +746,7 @@ namespace Engine.Editor
                     }
                     if (ImGui.MenuItem("Create Empty Parent", _selectedObjects.Any()))
                     {
-                        Vector3 position = MathUtil.SumAll(_selectedObjects.Select(go => go.Transform.Position));
+                        Vector3 position = MathUtil.SumAll(_selectedObjects.Select(go => go.Transform.Position)) / _selectedObjects.Count;
                         var newParent = CreateEmptyGameObject();
                         newParent.Transform.Position = position;
                         Command c = new RawCommand(() =>
@@ -763,6 +763,8 @@ namespace Engine.Editor
                             }
                         });
                         _undoRedo.CommitCommand(c);
+                        ClearSelection();
+                        SelectObject(newParent);
                     }
 
                     ImGui.EndMenu();
