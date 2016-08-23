@@ -12,6 +12,7 @@ namespace Engine.Editor.Graphics
     public class AxesRenderer : BoundsRenderItem
     {
         private static readonly string[] s_stages = { "Standard" };
+        private const float PlaneLength = 0.1f;
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
         private readonly GraphicsSystem _gs;
@@ -32,36 +33,29 @@ namespace Engine.Editor.Graphics
             _gs = gs;
             _vb = rc.ResourceFactory.CreateVertexBuffer(6 * VertexPositionColor.SizeInBytes, false);
 
-            const float planeLength = 0.2f;
-            const float opacity = 0.66f;
+            const float opacity = 0.56f;
             RgbaFloat red = new RgbaFloat(1, 0, 0, opacity);
             RgbaFloat green = new RgbaFloat(0, 1, 0, opacity);
             RgbaFloat blue = new RgbaFloat(0, 0, 1, opacity);
-            _vb.SetVertexData(
-                new VertexPositionColor[]
-                {
-                    new VertexPositionColor(new Vector3(0, 0, 0), red), // 0
-                    new VertexPositionColor(new Vector3(1, 0, 0), red),
-                    new VertexPositionColor(new Vector3(planeLength, 0, 0), red),
-                    new VertexPositionColor(new Vector3(planeLength, planeLength, 0), red),
-                    new VertexPositionColor(new Vector3(0, planeLength, 0), red),
-
-                    new VertexPositionColor(new Vector3(0, 0, 0), green), // 5
-                    new VertexPositionColor(new Vector3(0, 1, 0), green),
-                    new VertexPositionColor(new Vector3(0, planeLength, 0), green),
-                    new VertexPositionColor(new Vector3(0, planeLength, -planeLength), green),
-                    new VertexPositionColor(new Vector3(0, 0, -planeLength), green),
-
-                    new VertexPositionColor(new Vector3(0, 0, 0), blue), // 10
-                    new VertexPositionColor(new Vector3(0, 0, -1), blue),
-                    new VertexPositionColor(new Vector3(0, 0, -planeLength), blue),
-                    new VertexPositionColor(new Vector3(planeLength, 0, -planeLength), blue),
-                    new VertexPositionColor(new Vector3(planeLength, 0, 0), blue),
-                },
-                new VertexDescriptor(VertexPositionColor.SizeInBytes, 2, 0, IntPtr.Zero));
+            SetPlaneVertices(
+                new Vector3(PlaneLength, 0, PlaneLength),
+                new Vector3(PlaneLength, PlaneLength, 0),
+                new Vector3(0, PlaneLength, PlaneLength));
             _ib = rc.ResourceFactory.CreateIndexBuffer(6 * 4, false);
             _ib.SetIndices(
-                new int[] { 0, 1, 5, 6, 10, 11, 0, 2, 3, 0, 3, 4, 5, 7, 8, 5, 8, 9, 10, 12, 13, 10, 13, 14 },
+                new int[]
+                {
+                    0, 1, 2, 3, 4, 5, // Lines
+                    // Planes
+                    6, 7, 8, 6, 8, 9,
+                    10, 11, 12, 10, 12, 13,
+                    14, 15, 16, 14, 16, 17,
+
+                    // Solid plane borders
+                    18, 19, 19, 20, 20, 21, 21, 18,
+                    22, 23, 23, 24, 24, 25, 25, 22,
+                    26, 27, 27, 28, 28, 29, 29, 26
+                },
                 0,
                 0);
             _lineIndicesCount = 6;
@@ -94,9 +88,9 @@ namespace Engine.Editor.Graphics
             }
         }
 
-        private Matrix4x4 GetWorldMatrix()
+        private Matrix4x4 GetWorldMatrix(Vector3 offset = new Vector3())
         {
-            return Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateFromQuaternion(Rotation) * Matrix4x4.CreateTranslation(Position);
+            return Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateFromQuaternion(Rotation) * Matrix4x4.CreateTranslation(Position + offset);
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
@@ -121,65 +115,122 @@ namespace Engine.Editor.Graphics
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
             _material.ApplyPerObjectInput(_worldProvider);
-            var previousDSS = rc.DepthStencilState;
+            DepthStencilState previousDSS = rc.DepthStencilState;
             rc.DepthStencilState = _dss;
-            var previousRS = rc.RasterizerState;
+            RasterizerState previousRS = rc.RasterizerState;
             rc.RasterizerState = _rs;
             rc.DrawIndexedPrimitives(_lineIndicesCount, 0, PrimitiveTopology.LineList);
 
-            var previousBlendState = rc.BlendState;
+            BlendState previousBlendState = rc.BlendState;
             rc.BlendState = rc.AlphaBlend;
-            var difference = _gs.MainCamera.Transform.Position - Position;
-            if (difference.Y < 0)
-            {
-                if (difference.X > 0)
-                {
-                    DrawYZPlane(rc);
-                    DrawXYPlane(rc);
-                }
-                else
-                {
-                    DrawXYPlane(rc);
-                    DrawYZPlane(rc);
-                }
+            Vector3 difference = Vector3.Transform(_gs.MainCamera.Transform.Position - Position, Quaternion.Inverse(Rotation));
 
-                DrawXZPlane(rc);
-            }
-            else
-            {
-                DrawXZPlane(rc);
+            Vector3 xzOffset = (Math.Sign(difference.X) * Vector3.UnitX
+                    + Math.Sign(difference.Z) * Vector3.UnitZ);
 
-                if (difference.X > 0)
-                {
-                    DrawYZPlane(rc);
-                    DrawXYPlane(rc);
-                }
-                else
-                {
-                    DrawXYPlane(rc);
-                    DrawYZPlane(rc);
-                }
+            Vector3 xyOffset = (Math.Sign(difference.X) * Vector3.UnitX
+                + Math.Sign(difference.Y) * Vector3.UnitY);
 
-            }
+            Vector3 yzOffset = (Math.Sign(difference.Y) * Vector3.UnitY
+                + Math.Sign(difference.Z) * Vector3.UnitZ);
+
+            SetPlaneVertices(xzOffset * PlaneLength, xyOffset * PlaneLength, yzOffset * PlaneLength);
+
+            DrawXZPlane(rc);
+            DrawXYPlane(rc);
+            DrawYZPlane(rc);
 
             rc.DepthStencilState = previousDSS;
             rc.RasterizerState = previousRS;
             rc.BlendState = previousBlendState;
         }
 
+        private void SetRenderOffset(Vector3 offset)
+        {
+            _worldProvider.Data = GetWorldMatrix(offset);
+            _material.ApplyPerObjectInput(_worldProvider);
+        }
+
+        private void SetPlaneVertices(Vector3 xzOffset, Vector3 xyOffset, Vector3 yzOffset)
+        {
+            const float opacity = 0.66f;
+            RgbaFloat red = new RgbaFloat(1, 0, 0, opacity);
+            RgbaFloat green = new RgbaFloat(0, 1, 0, opacity);
+            RgbaFloat blue = new RgbaFloat(0, 0, 1, opacity);
+
+            RgbaFloat solidRed = new RgbaFloat(1, 0, 0, 1);
+            RgbaFloat solidGreen = new RgbaFloat(0, 1, 0, 1);
+            RgbaFloat solidBlue = new RgbaFloat(0, 0, 1, 1);
+
+
+            _vb.SetVertexData(
+                new VertexPositionColor[]
+                {
+                    // Axes
+                    new VertexPositionColor(new Vector3(0, 0, 0), red), // 0
+                    new VertexPositionColor(new Vector3(1, 0, 0), red),
+                    new VertexPositionColor(new Vector3(0, 0, 0), green), // 2
+                    new VertexPositionColor(new Vector3(0, 1, 0), green),
+                    new VertexPositionColor(new Vector3(0, 0, 0), blue), // 4
+                    new VertexPositionColor(new Vector3(0, 0, -1), blue),
+
+                    // Planes
+                    // XY
+                    new VertexPositionColor(xyOffset + new Vector3(-PlaneLength, PlaneLength, 0), blue), // 6
+                    new VertexPositionColor(xyOffset + new Vector3(-PlaneLength, -PlaneLength, 0), blue),
+                    new VertexPositionColor(xyOffset + new Vector3(PlaneLength, -PlaneLength, 0), blue),
+                    new VertexPositionColor(xyOffset + new Vector3(PlaneLength, PlaneLength, 0), blue),
+
+                    // YZ
+                    new VertexPositionColor(yzOffset + new Vector3(0, -PlaneLength, PlaneLength), red), // 10
+                    new VertexPositionColor(yzOffset + new Vector3(0, -PlaneLength, -PlaneLength), red),
+                    new VertexPositionColor(yzOffset + new Vector3(0, PlaneLength, -PlaneLength), red),
+                    new VertexPositionColor(yzOffset + new Vector3(0, PlaneLength, PlaneLength), red),
+
+                    // XZ
+                    new VertexPositionColor(xzOffset + new Vector3(-PlaneLength, 0, PlaneLength), green), // 14
+                    new VertexPositionColor(xzOffset + new Vector3(-PlaneLength, 0, -PlaneLength), green),
+                    new VertexPositionColor(xzOffset + new Vector3(PlaneLength, 0, -PlaneLength), green),
+                    new VertexPositionColor(xzOffset + new Vector3(PlaneLength, 0, PlaneLength), green),
+
+                    // Planes - Solid Borders
+                    // XY
+                    new VertexPositionColor(xyOffset + new Vector3(-PlaneLength, PlaneLength, 0), solidBlue), // 6
+                    new VertexPositionColor(xyOffset + new Vector3(-PlaneLength, -PlaneLength, 0), solidBlue),
+                    new VertexPositionColor(xyOffset + new Vector3(PlaneLength, -PlaneLength, 0), solidBlue),
+                    new VertexPositionColor(xyOffset + new Vector3(PlaneLength, PlaneLength, 0), solidBlue),
+
+                    // YZ
+                    new VertexPositionColor(yzOffset + new Vector3(0, -PlaneLength, PlaneLength), solidRed), // 10
+                    new VertexPositionColor(yzOffset + new Vector3(0, -PlaneLength, -PlaneLength), solidRed),
+                    new VertexPositionColor(yzOffset + new Vector3(0, PlaneLength, -PlaneLength), solidRed),
+                    new VertexPositionColor(yzOffset + new Vector3(0, PlaneLength, PlaneLength), solidRed),
+
+                    // XZ
+                    new VertexPositionColor(xzOffset + new Vector3(-PlaneLength, 0, PlaneLength), solidGreen), // 14
+                    new VertexPositionColor(xzOffset + new Vector3(-PlaneLength, 0, -PlaneLength), solidGreen),
+                    new VertexPositionColor(xzOffset + new Vector3(PlaneLength, 0, -PlaneLength), solidGreen),
+                    new VertexPositionColor(xzOffset + new Vector3(PlaneLength, 0, PlaneLength), solidGreen),
+                },
+                new VertexDescriptor(VertexPositionColor.SizeInBytes, 2, 0, IntPtr.Zero));
+        }
+
         private void DrawXYPlane(RenderContext rc)
         {
             rc.DrawIndexedPrimitives(6, _lineIndicesCount);
+            rc.DrawIndexedPrimitives(8, _lineIndicesCount + 18, PrimitiveTopology.LineList);
         }
 
         private void DrawYZPlane(RenderContext rc)
         {
             rc.DrawIndexedPrimitives(6, _lineIndicesCount + 6);
+            rc.DrawIndexedPrimitives(8, _lineIndicesCount + 26, PrimitiveTopology.LineList);
         }
 
         private void DrawXZPlane(RenderContext rc)
         {
             rc.DrawIndexedPrimitives(6, _lineIndicesCount + 12);
+            rc.DrawIndexedPrimitives(8, _lineIndicesCount + 34, PrimitiveTopology.LineList);
         }
     }
 }
