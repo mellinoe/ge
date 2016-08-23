@@ -282,7 +282,7 @@ namespace Engine
                     throw new InvalidOperationException("Cannot set a Transform's parent to itself.");
                 }
 
-                OnParentChanged(value);
+                SetParent(value);
             }
         }
 
@@ -290,7 +290,7 @@ namespace Engine
         /// Called when this transform's parent changes.
         /// </summary>
         /// <param name="newParent">The new parent. May be null.</param>
-        private void OnParentChanged(Transform newParent)
+        private void SetParent(Transform newParent)
         {
             var oldParent = _parent;
             if (oldParent != null)
@@ -309,11 +309,16 @@ namespace Engine
             }
 
             ParentChanged?.Invoke(this, oldParent, _parent);
-
+            if (_physicsEntity == null)
+            {
+                TransformChanged?.Invoke(this);
+                OnPositionChanged();
+            }
         }
 
         private void OnParentPositionChanged(Vector3 oldPos, Vector3 newPos)
         {
+            OnPositionChanged();
             OnPositionManuallyChanged(oldPos + _localPosition);
             if (_physicsEntity != null)
             {
@@ -324,12 +329,12 @@ namespace Engine
 
         private void OnParentRotationChanged(Quaternion oldRot, Quaternion newRot)
         {
+            OnRotationChanged();
             OnRotationManuallyChanged(Quaternion.Concatenate(oldRot, _localRotation));
             if (_physicsEntity != null)
             {
                 var diff = newRot - oldRot;
                 _physicsEntity.Orientation += diff;
-                OnRotationChanged();
             }
         }
 
