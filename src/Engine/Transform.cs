@@ -35,19 +35,11 @@ namespace Engine
 
         internal void RemovePhysicsEntity()
         {
-            Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
-            _localPosition = _physicsEntity.Position - parentPos;
-
-            Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
-            _localRotation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.Orientation);
-
-            if (_parent != null)
-            {
-                _parent.PositionManuallyChanged -= OnParentPositionChanged;
-                _parent.RotationManuallyChanged -= OnParentRotationChanged;
-            }
-
+            Vector3 localPosition = LocalPosition;
+            Quaternion localRotation = LocalRotation;
             _physicsEntity = null;
+            _localPosition = localPosition;
+            _localRotation = localRotation;
         }
 
         public Vector3 Position
@@ -97,8 +89,14 @@ namespace Engine
                 }
                 else
                 {
-                    Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
-                    return _physicsEntity.Position - parentPos;
+                    Matrix4x4 invWorld = Matrix4x4.Identity;
+                    if (Parent!= null)
+                    {
+                        Matrix4x4.Invert(Parent.GetWorldMatrix(), out invWorld);
+                    }
+
+                    return Vector3.Transform(_physicsEntity.Position, invWorld);
+
                 }
             }
             set
@@ -112,8 +110,8 @@ namespace Engine
                     }
                     else
                     {
-                        Vector3 parentPos = Parent != null ? Parent.Position : Vector3.Zero;
-                        _physicsEntity.Position = parentPos + value;
+                        Matrix4x4 world = Parent != null ? Parent.GetWorldMatrix() : Matrix4x4.Identity;
+                        _physicsEntity.Position = Vector3.Transform(value, world);
                     }
 
                     OnPositionChanged();
@@ -285,6 +283,7 @@ namespace Engine
             if (oldParent != null)
             {
                 oldParent._children.Remove(this);
+                newParent.TransformChanged += OnParentTransformChanged;
                 oldParent.PositionManuallyChanged -= OnParentPositionChanged;
                 oldParent.RotationManuallyChanged -= OnParentRotationChanged;
             }
@@ -293,6 +292,7 @@ namespace Engine
             if (newParent != null)
             {
                 newParent._children.Add(this);
+                newParent.TransformChanged += OnParentTransformChanged;
                 newParent.PositionManuallyChanged += OnParentPositionChanged;
                 newParent.RotationManuallyChanged += OnParentRotationChanged;
             }
@@ -303,6 +303,11 @@ namespace Engine
                 TransformChanged?.Invoke(this);
                 OnPositionChanged();
             }
+        }
+
+        private void OnParentTransformChanged(Transform obj)
+        {
+            TransformChanged?.Invoke(this);
         }
 
         private void OnParentPositionChanged(Vector3 oldPos, Vector3 newPos)
