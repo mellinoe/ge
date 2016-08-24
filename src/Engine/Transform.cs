@@ -283,7 +283,7 @@ namespace Engine
             if (oldParent != null)
             {
                 oldParent._children.Remove(this);
-                newParent.TransformChanged += OnParentTransformChanged;
+                oldParent.TransformChanged -= OnParentTransformChanged;
                 oldParent.PositionManuallyChanged -= OnParentPositionChanged;
                 oldParent.RotationManuallyChanged -= OnParentRotationChanged;
             }
@@ -342,7 +342,8 @@ namespace Engine
         {
             if (_physicsEntity != null)
             {
-                return Matrix4x4.CreateScale(_localScale)
+                Vector3 parentScale = Parent != null ? Parent.Scale : Vector3.One;
+                return Matrix4x4.CreateScale(_localScale * parentScale)
                 * Matrix4x4.CreateFromQuaternion(_physicsEntity.Orientation)
                 * Matrix4x4.CreateTranslation(_physicsEntity.Position);
             }

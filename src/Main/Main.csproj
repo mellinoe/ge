@@ -17,6 +17,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="ProjectAssemblyBehavior.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
     <UseVSHostingProcess>true</UseVSHostingProcess>

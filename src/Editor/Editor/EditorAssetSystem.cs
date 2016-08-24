@@ -1,5 +1,6 @@
 ﻿using System;
 using Engine.Assets;
+using Newtonsoft.Json;
 using Veldrid.Assets;
 
 namespace Engine.Editor
@@ -7,7 +8,15 @@ namespace Engine.Editor
     public class EditorAssetSystem : AssetSystem
     {
         private LooseFileDatabase _projectAssetDatabase;
+        private EditorSerializationBinder _binder;
+
         public LooseFileDatabase ProjectDatabase => _projectAssetDatabase;
+
+        public EditorAssetSystem()
+        {
+        }
+
+        public EditorSerializationBinder Binder => _binder;
 
         public string ProjectAssetRootPath
         {
@@ -22,6 +31,8 @@ namespace Engine.Editor
             compoundDB.AddDatabase(new EditorEmbeddedAssets());
             _projectAssetDatabase = new LooseFileDatabase("Assets");
             compoundDB.AddDatabase(_projectAssetDatabase);
+            _binder = new EditorSerializationBinder();
+            _projectAssetDatabase.DefaultSerializer.Binder = _binder;
             return compoundDB;
         }
     }

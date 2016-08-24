@@ -13,6 +13,7 @@ using Engine;
 using Veldrid.Assets;
 using ImGuiNET;
 using System.Reflection;
+using Engine.ProjectSystem;
 
 namespace Engine.Editor
 {
@@ -58,6 +59,9 @@ namespace Engine.Editor
             game.SystemRegistry.Register(ccs);
 
             window.Closed += game.Exit;
+
+            var als = new AssemblyLoadSystem();
+            game.SystemRegistry.Register(als);
 
             var editorSystem = new EditorSystem(game.SystemRegistry);
             editorSystem.DiscoverComponentsFromAssembly(typeof(Program).GetTypeInfo().Assembly);

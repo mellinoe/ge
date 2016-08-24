@@ -41,6 +41,7 @@ namespace Engine.Editor
             typeof(Transform)
         };
         private readonly List<Type> _newComponentOptions = new List<Type>();
+        private readonly HashSet<Type> _projectComponentsDiscovered = new HashSet<Type>();
 
         private readonly FrameTimeAverager _fta = new FrameTimeAverager(666);
         private bool _windowOpen = true;
@@ -53,6 +54,7 @@ namespace Engine.Editor
         private readonly EditorAssetSystem _as;
         private readonly GraphicsSystem _gs;
         private readonly BehaviorUpdateSystem _bus;
+        private readonly AssemblyLoadSystem _als;
 
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
         private readonly List<EditorBehavior> _newStarts = new List<EditorBehavior>();
@@ -86,6 +88,8 @@ namespace Engine.Editor
         private int _statusBarHeight = 20;
         private string _statusBarText = string.Empty;
         private Vector4 _statusBarTextColor;
+        private GameObject _parentingTarget;
+        private GameObject _newSelectedObject;
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -96,6 +100,7 @@ namespace Engine.Editor
             _gs = registry.GetSystem<GraphicsSystem>();
             _as = (EditorAssetSystem)registry.GetSystem<AssetSystem>();
             _bus = registry.GetSystem<BehaviorUpdateSystem>();
+            _als = registry.GetSystem<AssemblyLoadSystem>();
 
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Transform>(DrawTransform));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
@@ -103,8 +108,7 @@ namespace Engine.Editor
 
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<ImageProcessorTexture>>(DrawTextureRef));
 
-            var genericHandler = new GenericAssetMenuHandler();
-            _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
+            var genericHandler = new GenericAssetMenuHandler();            _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
             _assetMenuHandlers.AddItem(sceneHandler.TypeHandled, sceneHandler);
 
@@ -146,10 +150,12 @@ namespace Engine.Editor
             }
         }
 
-        public void DiscoverComponentsFromAssembly(Assembly assembly)
+        public IEnumerable<Type> DiscoverComponentsFromAssembly(Assembly assembly)
         {
-            _newComponentOptions.AddRange(
-                assembly.GetTypes().Where(t => typeof(Component).IsAssignableFrom(t) && HasParameterlessConstructor(t) && !s_newComponentExclusions.Contains(t)));
+            IEnumerable<Type> discovered = assembly.GetTypes()
+                .Where(t => typeof(Component).IsAssignableFrom(t) && HasParameterlessConstructor(t) && !s_newComponentExclusions.Contains(t));
+            _newComponentOptions.AddRange(discovered);
+            return discovered;
         }
 
         private bool HasParameterlessConstructor(Type t)
@@ -775,6 +781,46 @@ namespace Engine.Editor
                         ClearSelection();
                         SelectObject(newParent);
                     }
+                    ImGui.Separator();
+                    if (ImGui.MenuItem("Unparent Selected", _selectedObjects.Any(go => go.Transform.Parent != null)))
+                    {
+                        foreach (var selected in _selectedObjects.Where(go => go.Transform.Parent != null))
+                        {
+                            selected.Transform.Parent = null;
+                        }
+                    }
+                    if (ImGui.MenuItem("Select Parenting Target", _selectedObjects.Count == 1))
+                    {
+                        _parentingTarget = _selectedObjects.First();
+                    }
+                    if (ImGui.IsLastItemHovered())
+                    {
+                        ImGui.SetTooltip("Selects a GameObject to be used when parenting items with the next menu option.");
+                    }
+                    if (_parentingTarget != null)
+                    {
+                        if (ImGui.MenuItem($"Parent Selected to {_parentingTarget.Name}", _selectedObjects.Any(go => go != _parentingTarget)))
+                        {
+                            foreach (var selected in _selectedObjects.Where(go => go != _parentingTarget))
+                            {
+                                selected.Transform.Parent = _parentingTarget.Transform;
+                            }
+                        }
+                    }
+
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Project"))
+                {
+                    if (ImGui.MenuItem("Reload Project Assemblies", _loadedProjectManifest != null))
+                    {
+                        SerializeGameObjectsToScene();
+                        DestroyNonEditorGameObjects();
+                        ClearProjectComponents();
+                        _als.CreateNewLoadContext();
+                        DiscoverProjectComponents();
+                        ActivateCurrentScene();
+                    }
 
                     ImGui.EndMenu();
                 }
@@ -864,6 +910,13 @@ namespace Engine.Editor
             }
         }
 
+        private void ClearProjectComponents()
+        {
+            _newComponentOptions.RemoveAll(_projectComponentsDiscovered.Contains);
+            _as.Binder.ClearAssemblies();
+            _projectComponentsDiscovered.Clear();
+        }
+
         private GameObject CreateEmptyGameObject(Transform parent = null)
         {
             string prefix = "GameObject";
@@ -887,7 +940,7 @@ namespace Engine.Editor
                 EditorPreferences.Instance.LastOpenedProjectRoot = rootPathOrManifest;
                 _loadedProjectManifest = _as.ProjectDatabase.LoadAsset<ProjectManifest>(rootPathOrManifest);
                 _as.ProjectAssetRootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
-
+                DiscoverProjectComponents();
                 return true;
             }
             else if (Directory.Exists(rootPathOrManifest))
@@ -903,6 +956,19 @@ namespace Engine.Editor
 
             StatusBarText("Couldn't load project from " + rootPathOrManifest, RgbaFloat.Red);
             return false;
+        }
+
+        private void DiscoverProjectComponents()
+        {
+            foreach (Assembly assembly in _als.LoadFromProjectManifest(_loadedProjectManifest, _loadedProjectRoot))
+            {
+                foreach (Type discovered in DiscoverComponentsFromAssembly(assembly))
+                {
+                    _projectComponentsDiscovered.Add(discovered);
+                }
+
+                _as.Binder.AddProjectAssembly(assembly);
+            }
         }
 
         private ProjectManifest CreateNewManifest(string manifestPath)
@@ -1090,7 +1156,13 @@ namespace Engine.Editor
             ImGui.PushStyleColor(ColorTarget.Text, color);
             if (t.Children.Count > 0)
             {
+                ImGui.SetNextTreeNodeOpened(true, SetCondition.FirstUseEver);
                 bool opened = ImGui.TreeNode($"##{t.GameObject.Name}");
+                if (_newSelectedObject == t.GameObject)
+                {
+                    _newSelectedObject = null;
+                    ImGui.SetScrollHere();
+                }
                 ImGui.SameLine();
                 if (ImGui.Selectable(t.GameObject.Name))
                 {
@@ -1115,6 +1187,12 @@ namespace Engine.Editor
                     GameObjectClicked(t.GameObject);
                 }
                 ImGui.PopStyleColor();
+
+                if (_newSelectedObject == t.GameObject)
+                {
+                    _newSelectedObject = null;
+                    ImGui.SetScrollHere();
+                }
 
                 if (ImGui.BeginPopupContextItem($"{t.GameObject.Name}_Context"))
                 {
@@ -1205,6 +1283,8 @@ namespace Engine.Editor
             {
                 mr.Tint = new TintInfo(new Vector3(1.0f), 0.6f);
             }
+
+            _newSelectedObject = go;
         }
 
         private void Deselect(GameObject go)
