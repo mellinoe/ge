@@ -209,11 +209,6 @@ namespace Engine.Graphics
 
         protected override void UpdateCore(float deltaSeconds)
         {
-            float r = 0.8f;
-            float g = 0.8f;
-            float b = 0.8f;
-            Context.ClearColor = new RgbaFloat(r, g, b, 1.0f);
-
             UpdatePointLightBuffer();
 
             _visiblityManager.Octree.ApplyPendingMoves();

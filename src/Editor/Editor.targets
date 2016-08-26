@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CopyProjectPublishItems" AfterTargets="Build">
+    <PropertyGroup>
+      <ProjectPublishItemsRoot>$(OutputPath)/PublishItems</ProjectPublishItemsRoot>
+      <LauncherProjectName>Engine.Launcher</LauncherProjectName>
+    </PropertyGroup>
+
+    <Message Text="Copying Project Publish Assets from $(BinDir)$(OSTarget).$(Platform).$(OptimizationGroup)/$(LauncherProjectName) into $(ProjectPublishItemsRoot)"  />
+
+    <ItemGroup>
+      <LauncherItems Include="$(BinDir)$(OSTarget).$(Platform).$(OptimizationGroup)/$(LauncherProjectName)/*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(LauncherItems)" DestinationFolder="$(ProjectPublishItemsRoot)/$(OSTarget).$(Platform)" />
+  </Target>
+</Project>

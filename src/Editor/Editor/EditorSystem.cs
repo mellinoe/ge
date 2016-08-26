@@ -72,8 +72,8 @@ namespace Engine.Editor
         private Transform _multiTransformDummy = new Transform();
         private AxesRenderer _axesRenderer;
 
-        private string _loadedProjectRoot;
-        private ProjectManifest _loadedProjectManifest;
+        private ProjectContext _projectContext;
+        private ProjectPublisher _projectPublisher = new ProjectPublisher();
 
         private InMemoryAsset<SceneAsset> _currentScene;
         private string _currentScenePath;
@@ -108,7 +108,7 @@ namespace Engine.Editor
 
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<ImageProcessorTexture>>(DrawTextureRef));
 
-            var genericHandler = new GenericAssetMenuHandler();            _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
+            var genericHandler = new GenericAssetMenuHandler(); _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
             _assetMenuHandlers.AddItem(sceneHandler.TypeHandled, sceneHandler);
 
@@ -141,7 +141,7 @@ namespace Engine.Editor
             {
                 if (LoadProject(EditorPreferences.Instance.LastOpenedProjectRoot))
                 {
-                    var latestScene = EditorPreferences.Instance.GetLastOpenedScene(_loadedProjectRoot);
+                    var latestScene = EditorPreferences.Instance.GetLastOpenedScene(_projectContext.ProjectRootPath);
                     if (!string.IsNullOrEmpty(latestScene))
                     {
                         LoadScene(latestScene);
@@ -574,7 +574,7 @@ namespace Engine.Editor
 
         private void DrawProjectAssets()
         {
-            if (!string.IsNullOrEmpty(_loadedProjectRoot))
+            if (!string.IsNullOrEmpty(_projectContext.ProjectRootPath))
             {
                 DrawRecursiveNode(_as.ProjectDatabase.GetRootDirectoryGraph(), false);
             }
@@ -677,7 +677,7 @@ namespace Engine.Editor
 
         private void DrawMainMenu()
         {
-            bool openPopup = false;
+            string openPopup = null;
 
             if (ImGui.BeginMainMenuBar())
             {
@@ -685,12 +685,12 @@ namespace Engine.Editor
                 {
                     if (ImGui.MenuItem("Open Project"))
                     {
-                        openPopup = true;
+                        openPopup = "OpenProjectPopup";
                     }
                     {
                         string[] history =
-                            !string.IsNullOrEmpty(_loadedProjectRoot)
-                                ? EditorPreferences.Instance.GetProjectSceneHistory(_loadedProjectRoot).ToArray()
+                            _projectContext != null
+                                ? EditorPreferences.Instance.GetProjectSceneHistory(_projectContext.ProjectRootPath).ToArray()
                                 : Array.Empty<string>();
                         if (ImGui.BeginMenu($"Recently Opened", history.Any()))
                         {
@@ -717,7 +717,11 @@ namespace Engine.Editor
                     ImGui.Separator();
                     if (ImGui.MenuItem("Save Scene", "Ctrl+S", false, _currentScene != null && _playState == PlayState.Stopped))
                     {
-                        SaveCurrentScene();
+                        SaveCurrentScene(_currentScenePath);
+                    }
+                    if (ImGui.MenuItem("Save Scene As", "Ctrl+S", false, _currentScene != null && _playState == PlayState.Stopped))
+                    {
+                        openPopup = "SaveSceneAsPopup";
                     }
                     if (ImGui.MenuItem("Close Scene", string.Empty, false, _currentScene != null))
                     {
@@ -812,14 +816,25 @@ namespace Engine.Editor
                 }
                 if (ImGui.BeginMenu("Project"))
                 {
-                    if (ImGui.MenuItem("Reload Project Assemblies", _loadedProjectManifest != null))
+                    if (ImGui.MenuItem("Reload Project Assemblies", _projectContext != null))
                     {
-                        SerializeGameObjectsToScene();
-                        DestroyNonEditorGameObjects();
-                        ClearProjectComponents();
-                        _als.CreateNewLoadContext();
-                        DiscoverProjectComponents();
-                        ActivateCurrentScene();
+                        ReloadProjectAssemblies();
+                    }
+                    ImGui.Separator();
+                    if (ImGui.BeginMenu("Publish Project", _projectContext != null))
+                    {
+                        foreach (string option in _projectPublisher.PublishTargets)
+                        {
+                            if (ImGui.MenuItem(option))
+                            {
+                                _projectPublisher.PublishProject(
+                                    _projectContext,
+                                    option,
+                                    Path.Combine(_projectContext.ProjectRootPath, $"Published/{option}"));
+                            }
+                        }
+
+                        ImGui.EndMenu();
                     }
 
                     ImGui.EndMenu();
@@ -874,18 +889,18 @@ namespace Engine.Editor
 
             if (_playState == PlayState.Stopped && _input.GetKeyDown(Key.S) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
             {
-                SaveCurrentScene();
+                SaveCurrentScene(_currentScenePath);
             }
 
-            if (openPopup)
+            if (openPopup != null)
             {
-                ImGui.OpenPopup("###OpenScenePopup");
+                ImGui.OpenPopup($"###{openPopup}");
             }
 
-            if (ImGui.BeginPopup("###OpenScenePopup"))
+            if (ImGui.BeginPopup("###OpenProjectPopup"))
             {
                 ImGui.Text("Path to project root:");
-                if (openPopup)
+                if (openPopup != null)
                 {
                     ImGuiNative.igSetKeyboardFocusHere(0);
                 }
@@ -908,6 +923,47 @@ namespace Engine.Editor
 
                 ImGui.EndPopup();
             }
+
+            if (ImGui.BeginPopup("###OpenProjectPopup"))
+            {
+                ImGui.Text("Destination Path:");
+                if (openPopup != null)
+                {
+                    ImGuiNative.igSetKeyboardFocusHere(0);
+                }
+                if (ImGui.InputText(string.Empty, _filenameInputBuffer.Buffer, _filenameInputBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
+                {
+                    LoadProject(_filenameInputBuffer.ToString());
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.SameLine();
+                if (ImGui.Button("Save"))
+                {
+                    SaveCurrentScene(_filenameInputBuffer.ToString());
+                    ImGui.CloseCurrentPopup();
+                }
+
+                if (ImGui.Button("Close"))
+                {
+                    ImGui.CloseCurrentPopup();
+                }
+
+                ImGui.EndPopup();
+            }
+        }
+
+        private void ReloadProjectAssemblies()
+        {
+            if (_sceneCam != null)
+            {
+                _sceneCam.Enabled = true;
+            }
+            SerializeGameObjectsToScene();
+            DestroyNonEditorGameObjects();
+            ClearProjectComponents();
+            _als.CreateNewLoadContext();
+            DiscoverProjectComponents();
+            ActivateCurrentScene();
         }
 
         private void ClearProjectComponents()
@@ -935,22 +991,24 @@ namespace Engine.Editor
         {
             if (File.Exists(rootPathOrManifest))
             {
-                _loadedProjectRoot = new FileInfo(rootPathOrManifest).DirectoryName;
-                _gs.Context.ResourceFactory.ShaderAssetRootPath = _loadedProjectRoot;
+                var loadedProjectRoot = new FileInfo(rootPathOrManifest).DirectoryName;
+                _gs.Context.ResourceFactory.ShaderAssetRootPath = loadedProjectRoot;
                 EditorPreferences.Instance.LastOpenedProjectRoot = rootPathOrManifest;
-                _loadedProjectManifest = _as.ProjectDatabase.LoadAsset<ProjectManifest>(rootPathOrManifest);
-                _as.ProjectAssetRootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
+                var loadedProjectManifest = _as.ProjectDatabase.LoadAsset<ProjectManifest>(rootPathOrManifest);
+                _as.ProjectAssetRootPath = Path.Combine(loadedProjectRoot, loadedProjectManifest.AssetRoot);
+                _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest);
                 DiscoverProjectComponents();
                 return true;
             }
             else if (Directory.Exists(rootPathOrManifest))
             {
                 string manifestPath = Path.Combine(rootPathOrManifest, NewProjectManifestName);
-                _loadedProjectManifest = CreateNewManifest(manifestPath);
-                _loadedProjectRoot = rootPathOrManifest;
+                var loadedProjectManifest = CreateNewManifest(manifestPath);
+                var loadedProjectRoot = rootPathOrManifest;
                 _gs.Context.ResourceFactory.ShaderAssetRootPath = rootPathOrManifest;
                 EditorPreferences.Instance.LastOpenedProjectRoot = manifestPath;
-                _as.ProjectDatabase.RootPath = Path.Combine(_loadedProjectRoot, _loadedProjectManifest.AssetRoot);
+                _as.ProjectDatabase.RootPath = Path.Combine(loadedProjectRoot, loadedProjectManifest.AssetRoot);
+                _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest);
                 return true;
             }
 
@@ -960,7 +1018,7 @@ namespace Engine.Editor
 
         private void DiscoverProjectComponents()
         {
-            foreach (Assembly assembly in _als.LoadFromProjectManifest(_loadedProjectManifest, _loadedProjectRoot))
+            foreach (Assembly assembly in _als.LoadFromProjectManifest(_projectContext.ProjectManifest, _projectContext.ProjectRootPath))
             {
                 foreach (Type discovered in DiscoverComponentsFromAssembly(assembly))
                 {
@@ -1039,7 +1097,7 @@ namespace Engine.Editor
             DestroyNonEditorGameObjects();
             ActivateCurrentScene();
 
-            EditorPreferences.Instance.SetLatestScene(_loadedProjectRoot, path);
+            EditorPreferences.Instance.SetLatestScene(_projectContext.ProjectRootPath, path);
             _currentScenePath = path;
 
             return true;
@@ -1080,7 +1138,7 @@ namespace Engine.Editor
             }
         }
 
-        private void SaveCurrentScene()
+        private void SaveCurrentScene(string path)
         {
             if (_sceneCam != null)
             {
@@ -1088,13 +1146,15 @@ namespace Engine.Editor
             }
 
             SerializeGameObjectsToScene();
-            SaveScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer), _currentScenePath);
+            SaveScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer), path);
 
             if (_sceneCam != null)
             {
                 _sceneCam.Enabled = false;
                 _gs.SetMainCamera(_editorCamera);
             }
+
+            _currentScenePath = path;
         }
 
         private void SerializeGameObjectsToScene()

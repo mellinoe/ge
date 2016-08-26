@@ -28,9 +28,9 @@ namespace Engine.Editor
             Game game = new Game();
             GraphicsSystem gs = new GraphicsSystem(window, EditorPreferences.Instance.PreferOpenGL);
             gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
-
             game.SystemRegistry.Register(gs);
             game.LimitFrameRate = false;
+
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
             {
@@ -45,7 +45,7 @@ namespace Engine.Editor
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
             gs.AddFreeRenderItem(imGuiRenderer);
 
-            AssetSystem assetSystem = new EditorAssetSystem();
+            AssetSystem assetSystem = new EditorAssetSystem(Path.Combine(AppContext.BaseDirectory, "Assets"));
             game.SystemRegistry.Register(assetSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);

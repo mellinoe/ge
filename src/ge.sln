@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.25428.1
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main", "Main\Main.csproj", "{AE9BC745-284F-42F3-8236-C43AB9425DF2}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine\Engine.csproj", "{9BFBA3A1-21D4-4CBD-B0E1-A4F3AB80FD30}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Editor", "Editor\Editor.csproj", "{AE9BC745-284F-569F-82AA-C43AB9425DF2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine.Launcher", "Engine.Launcher\Engine.Launcher.csproj", "{9DC5384C-0FBF-4986-BBD4-9DC79F006938}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -287,6 +289,32 @@ Global
 		{AE9BC745-284F-569F-82AA-C43AB9425DF2}.Windows_Release|Any CPU.ActiveCfg = Windows_Release|x64
 		{AE9BC745-284F-569F-82AA-C43AB9425DF2}.Windows_Release|x64.ActiveCfg = Windows_Release|x64
 		{AE9BC745-284F-569F-82AA-C43AB9425DF2}.Windows_Release|x64.Build.0 = Windows_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Debug|Any CPU.ActiveCfg = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Debug|Any CPU.Build.0 = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Debug|x64.ActiveCfg = OSX_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Debug|x64.Build.0 = OSX_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.OSX_Debug|Any CPU.ActiveCfg = OSX_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.OSX_Debug|x64.ActiveCfg = OSX_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.OSX_Debug|x64.Build.0 = OSX_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.OSX_Release|Any CPU.ActiveCfg = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.OSX_Release|x64.ActiveCfg = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.OSX_Release|x64.Build.0 = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Release|Any CPU.ActiveCfg = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Release|Any CPU.Build.0 = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Release|x64.ActiveCfg = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Release|x64.Build.0 = OSX_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Ubuntu_Debug|Any CPU.ActiveCfg = Ubuntu_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Ubuntu_Debug|x64.ActiveCfg = Ubuntu_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Ubuntu_Debug|x64.Build.0 = Ubuntu_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Ubuntu_Release|Any CPU.ActiveCfg = Ubuntu_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Ubuntu_Release|x64.ActiveCfg = Ubuntu_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Ubuntu_Release|x64.Build.0 = Ubuntu_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Windows_Debug|Any CPU.ActiveCfg = Windows_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Windows_Debug|x64.ActiveCfg = Windows_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Windows_Debug|x64.Build.0 = Windows_Debug|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Windows_Release|Any CPU.ActiveCfg = Windows_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Windows_Release|x64.ActiveCfg = Windows_Release|x64
+		{9DC5384C-0FBF-4986-BBD4-9DC79F006938}.Windows_Release|x64.Build.0 = Windows_Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

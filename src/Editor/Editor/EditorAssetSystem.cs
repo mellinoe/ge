@@ -12,7 +12,7 @@ namespace Engine.Editor
 
         public LooseFileDatabase ProjectDatabase => _projectAssetDatabase;
 
-        public EditorAssetSystem()
+        public EditorAssetSystem(string assetRootPath) : base(assetRootPath)
         {
         }
 

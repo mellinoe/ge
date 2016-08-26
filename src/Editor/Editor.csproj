@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == '' And '$(OS)' != 'Windows_NT'">Ubuntu_Debug</Configuration>
     <Configuration Condition="'$(Configuration)' == ''">Windows_Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
@@ -17,6 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="EditorSerializationBinder.cs" />
+    <Compile Include="EditorUtility.cs" />
     <Compile Include="Editor\AssetMenuHandler.cs" />
     <Compile Include="Editor\Commands\CreateGameObjectCommand.cs" />
     <Compile Include="Editor\Commands\RawCommand.cs" />
@@ -35,10 +37,12 @@
     <Compile Include="Editor\EditorSystem.cs" />
     <Compile Include="Editor\Graphics\AxesRenderer.cs" />
     <Compile Include="Editor\InMemoryAsset.cs" />
+    <Compile Include="Editor\ProjectPublisher.cs" />
     <Compile Include="Editor\TextureDrawer.cs" />
     <Compile Include="Editor\UndoRedoStack.cs" />
     <Compile Include="Editor\Preferences.cs" />
     <Compile Include="Editor\Program.cs" />
+    <Compile Include="ProjectContext.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
@@ -73,6 +77,11 @@
       <Project>{9bfba3a1-21d4-4cbd-b0e1-a4f3ab80fd30}</Project>
       <Name>Engine</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Engine.Launcher\Engine.Launcher.csproj">
+      <Project>{9DC5384C-0FBF-4986-BBD4-9DC79F006938}</Project>
+      <Name>Engine.Launcher</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\win-x64\cimgui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -84,6 +93,6 @@
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-frag.glsl" />
     <None Include="project.json" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Editor.targets" />
 </Project>

@@ -8,15 +8,18 @@ namespace Engine.Assets
     public class AssetSystem : GameSystem
     {
         private readonly AssetDatabase _ad;
+        private string _assetRootPath;
 
-        public AssetSystem()
+        public AssetSystem(string assetRootPath)
         {
+            _assetRootPath = assetRootPath;
             _ad = CreateAssetDatabase();
+            LooseFileDatabase.AddExtensionTypeMapping(".scene", typeof(SceneAsset));
         }
 
         protected virtual AssetDatabase CreateAssetDatabase()
         {
-            var fileAssets = new LooseFileDatabase(Path.Combine(AppContext.BaseDirectory, "Assets"));
+            var fileAssets = new LooseFileDatabase(_assetRootPath);
             var embeddedAssets = new EngineEmbeddedAssets();
             var compoundDB = new CompoundAssetDatabase();
             compoundDB.AddDatabase(fileAssets);

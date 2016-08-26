@@ -50,7 +50,7 @@ namespace Ge
             gs.AddFreeRenderItem(imGuiRenderer);
             ImGuiNET.ImGui.GetIO().FontAllowUserScaling = true;
 
-            AssetSystem assetSystem = new AssetSystem();
+            AssetSystem assetSystem = new AssetSystem(Path.Combine(AppContext.BaseDirectory, "Assets"));
             game.SystemRegistry.Register(assetSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);
