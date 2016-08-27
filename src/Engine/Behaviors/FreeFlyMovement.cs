@@ -18,7 +18,7 @@ namespace Engine.Behaviors
         private float _turboMultiplier = 3f;
         private bool _draggingOffWindow;
 
-        internal override void Start(SystemRegistry registry)
+        protected override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
         }

@@ -24,6 +24,10 @@ namespace Engine.ProjectSystem
                 {
                     assemblies.Add(CopyAndLoad(path));
                 }
+                else
+                {
+                    throw new InvalidOperationException("A managed assembly from the manifest could not be found: " + path);
+                }
             }
 
             return assemblies;

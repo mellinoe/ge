@@ -19,7 +19,7 @@ namespace Engine.Behaviors
 
         private InputSystem _input;
 
-        internal override void Start(SystemRegistry registry)
+        protected override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
             _cc = GameObject.GetComponentInParentOrSelf<CharacterController>();

@@ -90,7 +90,7 @@ namespace Engine
                 else
                 {
                     Matrix4x4 invWorld = Matrix4x4.Identity;
-                    if (Parent!= null)
+                    if (Parent != null)
                     {
                         Matrix4x4.Invert(Parent.GetWorldMatrix(), out invWorld);
                     }
@@ -198,7 +198,7 @@ namespace Engine
                 else
                 {
                     Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
-                    _physicsEntity.Orientation = Quaternion.Concatenate(Quaternion.Inverse(parentRot), value);
+                    _physicsEntity.Orientation = Quaternion.Concatenate(parentRot, value);
                 }
 
                 OnRotationManuallyChanged(oldRotation);
@@ -321,19 +321,30 @@ namespace Engine
             }
         }
 
-        private void OnParentRotationChanged(Quaternion oldRot, Quaternion newRot)
+        private void OnParentRotationChanged(Quaternion oldParentRot, Quaternion newParentRot)
         {
-            OnRotationChanged();
-            OnRotationManuallyChanged(Quaternion.Concatenate(oldRot, _localRotation));
+            Quaternion oldRot;
             if (_physicsEntity != null)
             {
-                var diff = newRot - oldRot;
+                Quaternion localRotation = Quaternion.Concatenate(Quaternion.Inverse(oldParentRot), _physicsEntity.Orientation);
+                oldRot = Quaternion.Concatenate(oldParentRot, localRotation);
+                var diff = newParentRot - oldRot;
                 _physicsEntity.Orientation += diff;
                 Vector3 basisDirection = Vector3.Transform(_physicsEntity.Position - _parent.Position, Quaternion.Inverse(oldRot));
                 float distance = basisDirection.Length();
-                Vector3 newDirection = Vector3.Transform(basisDirection, newRot);
-                _physicsEntity.Position = _parent.Position + Vector3.Normalize(newDirection) * distance;
+                Vector3 newDirection = Vector3.Transform(basisDirection, newParentRot);
+                if (newDirection != Vector3.Zero)
+                {
+                    _physicsEntity.Position = _parent.Position + Vector3.Normalize(newDirection) * distance;
+                }
             }
+            else
+            {
+                oldRot = _localRotation;
+            }
+
+            OnRotationChanged();
+            OnRotationManuallyChanged(oldRot);
         }
 
         public IReadOnlyList<Transform> Children => _children;

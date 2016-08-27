@@ -25,6 +25,7 @@
 
         public abstract void Update(float deltaSeconds);
 
-        internal virtual void Start(SystemRegistry registry) { }
+        internal void StartInternal(SystemRegistry registry) => Start(registry);
+        protected virtual void Start(SystemRegistry registry) { }
     }
 }

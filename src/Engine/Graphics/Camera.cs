@@ -15,10 +15,12 @@ namespace Engine.Graphics
         private float _fov = 1.05f;
         private float _nearPlaneDistance = 0.3f;
         private float _farPlaneDistance = 30f;
+        private Vector3 _upDirection = Vector3.UnitY;
 
         public float FieldOfViewRadians { get { return _fov; } set { _fov = value; SetProjectionMatrix(); } }
         public float NearPlaneDistance { get { return _nearPlaneDistance; } set { _nearPlaneDistance = value; SetProjectionMatrix(); } }
         public float FarPlaneDistance { get { return _farPlaneDistance; } set { _farPlaneDistance = value; SetProjectionMatrix(); } }
+        public Vector3 UpDirection { get { return _upDirection; } set { _upDirection = value; if (Transform != null) { SetViewMatrix(Transform); } } }
 
         public ConstantBufferDataProvider ViewProvider => _viewProvider;
         public ConstantBufferDataProvider ProjectionProvider => _projectionProvider;
@@ -83,7 +85,7 @@ namespace Engine.Graphics
             _viewProvider.Data = Matrix4x4.CreateLookAt(
                 GameObject.Transform.Position,
                 GameObject.Transform.Position + GameObject.Transform.Forward,
-                GameObject.Transform.Up);
+                _upDirection);
 
             _cameraInfoProvider.Data = new Vector4(Transform.Position, 1f);
 

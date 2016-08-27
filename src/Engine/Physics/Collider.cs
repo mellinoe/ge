@@ -37,6 +37,20 @@ namespace Engine.Physics
             }
         }
 
+        private bool _isAffectedByGravity = true;
+        public bool IsAffectedByGravity
+        {
+            get { return _isAffectedByGravity; }
+            set
+            {
+                _isAffectedByGravity = value;
+                if (Entity != null)
+                {
+                    Entity.IsAffectedByGravity = value;
+                }
+            }
+        }
+
         [JsonIgnore]
         public Entity Entity { get; private set; }
 
@@ -148,6 +162,7 @@ namespace Engine.Physics
             _physicsSystem.AddObject(Entity);
             Entity.Position = Transform.Position;
             Entity.Orientation = Transform.Rotation;
+            Entity.IsAffectedByGravity = IsAffectedByGravity;
             Entity.Tag = this;
             Entity.CollisionInformation.Tag = this;
 

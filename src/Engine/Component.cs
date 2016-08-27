@@ -8,21 +8,25 @@ namespace Engine
     {
         [JsonIgnore]
         private GameObject _attachedGO;
+        [JsonIgnore]
+        private Transform _transform;
 
         [JsonIgnore]
         public GameObject GameObject => _attachedGO;
 
         [JsonIgnore]
-        public Transform Transform => _attachedGO.Transform;
+        public Transform Transform => _transform;
 
         internal void AttachToGameObject(GameObject go, SystemRegistry registry)
         {
             _attachedGO = go;
+            _transform = _attachedGO.Transform;
             InternalAttached(registry);
         }
 
         private bool _enabled = true;
         private bool _enabledInHierarchy = false;
+
         public bool Enabled
         {
             get { return _enabled; }

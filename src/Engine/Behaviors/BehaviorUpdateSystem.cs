@@ -22,7 +22,7 @@ namespace Engine.Behaviors
         {
             foreach (var b in _newStarts)
             {
-                b.Start(_registry);
+                b.StartInternal(_registry);
             }
             _newStarts.Clear();
 

@@ -15,7 +15,7 @@ namespace Engine.Behaviors
 
         private Random _random = new Random();
 
-        internal override void Start(SystemRegistry registry)
+        protected override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
         }

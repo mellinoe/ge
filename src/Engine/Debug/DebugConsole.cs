@@ -25,7 +25,7 @@ namespace Engine.Editor
         private bool _focusInput;
         private InputSystem _input;
 
-        internal override void Start(SystemRegistry registry)
+        protected override void Start(SystemRegistry registry)
         {
             _ccs = registry.GetSystem<ConsoleCommandSystem>();
             _ccs.Print += AddLine;

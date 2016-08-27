@@ -574,7 +574,7 @@ namespace Engine.Editor
 
         private void DrawProjectAssets()
         {
-            if (!string.IsNullOrEmpty(_projectContext.ProjectRootPath))
+            if (!string.IsNullOrEmpty(_projectContext?.ProjectRootPath))
             {
                 DrawRecursiveNode(_as.ProjectDatabase.GetRootDirectoryGraph(), false);
             }
@@ -924,7 +924,7 @@ namespace Engine.Editor
                 ImGui.EndPopup();
             }
 
-            if (ImGui.BeginPopup("###OpenProjectPopup"))
+            if (ImGui.BeginPopup("###SaveSceneAsPopup"))
             {
                 ImGui.Text("Destination Path:");
                 if (openPopup != null)
@@ -1229,10 +1229,14 @@ namespace Engine.Editor
                     GameObjectClicked(t.GameObject);
                 }
                 ImGui.PopStyleColor();
+                if (ImGui.BeginPopupContextItem($"{t.GameObject.Name}_Context"))
+                {
+                    DrawContextMenuForGameObject(t.GameObject);
+                }
 
                 if (opened)
                 {
-                    foreach (var child in t.Children)
+                    foreach (var child in t.Children.ToArray())
                     {
                         DrawNode(child);
                     }
@@ -1275,7 +1279,7 @@ namespace Engine.Editor
             }
             if (ImGui.MenuItem("Clone", string.Empty))
             {
-                CloneGameObject(go);
+                CloneGameObject(go, go.Transform.Parent);
             }
             if (ImGui.MenuItem("Delete", string.Empty))
             {
@@ -1302,7 +1306,7 @@ namespace Engine.Editor
             go.Destroy();
         }
 
-        private void CloneGameObject(GameObject go)
+        private void CloneGameObject(GameObject go, Transform parent)
         {
             SerializedGameObject sgo = new SerializedGameObject(go);
             using (var fs = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096))
@@ -1325,9 +1329,14 @@ namespace Engine.Editor
                 newGo.AddComponent(comp);
             }
 
-            if (go.Transform.Parent != null)
+            if (parent != null)
             {
-                newGo.Transform.Parent = go.Transform.Parent;
+                newGo.Transform.Parent = parent;
+            }
+
+            foreach (var child in go.Transform.Children)
+            {
+                CloneGameObject(child.GameObject, newGo.Transform);
             }
 
             ClearSelection();

@@ -18,7 +18,7 @@ namespace Engine.Behaviors
 
         private Vector3 _origin;
 
-        internal override void Start(SystemRegistry registry)
+        protected override void Start(SystemRegistry registry)
         {
             _cc = GameObject.GetComponentInParentOrSelf<CharacterController>();
             _origin = Transform.LocalPosition;
