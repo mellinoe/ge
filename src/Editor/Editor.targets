@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="CopyProjectPublishItems" AfterTargets="Build">
+  <Target Name="PostPublish" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(DisablePostPublish)' != 'true'" />
+  
+  <Target Name="CopyProjectPublishItems" AfterTargets="PostPublish">
     <PropertyGroup>
       <ProjectPublishItemsRoot>$(OutputPath)/PublishItems</ProjectPublishItemsRoot>
       <LauncherProjectName>Engine.Launcher</LauncherProjectName>
@@ -13,5 +15,24 @@
     </ItemGroup>
 
     <Copy SourceFiles="@(LauncherItems)" DestinationFolder="$(ProjectPublishItemsRoot)/$(OSTarget).$(Platform)" />
+  </Target>
+
+  <Target Name="PublishSdkItems" AfterTargets="PostPublish">
+    <PropertyGroup>
+      <SdkOutputPath>$(BinDir)EditorSDK</SdkOutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <SdkItemNames Include="Engine.dll" />
+      <SdkItemNames Include="Editor.dll" />
+      <SdkItemNames Include="Veldrid.dll" />
+      <SdkItemNames Include="Veldrid.Assets.dll" />
+      <SdkItemNames Include="BEPUphysics.dll" />
+      <SdkItemNames Include="BEPUutilities.dll" />
+
+      <SdkCopyItems Include="$(OutputPath)%(SdkItemNames.Identity)" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(SdkCopyItems)" DestinationFolder="$(SdkOutputPath)" />
   </Target>
 </Project>

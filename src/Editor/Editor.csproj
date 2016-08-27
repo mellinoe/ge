@@ -10,7 +10,7 @@
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ProjectGuid>{AE9BC745-284F-569F-82AA-C43AB9425DF2}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AssemblyName>ge.Editor</AssemblyName>
+    <AssemblyName>Editor</AssemblyName>
     <RootNamespace>Engine</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>

@@ -729,6 +729,22 @@ namespace Engine.Editor
                         DestroyNonEditorGameObjects();
                         _currentScene = null;
                     }
+                    ImGui.Separator();
+                    if (ImGui.BeginMenu("Publish", _projectContext != null))
+                    {
+                        foreach (string option in _projectPublisher.PublishTargets)
+                        {
+                            if (ImGui.MenuItem(option))
+                            {
+                                _projectPublisher.PublishProject(
+                                    _projectContext,
+                                    option,
+                                    Path.Combine(_projectContext.ProjectRootPath, $"Published/{option}"));
+                            }
+                        }
+
+                        ImGui.EndMenu();
+                    }
 
                     if (ImGui.MenuItem("Exit"))
                     {
@@ -819,22 +835,6 @@ namespace Engine.Editor
                     if (ImGui.MenuItem("Reload Project Assemblies", _projectContext != null))
                     {
                         ReloadProjectAssemblies();
-                    }
-                    ImGui.Separator();
-                    if (ImGui.BeginMenu("Publish Project", _projectContext != null))
-                    {
-                        foreach (string option in _projectPublisher.PublishTargets)
-                        {
-                            if (ImGui.MenuItem(option))
-                            {
-                                _projectPublisher.PublishProject(
-                                    _projectContext,
-                                    option,
-                                    Path.Combine(_projectContext.ProjectRootPath, $"Published/{option}"));
-                            }
-                        }
-
-                        ImGui.EndMenu();
                     }
 
                     ImGui.EndMenu();
