@@ -38,7 +38,7 @@ namespace Engine.Editor
             {
                 throw new InvalidOperationException("Couldn't locate the project manifest to publish.");
             }
-            File.Copy(manifestFile, manifestFile.Replace(projectContext.ProjectRootPath, outputDir));
+            File.Copy(manifestFile, manifestFile.Replace(projectContext.ProjectRootPath, outputDir), overwrite: true);
         }
     }
 }
