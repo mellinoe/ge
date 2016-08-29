@@ -328,8 +328,8 @@ namespace Engine
             {
                 Quaternion localRotation = Quaternion.Concatenate(Quaternion.Inverse(oldParentRot), _physicsEntity.Orientation);
                 oldRot = Quaternion.Concatenate(oldParentRot, localRotation);
-                var diff = newParentRot - oldRot;
-                _physicsEntity.Orientation += diff;
+                Quaternion diff = Quaternion.Concatenate(Quaternion.Inverse(oldParentRot), newParentRot);
+                _physicsEntity.Orientation = Quaternion.Concatenate(_physicsEntity.Orientation, diff);
                 Vector3 basisDirection = Vector3.Transform(_physicsEntity.Position - _parent.Position, Quaternion.Inverse(oldRot));
                 float distance = basisDirection.Length();
                 Vector3 newDirection = Vector3.Transform(basisDirection, newParentRot);
@@ -337,6 +337,7 @@ namespace Engine
                 {
                     _physicsEntity.Position = _parent.Position + Vector3.Normalize(newDirection) * distance;
                 }
+
             }
             else
             {
