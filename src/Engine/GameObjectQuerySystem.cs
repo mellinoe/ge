@@ -31,5 +31,15 @@ namespace Engine
         {
             return _gameObjects;
         }
+
+        public string GetCloneName(string name)
+        {
+            while (FindByName(name) != null)
+            {
+                name += " (Clone)";
+            }
+
+            return name;
+        }
     }
 }

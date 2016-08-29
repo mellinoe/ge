@@ -21,6 +21,7 @@
     <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
     <Compile Include="Assets\EngineEmbeddedAssets.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
+    <Compile Include="Assets\SerializedPrefab.cs" />
     <Compile Include="Behaviors\BallLauncher.cs" />
     <Compile Include="Behaviors\Behavior.cs" />
     <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />

@@ -33,7 +33,7 @@ namespace Engine.Physics
             Space.Add(spaceObject);
         }
 
-        internal void RemoveObject(ISpaceObject spaceObect)
+        public void RemoveObject(ISpaceObject spaceObect)
         {
             Space.Remove(spaceObect);
         }

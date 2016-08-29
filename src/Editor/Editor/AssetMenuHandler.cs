@@ -6,9 +6,9 @@ namespace Engine.Editor
 {
     public abstract class AssetMenuHandler
     {
-        public void DrawMenuItems()
+        public void DrawMenuItems(Func<object> getAsset)
         {
-            CoreDrawMenuItems();
+            CoreDrawMenuItems(getAsset);
         }
 
         public void HandleFileOpen(string path)
@@ -19,13 +19,20 @@ namespace Engine.Editor
         public abstract Type TypeHandled { get; }
 
         protected abstract void CoreHandleItemOpen(string path);
-        protected abstract void CoreDrawMenuItems();
+        protected abstract void CoreDrawMenuItems(Func<object> getAsset);
     }
 
     public abstract class AssetMenuHandler<T> : AssetMenuHandler
     {
         private static readonly Type _typeHandled = typeof(T);
         public override Type TypeHandled => _typeHandled;
+        protected override void CoreDrawMenuItems(Func<object> getAsset)
+        {
+            Func<T> func = () => (T)getAsset();
+            CoreDrawMenuItems(func);
+        }
+
+        protected abstract void CoreDrawMenuItems(Func<T> getAsset);
     }
 
     public class ExplicitMenuHandler<T> : AssetMenuHandler<T>
@@ -36,10 +43,15 @@ namespace Engine.Editor
         public ExplicitMenuHandler(Action drawMenuItems, Action<string> handleItemOpen)
         {
             _drawMenuItems = drawMenuItems;
+            if (handleItemOpen == null)
+            {
+                handleItemOpen = GenericAssetMenuHandler.GenericFileOpen;
+            }
+
             _handleItemOpen = handleItemOpen;
         }
 
-        protected override void CoreDrawMenuItems()
+        protected override void CoreDrawMenuItems(Func<T> getAsset)
         {
             _drawMenuItems();
         }
@@ -50,13 +62,20 @@ namespace Engine.Editor
         }
     }
 
-    public class GenericAssetMenuHandler : AssetMenuHandler<object>
+    public class GenericAssetMenuHandler : AssetMenuHandler
     {
-        protected override void CoreDrawMenuItems()
+        public override Type TypeHandled => typeof(object);
+
+        protected override void CoreDrawMenuItems(Func<object> getAsset)
         {
         }
 
         protected override void CoreHandleItemOpen(string path)
+        {
+            GenericFileOpen(path);
+        }
+
+        internal static void GenericFileOpen(string path)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

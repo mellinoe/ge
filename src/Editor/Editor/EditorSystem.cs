@@ -112,6 +112,9 @@ namespace Engine.Editor
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
             _assetMenuHandlers.AddItem(sceneHandler.TypeHandled, sceneHandler);
 
+            var prefabHandler = new PrefabAssetHandler(_goQuery, this);
+            _assetMenuHandlers.AddItem(prefabHandler.TypeHandled, prefabHandler);
+
             _registry.Register(this);
 
             _editorCameraGO = new GameObject("__EditorCamera");
@@ -629,7 +632,7 @@ namespace Engine.Editor
                             _as.ProjectDatabase.DeleteAsset(asset.Path);
                         }
 
-                        handler.DrawMenuItems();
+                        handler.DrawMenuItems(() => _as.Database.LoadAsset(asset.Path));
 
                         ImGui.EndPopup();
                     }
@@ -801,6 +804,10 @@ namespace Engine.Editor
                         ClearSelection();
                         SelectObject(newParent);
                     }
+                    if (ImGui.MenuItem("Create Prefab From Selected", _selectedObjects.Count == 1))
+                    {
+                        CreateGameObjectPrefab(_selectedObjects.Single());
+                    }
                     ImGui.Separator();
                     if (ImGui.MenuItem("Unparent Selected", _selectedObjects.Any(go => go.Transform.Parent != null)))
                     {
@@ -949,6 +956,23 @@ namespace Engine.Editor
                 }
 
                 ImGui.EndPopup();
+            }
+        }
+
+        private void CreateGameObjectPrefab(GameObject go)
+        {
+            List<GameObject> allChildren = new List<GameObject>();
+            CollectChildren(go.Transform, allChildren);
+            SerializedPrefab sp = new SerializedPrefab(allChildren);
+            _as.ProjectDatabase.SaveDefinition(sp, "NewPrefab.prefab");
+        }
+
+        private void CollectChildren(Transform t, List<GameObject> allChildren)
+        {
+            allChildren.Add(t.GameObject);
+            foreach (Transform child in t.Children)
+            {
+                CollectChildren(child, allChildren);
             }
         }
 
@@ -1343,7 +1367,7 @@ namespace Engine.Editor
             SelectObject(newGo);
         }
 
-        private void SelectObject(GameObject go)
+        public void SelectObject(GameObject go)
         {
             _selectedObjects.Add(go);
             go.Destroyed += OnSelectedDestroyed;
@@ -1362,7 +1386,7 @@ namespace Engine.Editor
             _selectedObjects.Remove(go);
         }
 
-        private void ClearSelection()
+        public void ClearSelection()
         {
             if (_selectedObjects.Any())
             {
