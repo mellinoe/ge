@@ -3,17 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace Engine
 {
     public class GameObject
     {
+        private static long s_latestAssignedID = 0;
+
         private readonly MultiValueDictionary<Type, Component> _components = new MultiValueDictionary<Type, Component>();
         private SystemRegistry _registry;
         private bool _enabled = true;
         private bool _enabledInHierarchy = true;
 
         public string Name { get; set; }
+
+        public ulong ID { get; }
 
         public Transform Transform { get; }
 
@@ -42,6 +47,14 @@ namespace Engine
             Transform = t;
             Name = name;
             InternalConstructed?.Invoke(this);
+            ID = GetNextID();
+        }
+
+        private ulong GetNextID()
+        {
+            ulong newID = unchecked((ulong)Interlocked.Increment(ref s_latestAssignedID));
+            Debug.Assert(newID != 0); // Overflow
+            return newID;
         }
 
         public void AddComponent(Component component)

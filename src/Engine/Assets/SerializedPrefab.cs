@@ -21,12 +21,11 @@ namespace Engine.Assets
 
         public GameObject Instantiate(GameObjectQuerySystem goqs)
         {
-            Dictionary<string, GameObject> prefabNameToGO = new Dictionary<string, GameObject>();
+            Dictionary<ulong, GameObject> prefabIDToGO = new Dictionary<ulong, GameObject>();
 
-            foreach (var sgo in GameObjects)
+            foreach (SerializedGameObject sgo in GameObjects)
             {
-                string clonedName = goqs.GetCloneName(sgo.Name);
-                GameObject go = new GameObject(clonedName);
+                GameObject go = new GameObject(sgo.Name);
                 go.Transform.LocalPosition = sgo.Transform.LocalPosition;
                 go.Transform.LocalRotation = sgo.Transform.LocalRotation;
                 go.Transform.LocalScale = sgo.Transform.LocalScale;
@@ -36,20 +35,20 @@ namespace Engine.Assets
                     go.AddComponent(component);
                 }
 
-                prefabNameToGO.Add(sgo.Name, go);
+                prefabIDToGO.Add(sgo.ID, go);
             }
 
-            foreach (var kvp in GameObjects)
+            foreach (SerializedGameObject sgo in GameObjects)
             {
-                GameObject go = prefabNameToGO[kvp.Name];
-                string parentOriginalName = kvp.Transform.ParentName;
-                if (!string.IsNullOrEmpty(parentOriginalName))
+                GameObject go = prefabIDToGO[sgo.ID];
+                ulong parentOriginalID = sgo.Transform.ParentID;
+                if (parentOriginalID != 0)
                 {
-                    go.Transform.Parent = prefabNameToGO[parentOriginalName].Transform;
+                    go.Transform.Parent = prefabIDToGO[parentOriginalID].Transform;
                 }
             }
 
-            return prefabNameToGO[GameObjects.First().Name];
+            return prefabIDToGO[GameObjects.First().ID];
         }
     }
 }

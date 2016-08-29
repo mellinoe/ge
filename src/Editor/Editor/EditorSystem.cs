@@ -182,7 +182,7 @@ namespace Engine.Editor
 
                 if (_playState == PlayState.Stopped)
                 {
-                    SerializeGameObjectsToScene();
+                    SerializeGameObjectsToScene(_currentScene);
                 }
 
                 _playState = PlayState.Playing;
@@ -982,12 +982,20 @@ namespace Engine.Editor
             {
                 _sceneCam.Enabled = true;
             }
-            SerializeGameObjectsToScene();
+
+            InMemoryAsset<SceneAsset> tempScene = new InMemoryAsset<SceneAsset>();
+            SerializeGameObjectsToScene(tempScene);
             DestroyNonEditorGameObjects();
             ClearProjectComponents();
             _als.CreateNewLoadContext();
             DiscoverProjectComponents();
-            ActivateCurrentScene();
+            ActivateScene(tempScene.GetAsset(_as.ProjectDatabase.DefaultSerializer));
+
+            if (_playState == PlayState.Playing)
+            {
+                _editorCameraGO.Enabled = false;
+                _sceneCam.Enabled = true;
+            }
         }
 
         private void ClearProjectComponents()
@@ -1127,6 +1135,11 @@ namespace Engine.Editor
             return true;
         }
 
+        private void ActivateCurrentScene()
+        {
+            ActivateScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer));
+        }
+
         private void ActivateScene(SceneAsset asset)
         {
             asset.GenerateGameObjects();
@@ -1144,11 +1157,6 @@ namespace Engine.Editor
 
             _editorCameraGO.Enabled = true;
             _gs.SetMainCamera(_editorCamera);
-        }
-
-        private void ActivateCurrentScene()
-        {
-            ActivateScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer));
         }
 
         private void SaveScene(SceneAsset scene, string path)
@@ -1169,7 +1177,7 @@ namespace Engine.Editor
                 _sceneCam.Enabled = true;
             }
 
-            SerializeGameObjectsToScene();
+            SerializeGameObjectsToScene(_currentScene);
             SaveScene(_currentScene.GetAsset(_as.ProjectDatabase.DefaultSerializer), path);
 
             if (_sceneCam != null)
@@ -1181,11 +1189,11 @@ namespace Engine.Editor
             _currentScenePath = path;
         }
 
-        private void SerializeGameObjectsToScene()
+        private void SerializeGameObjectsToScene(InMemoryAsset<SceneAsset> asset)
         {
             SerializedGameObject[] sGos = _goQuery.GetAllGameObjects().Where(go => !IsEditorObject(go))
                 .Select(go => new SerializedGameObject(go)).ToArray();
-            _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
+            asset.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
         }
 
         private void DestroyNonEditorGameObjects()
@@ -1241,19 +1249,19 @@ namespace Engine.Editor
             if (t.Children.Count > 0)
             {
                 ImGui.SetNextTreeNodeOpened(true, SetCondition.FirstUseEver);
-                bool opened = ImGui.TreeNode($"##{t.GameObject.Name}");
+                bool opened = ImGui.TreeNode($"##{t.GameObject.ID}");
                 if (_newSelectedObject == t.GameObject)
                 {
                     _newSelectedObject = null;
                     ImGui.SetScrollHere();
                 }
                 ImGui.SameLine();
-                if (ImGui.Selectable(t.GameObject.Name))
+                if (ImGui.Selectable($"{t.GameObject.Name}##{t.GameObject.ID}"))
                 {
                     GameObjectClicked(t.GameObject);
                 }
                 ImGui.PopStyleColor();
-                if (ImGui.BeginPopupContextItem($"{t.GameObject.Name}_Context"))
+                if (ImGui.BeginPopupContextItem($"{t.GameObject.ID}_Context"))
                 {
                     DrawContextMenuForGameObject(t.GameObject);
                 }
@@ -1270,7 +1278,7 @@ namespace Engine.Editor
             }
             else
             {
-                if (ImGui.Selectable(t.GameObject.Name))
+                if (ImGui.Selectable($"{t.GameObject.Name}##{t.GameObject.ID}"))
                 {
                     GameObjectClicked(t.GameObject);
                 }
@@ -1282,7 +1290,7 @@ namespace Engine.Editor
                     ImGui.SetScrollHere();
                 }
 
-                if (ImGui.BeginPopupContextItem($"{t.GameObject.Name}_Context"))
+                if (ImGui.BeginPopupContextItem($"{t.GameObject.ID}_Context"))
                 {
                     DrawContextMenuForGameObject(t.GameObject);
                 }
@@ -1500,6 +1508,8 @@ namespace Engine.Editor
                 {
                     go.Name = _goNameBuffer.ToString();
                 }
+                ImGui.SameLine();
+                ImGui.Text(go.ID.ToString());
 
                 ImGui.EndChildFrame();
             }

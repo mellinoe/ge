@@ -12,8 +12,7 @@ namespace Engine.Assets
 
         public void GenerateGameObjects()
         {
-            Dictionary<string, GameObject> gameObjects = new Dictionary<string, GameObject>();
-            Dictionary<string, SerializedGameObject> sGameObjects = new Dictionary<string, SerializedGameObject>();
+            Dictionary<ulong, GameObject> nameToGO = new Dictionary<ulong, GameObject>();
 
             foreach (var sgo in GameObjects)
             {
@@ -27,17 +26,16 @@ namespace Engine.Assets
                     go.AddComponent(component);
                 }
 
-                gameObjects.Add(go.Name, go);
-                sGameObjects.Add(go.Name, sgo);
+                nameToGO.Add(sgo.ID, go);
             }
 
-            foreach (var kvp in sGameObjects)
+            foreach (var sgo in GameObjects)
             {
-                string parentName = kvp.Value.Transform.ParentName;
-                if (!string.IsNullOrEmpty(parentName))
+                ulong parentID= sgo.Transform.ParentID;
+                if (parentID != 0)
                 {
-                    var parent = gameObjects[parentName];
-                    gameObjects[kvp.Key].Transform.Parent = parent.Transform;
+                    var parent = nameToGO[parentID];
+                    nameToGO[sgo.ID].Transform.Parent = parent.Transform;
                 }
             }
         }
@@ -53,6 +51,7 @@ namespace Engine.Assets
         public string Name { get; set; }
         public SerializedTransform Transform { get; set; }
         public Component[] Components { get; set; }
+        public ulong ID { get; set; }
 
         public SerializedGameObject()
         {
@@ -63,6 +62,7 @@ namespace Engine.Assets
             Name = go.Name;
             Transform = new SerializedTransform(go.Transform);
             Components = go.GetComponents<Component>().Where(c => !s_excludedComponents.Contains(c.GetType())).ToArray();
+            ID = go.ID;
         }
     }
 
@@ -71,7 +71,7 @@ namespace Engine.Assets
         public Vector3 LocalPosition { get; set; }
         public Quaternion LocalRotation { get; set; }
         public Vector3 LocalScale { get; set; }
-        public string ParentName { get; set; }
+        public ulong ParentID { get; set; }
 
         public SerializedTransform()
         {
@@ -87,11 +87,7 @@ namespace Engine.Assets
 
             if (transform.Parent != null)
             {
-                ParentName = transform.Parent.GameObject.Name;
-            }
-            else
-            {
-                ParentName = string.Empty;
+                ParentID = transform.Parent.GameObject.ID;
             }
         }
     }
