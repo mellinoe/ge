@@ -152,15 +152,14 @@ float4 PS(PixelInput input) : SV_Target
 
 	float3 vertexToEye = normalize(cameraPosition_worldSpace - input.position_worldSpace);
 	float3 lightReflect = normalize(reflect(lightDir, input.normal));
-	float3 lightColor = float3(1, 1, 1);
 
 	float specularFactor = dot(vertexToEye, lightReflect);
 	if (specularFactor > 0)
 	{
 		specularFactor = pow(abs(specularFactor), specularPower);
-		specularColor = float4(lightColor * specularIntensity * specularFactor, 1.0f);
+		specularColor = float4(lightColor.rgb * specularIntensity * specularFactor, 1.0f);
 	}
 
-	float4 beforeTint = specularColor + (ambientLight * surfaceColor) + (diffuseFactor * surfaceColor) + pointDiffuse + pointSpec;
+	float4 beforeTint = specularColor + (ambientLight * surfaceColor) + (diffuseFactor * lightColor * surfaceColor) + pointDiffuse + pointSpec;
 	return ApplyTintColor(beforeTint, tintColor, tintFactor);
 }
