@@ -10,16 +10,17 @@ namespace Engine.Assets
         private readonly AssetDatabase _ad;
         private string _assetRootPath;
 
-        public AssetSystem(string assetRootPath)
+        public AssetSystem(string assetRootPath, SerializationBinder binder)
         {
             _assetRootPath = assetRootPath;
-            _ad = CreateAssetDatabase();
+            _ad = CreateAssetDatabase(binder);
             LooseFileDatabase.AddExtensionTypeMapping(".scene", typeof(SceneAsset));
         }
 
-        protected virtual AssetDatabase CreateAssetDatabase()
+        protected virtual AssetDatabase CreateAssetDatabase(SerializationBinder binder)
         {
             var fileAssets = new LooseFileDatabase(_assetRootPath);
+            fileAssets.DefaultSerializer.Binder = binder;
             var embeddedAssets = new EngineEmbeddedAssets();
             var compoundDB = new CompoundAssetDatabase();
             compoundDB.AddDatabase(fileAssets);

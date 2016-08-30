@@ -56,6 +56,7 @@
     <Compile Include="GUI\FilePicker.cs" />
     <Compile Include="ProjectSystem\AssemblyLoadSystem.cs" />
     <Compile Include="ProjectSystem\EngineLoadContext.cs" />
+    <Compile Include="ProjectSystem\EngineSerializationBinder.cs" />
     <Compile Include="ProjectSystem\ProjectManifest.cs" />
     <Compile Include="RefOrImmediate`1.cs" />
     <Compile Include="Graphics\ShadowMapPreview.cs" />

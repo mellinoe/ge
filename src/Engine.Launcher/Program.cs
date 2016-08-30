@@ -60,6 +60,10 @@ namespace Engine
             game.SystemRegistry.Register(gs);
             window.Closed += game.Exit;
 
+            AssemblyLoadSystem als = new AssemblyLoadSystem();
+            als.LoadFromProjectManifest(projectManifest, AppContext.BaseDirectory);
+            game.SystemRegistry.Register(als);
+
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
             {
@@ -77,7 +81,7 @@ namespace Engine
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
             gs.AddFreeRenderItem(imGuiRenderer);
 
-            AssetSystem assetSystem = new AssetSystem(Path.Combine(AppContext.BaseDirectory, projectManifest.AssetRoot));
+            AssetSystem assetSystem = new AssetSystem(Path.Combine(AppContext.BaseDirectory, projectManifest.AssetRoot), als.Binder);
             game.SystemRegistry.Register(assetSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);

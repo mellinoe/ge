@@ -7,22 +7,26 @@ namespace Engine.ProjectSystem
 {
     public class AssemblyLoadSystem : GameSystem
     {
-        public EngineLoadContext LoadContext { get; private set; } = new EngineLoadContext();
+        private EngineLoadContext _loadContext = new EngineLoadContext();
+        public EngineSerializationBinder Binder { get; } = new EngineSerializationBinder();
 
         public void CreateNewLoadContext()
         {
-            LoadContext = new EngineLoadContext();
+            _loadContext = new EngineLoadContext();
+            Binder.ClearAssemblies();
         }
 
         public IEnumerable<Assembly> LoadFromProjectManifest(ProjectManifest manifest, string rootPath)
         {
             List<Assembly> assemblies = new List<Assembly>();
-            foreach (string assembly in manifest.ManagedAssemblies)
+            foreach (string assemblyPath in manifest.ManagedAssemblies)
             {
-                string path = Path.Combine(rootPath, assembly);
+                string path = Path.Combine(rootPath, assemblyPath);
                 if (File.Exists(path))
                 {
-                    assemblies.Add(CopyAndLoad(path));
+                    Assembly assembly = CopyAndLoad(path);
+                    assemblies.Add(assembly);
+                    Binder.AddProjectAssembly(assembly);
                 }
                 else
                 {
@@ -33,11 +37,11 @@ namespace Engine.ProjectSystem
             return assemblies;
         }
 
-        public Assembly CopyAndLoad(string path)
+        private Assembly CopyAndLoad(string path)
         {
             string tempPath = Path.GetTempFileName();
             File.Copy(path, tempPath, true);
-            return LoadContext.LoadFromAssemblyPath(tempPath);
+            return _loadContext.LoadFromAssemblyPath(tempPath);
         }
 
         protected override void UpdateCore(float deltaSeconds)

@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Engine
 {
@@ -23,6 +26,26 @@ namespace Engine
             foreach (string newPath in Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories))
             {
                 File.Copy(newPath, newPath.Replace(sourceDir, destinationDir), true);
+            }
+        }
+
+        public static void ForceMoveFile(string source, string destination)
+        {
+            if (File.Exists(destination))
+            {
+                File.Delete(destination);
+            }
+
+            File.Move(source, destination);
+        }
+
+        public static void ShowFileInExplorer(string path)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                path = Path.GetFullPath(path); // Normalize separators and get full path.
+                string args = $"/select, \"{path}\"";
+                Process.Start("explorer", args);
             }
         }
     }

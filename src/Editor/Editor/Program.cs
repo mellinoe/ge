@@ -45,7 +45,10 @@ namespace Engine.Editor
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
             gs.AddFreeRenderItem(imGuiRenderer);
 
-            AssetSystem assetSystem = new EditorAssetSystem(Path.Combine(AppContext.BaseDirectory, "Assets"));
+            var als = new AssemblyLoadSystem();
+            game.SystemRegistry.Register(als);
+
+            AssetSystem assetSystem = new EditorAssetSystem(Path.Combine(AppContext.BaseDirectory, "Assets"), als.Binder);
             game.SystemRegistry.Register(assetSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);
@@ -59,9 +62,6 @@ namespace Engine.Editor
             game.SystemRegistry.Register(ccs);
 
             window.Closed += game.Exit;
-
-            var als = new AssemblyLoadSystem();
-            game.SystemRegistry.Register(als);
 
             var editorSystem = new EditorSystem(game.SystemRegistry);
             editorSystem.DiscoverComponentsFromAssembly(typeof(Program).GetTypeInfo().Assembly);

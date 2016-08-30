@@ -7,6 +7,8 @@ namespace Engine.Editor
     public class ProjectPublisher
     {
         private readonly string _publishItemsRoot;
+        private const string LauncherName = "Engine.Launcher";
+
         public string[] PublishTargets { get; set; }
 
         public ProjectPublisher()
@@ -39,6 +41,15 @@ namespace Engine.Editor
                 throw new InvalidOperationException("Couldn't locate the project manifest to publish.");
             }
             File.Copy(manifestFile, manifestFile.Replace(projectContext.ProjectRootPath, outputDir), overwrite: true);
+
+            string launcherExePath = Path.Combine(outputDir, LauncherName + ".exe");
+            string launcherDllPath = Path.Combine(outputDir, LauncherName + ".dll");
+
+            string projectNamedLauncher = launcherExePath.Replace(LauncherName, projectContext.ProjectManifest.Name);
+            EditorUtility.ForceMoveFile(launcherExePath, projectNamedLauncher);
+            EditorUtility.ForceMoveFile(launcherDllPath, launcherDllPath.Replace(LauncherName, projectContext.ProjectManifest.Name));
+
+            EditorUtility.ShowFileInExplorer(projectNamedLauncher);
         }
     }
 }

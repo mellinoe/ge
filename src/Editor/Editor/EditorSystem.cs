@@ -1001,7 +1001,6 @@ namespace Engine.Editor
         private void ClearProjectComponents()
         {
             _newComponentOptions.RemoveAll(_projectComponentsDiscovered.Contains);
-            _as.Binder.ClearAssemblies();
             _projectComponentsDiscovered.Clear();
         }
 
@@ -1056,8 +1055,6 @@ namespace Engine.Editor
                 {
                     _projectComponentsDiscovered.Add(discovered);
                 }
-
-                _as.Binder.AddProjectAssembly(assembly);
             }
         }
 

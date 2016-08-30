@@ -1,12 +1,12 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Engine.Editor
+namespace Engine.ProjectSystem
 {
-    public class EditorSerializationBinder : SerializationBinder
+    public class EngineSerializationBinder : SerializationBinder
     {
         private readonly Dictionary<string, Assembly> _projectLoadedAssemblies = new Dictionary<string, Assembly>();
         private readonly DefaultSerializationBinder _defaultBinder = new DefaultSerializationBinder();

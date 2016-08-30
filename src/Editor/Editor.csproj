@@ -17,7 +17,6 @@
     <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="EditorSerializationBinder.cs" />
     <Compile Include="EditorUtility.cs" />
     <Compile Include="Editor\AssetMenuHandler.cs" />
     <Compile Include="Editor\Commands\CreateGameObjectCommand.cs" />
