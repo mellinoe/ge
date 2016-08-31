@@ -61,6 +61,11 @@ namespace Engine.Physics
             _depth = depth;
         }
 
+        protected override void PostAttached(SystemRegistry registry)
+        {
+            SetEntity(CreateEntity());
+        }
+
         protected override Entity CreateEntity()
         {
             Vector3 scale = GameObject.Transform.Scale;

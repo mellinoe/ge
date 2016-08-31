@@ -232,5 +232,19 @@ namespace Engine.Editor.Graphics
             rc.DrawIndexedPrimitives(6, _lineIndicesCount + 12);
             rc.DrawIndexedPrimitives(8, _lineIndicesCount + 34, PrimitiveTopology.LineList);
         }
+
+        public bool RayCast(Ray ray, out float distance)
+        {
+            if (ray.Intersects(Bounds))
+            {
+                distance = Vector3.Distance(Position, ray.Origin);
+                return true;
+            }
+            else
+            {
+                distance = 0;
+                return false;
+            }
+        }
     }
 }

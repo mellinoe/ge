@@ -54,6 +54,8 @@
     <Compile Include="Graphics\PointLightInfo.cs" />
     <Compile Include="Graphics\Skybox.cs" />
     <Compile Include="GUI\FilePicker.cs" />
+    <Compile Include="Physics\Conversions.cs" />
+    <Compile Include="Physics\MeshCollider.cs" />
     <Compile Include="ProjectSystem\AssemblyLoadSystem.cs" />
     <Compile Include="ProjectSystem\EngineLoadContext.cs" />
     <Compile Include="ProjectSystem\EngineSerializationBinder.cs" />

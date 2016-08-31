@@ -6,6 +6,7 @@ using Veldrid.Graphics;
 using Veldrid.Assets;
 using Engine.Assets;
 using Newtonsoft.Json;
+using System;
 
 namespace Engine.Graphics
 {
@@ -304,6 +305,19 @@ namespace Engine.Graphics
                     _gs.RemoveRenderItem(_boundsRenderer);
                 }
             }
+        }
+
+        public bool RayCast(Ray ray, out float distance)
+        {
+            Matrix4x4 invWorld;
+            if (!Matrix4x4.Invert(_worldProvider.Data, out invWorld))
+            {
+                distance = 0f;
+                return false;
+            }
+
+            ray = Ray.Transform(ray, invWorld);
+            return _mesh.RayCast(ray, out distance);
         }
 
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";

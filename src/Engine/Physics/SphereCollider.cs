@@ -35,6 +35,11 @@ namespace Engine.Physics
             _radius = radius;
         }
 
+        protected override void PostAttached(SystemRegistry registry)
+        {
+            SetEntity(CreateEntity());
+        }
+
         protected override Entity CreateEntity()
         {
             Vector3 scale = GameObject.Transform.Scale;

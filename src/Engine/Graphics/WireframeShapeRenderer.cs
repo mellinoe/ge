@@ -402,6 +402,20 @@ namespace Engine.Graphics
             }
         }
 
+        public bool RayCast(Ray ray, out float distance)
+        {
+            if (ray.Intersects(Bounds))
+            {
+                distance = Vector3.Distance(_bri.Bounds.GetCenter(), ray.Origin);
+                return true;
+            }
+            else
+            {
+                distance = 0f;
+                return false;
+            }
+        }
+
         protected override void AddVerticesAndIndices()
         {
             Box = _bri.Bounds;

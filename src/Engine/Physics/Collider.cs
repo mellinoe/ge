@@ -128,8 +128,10 @@ namespace Engine.Physics
         protected sealed override void Attached(SystemRegistry registry)
         {
             _physicsSystem = registry.GetSystem<PhysicsSystem>();
-            Entity = CreateEntity();
+            PostAttached(registry);
         }
+
+        protected virtual void PostAttached(SystemRegistry registry) { }
 
         protected sealed override void Removed(SystemRegistry registry)
         {
@@ -137,15 +139,17 @@ namespace Engine.Physics
 
         protected override void OnEnabled()
         {
-            AddAndInitializeEntity();
             GameObject.Transform.ScaleChanged += ScaleChanged;
         }
 
         protected override void OnDisabled()
         {
-            _physicsSystem.RemoveObject(Entity);
+            if (Entity != null)
+            {
+                _physicsSystem.RemoveObject(Entity);
+                Transform.RemovePhysicsEntity();
+            }
             GameObject.Transform.ScaleChanged -= ScaleChanged;
-            Transform.RemovePhysicsEntity();
             if (_parentCollider != null)
             {
                 _parentCollider.Transform.PositionManuallyChanged -= OnAttachedParentManuallyMoved;
@@ -157,8 +161,16 @@ namespace Engine.Physics
             }
         }
 
-        private void AddAndInitializeEntity()
+        // Must be called by subclasses when they are able to construct an Entity.
+        protected void SetEntity(Entity entity)
         {
+            if (Entity != null)
+            {
+                _physicsSystem.RemoveObject(Entity);
+                Transform.RemovePhysicsEntity();
+            }
+
+            Entity = entity;
             _physicsSystem.AddObject(Entity);
             Entity.Position = Transform.Position;
             Entity.Orientation = Transform.Rotation;

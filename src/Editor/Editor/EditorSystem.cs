@@ -90,6 +90,7 @@ namespace Engine.Editor
         private Vector4 _statusBarTextColor;
         private GameObject _parentingTarget;
         private GameObject _newSelectedObject;
+        private List<RenderItem> _gsRCHits = new List<RenderItem>();
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -107,6 +108,7 @@ namespace Engine.Editor
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Component>(GenericDrawer));
 
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<ImageProcessorTexture>>(DrawTextureRef));
+            DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<MeshData>>(DrawMeshRef));
 
             var genericHandler = new GenericAssetMenuHandler(); _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
@@ -319,6 +321,19 @@ namespace Engine.Editor
             return false;
         }
 
+        private bool DrawMeshRef(string label, ref RefOrImmediate<MeshData> obj, RenderContext rc)
+        {
+            AssetRef<MeshData> oldRef = obj.GetRef() ?? new AssetRef<MeshData>();
+            AssetRef<MeshData> newRef = DrawAssetRef(label, oldRef, _as.Database);
+            if (newRef != null)
+            {
+                obj = new RefOrImmediate<MeshData>(new AssetRef<MeshData>(newRef.ID), null);
+                return true;
+            }
+
+            return false;
+        }
+
         private static AssetRef<T> DrawAssetRef<T>(string label, AssetRef<T> existingRef, AssetDatabase database)
         {
             AssetID result = default(AssetID);
@@ -429,18 +444,12 @@ namespace Engine.Editor
                     var screenPos = _input.MousePosition;
                     var ray = _gs.MainCamera.GetRayFromScreenPoint(screenPos.X, screenPos.Y);
 
-                    RayCastResult rcr;
-                    if (_physics.Space.RayCast(ray, (bpe) => bpe.Tag != null && bpe.Tag is Collider, out rcr))
+                    int hits = _gs.RayCast(ray, _gsRCHits);
+                    if (hits > 0)
                     {
-                        if (rcr.HitObject.Tag != null)
-                        {
-                            Collider c = rcr.HitObject.Tag as Collider;
-                            if (c != null)
-                            {
-                                GameObject go = c.GameObject;
-                                GameObjectClicked(go);
-                            }
-                        }
+                        var first = (Component)_gsRCHits.First(ri => ri is Component);
+                        GameObject go = first.GameObject;
+                        GameObjectClicked(go);
                     }
                     else
                     {

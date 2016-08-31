@@ -192,6 +192,18 @@ namespace Engine.Graphics
             _boundsRenderItemEntries.Remove(bri);
         }
 
+        public int RayCast(Ray ray, List<RenderItem> hits)
+        {
+            hits.Clear();
+            return _visiblityManager.Octree.RayCast(ray, hits, RayCastFilter);
+        }
+
+        private bool RayCastFilter(Ray ray, RenderItem ri)
+        {
+            float distance;
+            return ((BoundsRenderItem)ri).RayCast(ray, out distance);
+        }
+
         public void ToggleOctreeVisualizer()
         {
             if (_octreeRenderer == null)
