@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using BEPUphysics.Entities;
 using System.Collections.Generic;
 using BEPUphysics.Entities.Prefabs;
@@ -24,16 +23,22 @@ namespace Engine.Physics
             _shapes = shapes;
         }
 
+        protected override void PostAttached(SystemRegistry registry)
+        {
+            SetEntity(CreateEntity());
+        }
+
         protected override Entity CreateEntity()
         {
-            CompoundBody cb = new CompoundBody(_shapes.Select(bse => bse.GetShapeEntry()).ToList(), Mass);
+            CompoundBody cb = new CompoundBody(
+                _shapes.Select(bse => BoxShapeDescription.Scale(bse, Transform.Scale).GetShapeEntry()).ToList(), Mass);
             EntityCenter = -cb.Position;
             return cb;
         }
 
         protected override void ScaleChanged(Vector3 scale)
         {
-            throw new NotSupportedException();
+            SetEntity(CreateEntity());
         }
     }
 
@@ -75,6 +80,11 @@ namespace Engine.Physics
         public override EntityShape GetEnityShape()
         {
             return new BoxShape(Dimensions.X, Dimensions.Y, Dimensions.Z);
+        }
+
+        public static BoxShapeDescription Scale(BoxShapeDescription bse, Vector3 scale)
+        {
+            return new BoxShapeDescription(bse.Dimensions * scale, bse.Position * scale, bse.Orientation);
         }
     }
 
