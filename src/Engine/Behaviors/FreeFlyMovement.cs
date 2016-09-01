@@ -37,11 +37,11 @@ namespace Engine.Behaviors
             }
             if (_input.GetKey(Key.A))
             {
-                moveDirection += GameObject.Transform.Right;
+                moveDirection -= GameObject.Transform.Right;
             }
             if (_input.GetKey(Key.D))
             {
-                moveDirection -= GameObject.Transform.Right;
+                moveDirection += GameObject.Transform.Right;
             }
             if (_input.GetKey(Key.E))
             {
