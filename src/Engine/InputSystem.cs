@@ -1,6 +1,7 @@
 ﻿using OpenTK.Input;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
 using Veldrid.Platform;
 
@@ -18,7 +19,24 @@ namespace Engine
 
         private readonly List<Action<InputSystem>> _callbacks = new List<Action<InputSystem>>();
 
-        public Vector2 MousePosition { get; private set; }
+        private Vector2 _previousSnapshotMousePosition;
+
+        public Vector2 MousePosition
+        {
+            get
+            {
+                return CurrentSnapshot.MousePosition;
+            }
+            set
+            {
+                Mouse.SetPosition(value.X, value.Y);
+                var cursorState = Mouse.GetCursorState();
+                Point windowPoint = _window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
+                _previousSnapshotMousePosition = new Vector2(windowPoint.X, windowPoint.Y);
+            }
+        }
+
+        public Vector2 MouseDelta { get; private set; }
 
         public InputSnapshot CurrentSnapshot { get; private set; }
 
@@ -71,7 +89,9 @@ namespace Engine
             _newKeysThisFrame.Clear();
             _newMouseButtonsThisFrame.Clear();
 
-            MousePosition = snapshot.MousePosition;
+            MouseDelta = CurrentSnapshot.MousePosition - _previousSnapshotMousePosition;
+            _previousSnapshotMousePosition = CurrentSnapshot.MousePosition;
+
             foreach (var ke in snapshot.KeyEvents)
             {
                 if (ke.Down)

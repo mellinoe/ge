@@ -51,12 +51,107 @@ namespace Engine.Physics
             }
         }
 
+        private UpdateMode _updateMode = UpdateMode.Discrete;
+        public UpdateMode UpdateMode
+        {
+            get
+            {
+                return _updateMode;
+            }
+            set
+            {
+                _updateMode = value;
+                if (Entity != null)
+                {
+                    Entity.PositionUpdateMode = MapUpdateMode(_updateMode);
+                }
+            }
+        }
+
+        private float _angularDamping = .15f;
+        public float AngularDamping
+        {
+            get { return _angularDamping; }
+            set
+            {
+                _angularDamping = value;
+                if (Entity != null)
+                {
+                    Entity.AngularDamping = value;
+                }
+            }
+        }
+
+        private float _linearDamping = .03f;
+        public float LinearDamping
+        {
+            get { return _linearDamping; }
+            set
+            {
+                _linearDamping = value;
+                if (Entity != null)
+                {
+                    Entity.LinearDamping = value;
+                }
+            }
+        }
+
+        private float _bounciness = BEPUphysics.Materials.MaterialManager.DefaultBounciness;
+        public float Bounciness
+        {
+            get { return _bounciness; }
+            set
+            {
+                _bounciness = value;
+                if (Entity != null)
+                {
+                    Entity.Material.Bounciness = value;
+                }
+            }
+        }
+
+        private float _staticFriction = BEPUphysics.Materials.MaterialManager.DefaultStaticFriction;
+        public float StaticFriction
+        {
+            get { return _staticFriction; }
+            set
+            {
+                _staticFriction = value;
+                if (Entity != null)
+                {
+                    Entity.Material.StaticFriction = value;
+                }
+            }
+        }
+
+        private float _kineticFriction = BEPUphysics.Materials.MaterialManager.DefaultKineticFriction;
+        public float KineticFriction
+        {
+            get { return _kineticFriction; }
+            set
+            {
+                _kineticFriction = value;
+                if (Entity != null)
+                {
+                    Entity.Material.KineticFriction = value;
+                }
+            }
+        }
+
         [JsonIgnore]
         public Entity Entity { get; private set; }
 
         public Collider(float mass)
         {
             _mass = mass;
+        }
+
+        public void WakeUp()
+        {
+            if (Entity != null)
+            {
+                Entity.ActivityInformation.Activate();
+            }
         }
 
         protected abstract Entity CreateEntity();
@@ -140,6 +235,22 @@ namespace Engine.Physics
         protected override void OnEnabled()
         {
             GameObject.Transform.ScaleChanged += ScaleChanged;
+            if (Entity != null)
+            {
+                _physicsSystem.AddObject(Entity);
+                Transform.SetPhysicsEntity(Entity);
+            }
+
+            GameObject.Transform.ScaleChanged += ScaleChanged;
+            if (_parentCollider != null)
+            {
+                _parentCollider.Transform.PositionManuallyChanged += OnAttachedParentManuallyMoved;
+            }
+
+            if (_isTrigger)
+            {
+                SetEntityTrigger();
+            }
         }
 
         protected override void OnDisabled()
@@ -149,6 +260,7 @@ namespace Engine.Physics
                 _physicsSystem.RemoveObject(Entity);
                 Transform.RemovePhysicsEntity();
             }
+
             GameObject.Transform.ScaleChanged -= ScaleChanged;
             if (_parentCollider != null)
             {
@@ -171,12 +283,28 @@ namespace Engine.Physics
             }
 
             Entity = entity;
-            _physicsSystem.AddObject(Entity);
             Entity.Position = Transform.Position;
             Entity.Orientation = Transform.Rotation;
             Entity.IsAffectedByGravity = IsAffectedByGravity;
+            Entity.PositionUpdateMode = MapUpdateMode(UpdateMode);
+            Entity.AngularDamping = AngularDamping;
+            Entity.LinearDamping = LinearDamping;
+            Entity.Material.Bounciness = Bounciness;
+            Entity.Material.StaticFriction = StaticFriction;
+            Entity.Material.KineticFriction = KineticFriction;
+
             Entity.Tag = this;
             Entity.CollisionInformation.Tag = this;
+
+            if (EnabledInHierarchy)
+            {
+                _physicsSystem.AddObject(Entity);
+                Transform.SetPhysicsEntity(Entity);
+                if (_isTrigger)
+                {
+                    SetEntityTrigger();
+                }
+            }
 
             _parentCollider = GameObject.GetComponentInParent<Collider>();
             if (_parentCollider != null)
@@ -197,12 +325,20 @@ namespace Engine.Physics
                 _physicsSystem.AddObject(_parentJoint);
                 _parentCollider.Transform.PositionManuallyChanged += OnAttachedParentManuallyMoved;
             }
+        }
 
-            Transform.SetPhysicsEntity(Entity);
-
-            if (_isTrigger)
+        private PositionUpdateMode MapUpdateMode(UpdateMode updateMode)
+        {
+            switch (_updateMode)
             {
-                SetEntityTrigger();
+                case UpdateMode.Discrete:
+                    return PositionUpdateMode.Discrete;
+                case UpdateMode.Continuous:
+                    return PositionUpdateMode.Continuous;
+                case UpdateMode.Passive:
+                    return PositionUpdateMode.Passive;
+                default:
+                    throw new InvalidOperationException("Invalid update mode: " + _updateMode);
             }
         }
 

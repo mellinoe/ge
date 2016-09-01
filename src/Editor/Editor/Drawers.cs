@@ -171,6 +171,10 @@ namespace Engine.Editor
             }
             else if (type.GetTypeInfo().IsGenericType)
             {
+                if (typeof(List<>).GetTypeInfo().IsAssignableFrom(type.GetGenericTypeDefinition()))
+                {
+                    return (Drawer)Activator.CreateInstance(typeof(ListDrawer<>).MakeGenericType(type.GenericTypeArguments[0]));
+                }
                 if (typeof(AssetRef<>).GetTypeInfo().IsAssignableFrom(type.GetGenericTypeDefinition()))
                 {
                     return (Drawer)Activator.CreateInstance(typeof(AssetRefDrawer<>).MakeGenericType(type.GenericTypeArguments[0]));
@@ -537,7 +541,7 @@ namespace Engine.Editor
                         drawer = DrawerCache.GetDrawer(pi.PropertyType);
                     }
                     bool changed = drawer.Draw(pi.Name, ref value, rc);
-                    if (changed && originalValue != value)
+                    if (changed && originalValue != value || pi.PropertyType.GetTypeInfo().IsValueType)
                     {
                         if (pi.SetMethod != null)
                         {

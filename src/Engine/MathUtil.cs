@@ -6,6 +6,8 @@ namespace Engine
 {
     public static class MathUtil
     {
+        public static readonly float TwoPi = (float)(Math.PI * 2.0);
+
         public static float Clamp(float value, float min, float max)
         {
             if (value <= min)

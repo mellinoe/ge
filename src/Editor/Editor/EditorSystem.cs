@@ -60,7 +60,7 @@ namespace Engine.Editor
         private readonly List<EditorBehavior> _newStarts = new List<EditorBehavior>();
 
         private readonly TextInputBuffer _filenameInputBuffer = new TextInputBuffer(256);
-        private readonly TextInputBuffer _filenameBuffer = new TextInputBuffer(100);
+        private readonly TextInputBuffer _assetFileNameBufer = new TextInputBuffer(100);
         private readonly TextInputBuffer _goNameBuffer = new TextInputBuffer(100);
 
         private Camera _sceneCam;
@@ -557,21 +557,25 @@ namespace Engine.Editor
                 ImGui.Text("Asset Name:");
                 ImGui.PushItemWidth(220);
                 ImGui.SameLine();
-                if (ImGui.InputText("###AssetNameInput", _filenameBuffer.Buffer, _filenameBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
+                bool save = false;
+                if (ImGui.InputText("###AssetNameInput", _assetFileNameBufer.Buffer, _assetFileNameBufer.Length, InputTextFlags.EnterReturnsTrue, null))
                 {
-                    _loadedAssetPath = _filenameBuffer.StringValue;
+                    save = true;
                 }
                 ImGui.PopItemWidth();
                 ImGui.SameLine();
                 if (ImGui.Button("Save"))
                 {
-                    string path = _as.ProjectDatabase.GetAssetPath(_loadedAssetPath);
-                    using (var fs = File.CreateText(path))
-                    {
-                        var serializer = JsonSerializer.CreateDefault();
-                        serializer.TypeNameHandling = TypeNameHandling.All;
-                        serializer.Serialize(fs, _selectedAsset);
-                    }
+                    save = true;
+                }
+
+                if (save)
+                {
+                    FileInfo fi = new FileInfo(_loadedAssetPath);
+                    _as.ProjectDatabase.SaveDefinition(_selectedAsset, _loadedAssetPath);
+                    string newPath = Path.Combine(fi.Directory.FullName, _assetFileNameBufer.StringValue);
+                    File.Move(_loadedAssetPath, newPath);
+                    _loadedAssetPath = newPath;
                 }
             }
             else if (_selectedObjects.Count > 1)
@@ -608,7 +612,7 @@ namespace Engine.Editor
                         ClearSelection();
                         _selectedAsset = _as.ProjectDatabase.LoadAsset(asset.Path);
                         _loadedAssetPath = asset.Path;
-                        _filenameBuffer.StringValue = asset.Name;
+                        _assetFileNameBufer.StringValue = asset.Name;
                     }
                     if (_loadedAssetPath == asset.Path)
                     {
@@ -848,6 +852,11 @@ namespace Engine.Editor
                 }
                 if (ImGui.BeginMenu("Project"))
                 {
+                    if (ImGui.MenuItem("Edit Project Manifest"))
+                    {
+                        openPopup = "EditProjectManifestPopup";
+                    }
+                    ImGui.Separator();
                     if (ImGui.MenuItem("Reload Project Assemblies", _projectContext != null))
                     {
                         ReloadProjectAssemblies();
@@ -966,6 +975,22 @@ namespace Engine.Editor
 
                 ImGui.EndPopup();
             }
+
+            if (ImGui.BeginPopup("###EditProjectManifestPopup"))
+            {
+                Drawer d = DrawerCache.GetDrawer(typeof(ProjectManifest));
+                object manifest = _projectContext.ProjectManifest;
+                if (d.Draw("Project Manifest", ref manifest, _gs.Context))
+                {
+                }
+
+                if (ImGui.Button("Save"))
+                {
+                    _as.ProjectDatabase.SaveDefinition(manifest, _projectContext.ProjectManifestPath);
+                }
+
+                ImGui.EndPopup();
+            }
         }
 
         private void CreateGameObjectPrefab(GameObject go)
@@ -1036,7 +1061,7 @@ namespace Engine.Editor
                 EditorPreferences.Instance.LastOpenedProjectRoot = rootPathOrManifest;
                 var loadedProjectManifest = _as.ProjectDatabase.LoadAsset<ProjectManifest>(rootPathOrManifest);
                 _as.ProjectAssetRootPath = Path.Combine(loadedProjectRoot, loadedProjectManifest.AssetRoot);
-                _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest);
+                _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest, rootPathOrManifest);
                 DiscoverProjectComponents();
                 return true;
             }
@@ -1048,7 +1073,7 @@ namespace Engine.Editor
                 _gs.Context.ResourceFactory.ShaderAssetRootPath = rootPathOrManifest;
                 EditorPreferences.Instance.LastOpenedProjectRoot = manifestPath;
                 _as.ProjectDatabase.RootPath = Path.Combine(loadedProjectRoot, loadedProjectManifest.AssetRoot);
-                _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest);
+                _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest, manifestPath);
                 return true;
             }
 
@@ -1174,6 +1199,8 @@ namespace Engine.Editor
                 var jtw = new JsonTextWriter(fs);
                 _as.ProjectDatabase.DefaultSerializer.Serialize(jtw, scene);
             }
+
+            StatusBarText($"[{DateTime.Now.ToString()}] Saved scene to {path}.", RgbaFloat.Cyan);
         }
 
         private void SaveCurrentScene(string path)

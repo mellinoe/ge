@@ -56,6 +56,7 @@
     <Compile Include="GUI\FilePicker.cs" />
     <Compile Include="Physics\Conversions.cs" />
     <Compile Include="Physics\MeshCollider.cs" />
+    <Compile Include="Physics\UpdateMode.cs" />
     <Compile Include="ProjectSystem\AssemblyLoadSystem.cs" />
     <Compile Include="ProjectSystem\EngineLoadContext.cs" />
     <Compile Include="ProjectSystem\EngineSerializationBinder.cs" />

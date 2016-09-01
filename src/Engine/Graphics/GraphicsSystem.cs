@@ -15,8 +15,10 @@ namespace Engine.Graphics
 {
     public class GraphicsSystem : GameSystem
     {
-        private static readonly DynamicDataProvider<LightInfo> _noLightProvider
+        private static readonly DynamicDataProvider<LightInfo> s_noLightProvider
             = new DynamicDataProvider<LightInfo>(new LightInfo(RgbaFloat.Black, Vector3.Zero));
+
+        private static readonly ConstantDataProvider<Matrix4x4> s_identityProvider = new ConstantDataProvider<Matrix4x4>(Matrix4x4.Identity);
 
         private readonly Window _window;
         private readonly Renderer _renderer;
@@ -58,7 +60,12 @@ namespace Engine.Graphics
             };
             _renderer = new Renderer(Context, _pipelineStages);
 
-            Context.RegisterGlobalDataProvider("LightBuffer", _noLightProvider);
+            // Placeholder providers so that materials can bind to them.
+            Context.RegisterGlobalDataProvider("ViewMatrix", s_identityProvider);
+            Context.RegisterGlobalDataProvider("ProjectionMatrix", s_identityProvider);
+            Context.RegisterGlobalDataProvider("CameraInfo", s_identityProvider);
+            Context.RegisterGlobalDataProvider("LightBuffer", s_noLightProvider);
+
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
             Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));
         }
@@ -106,7 +113,7 @@ namespace Engine.Graphics
             if (ShadowMapStage.Light == directionalLight)
             {
                 ShadowMapStage.Light = null;
-                Context.RegisterGlobalDataProvider("LightBuffer", _noLightProvider);
+                Context.RegisterGlobalDataProvider("LightBuffer", s_noLightProvider);
             }
         }
 

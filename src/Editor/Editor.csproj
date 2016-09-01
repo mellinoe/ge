@@ -41,6 +41,7 @@
     <Compile Include="Editor\UndoRedoStack.cs" />
     <Compile Include="Editor\Preferences.cs" />
     <Compile Include="Editor\Program.cs" />
+    <Compile Include="ListDrawer.cs" />
     <Compile Include="PrefabAssetHandler.cs" />
     <Compile Include="ProjectContext.cs" />
   </ItemGroup>

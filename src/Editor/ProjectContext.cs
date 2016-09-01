@@ -10,13 +10,14 @@ namespace Engine.Editor
         public string ProjectRootPath { get; set; }
         /// <summary>The loaded project manifest.</summary>
         public ProjectManifest ProjectManifest { get; set; }
+        public string ProjectManifestPath { get; set; }
 
         /// <summary>
         /// Constructs a new ProjectContext.
         /// </summary>
         /// <param name="projectRootPath">The root path of the project.</param>
         /// <param name="projectManifest">The loaded project manifest.</param>
-        public ProjectContext(string projectRootPath, ProjectManifest projectManifest)
+        public ProjectContext(string projectRootPath, ProjectManifest projectManifest, string manifestPath)
         {
             if (string.IsNullOrEmpty(projectRootPath))
             {
@@ -29,6 +30,7 @@ namespace Engine.Editor
 
             ProjectRootPath = projectRootPath;
             ProjectManifest = projectManifest;
+            ProjectManifestPath = manifestPath;
         }
 
         /// <summary>
