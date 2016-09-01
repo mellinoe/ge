@@ -58,6 +58,7 @@ namespace Engine.Graphics
             };
             _renderer = new Renderer(Context, _pipelineStages);
 
+            Context.RegisterGlobalDataProvider("LightBuffer", _noLightProvider);
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
             Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));
         }
