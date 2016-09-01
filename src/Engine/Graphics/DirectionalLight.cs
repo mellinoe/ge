@@ -17,6 +17,8 @@ namespace Engine.Graphics
 
         public ConstantBufferDataProvider LightProvider => _lightProvider;
 
+        public DirectionalLight() : this(RgbaFloat.White, -Vector3.UnitY) { }
+
         public DirectionalLight(RgbaFloat diffuseColor, Vector3 direction)
         {
             _diffuseColor = diffuseColor;
