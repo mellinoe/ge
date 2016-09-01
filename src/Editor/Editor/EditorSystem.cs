@@ -727,11 +727,11 @@ namespace Engine.Editor
                     }
 
                     ImGui.Separator();
-                    if (ImGui.MenuItem("Save Scene", "Ctrl+S", false, _currentScene != null && _playState == PlayState.Stopped))
+                    if (ImGui.MenuItem("Save Scene", "Ctrl+S", false, !string.IsNullOrEmpty(_currentScenePath) && _playState == PlayState.Stopped))
                     {
                         SaveCurrentScene(_currentScenePath);
                     }
-                    if (ImGui.MenuItem("Save Scene As", "Ctrl+S", false, _currentScene != null && _playState == PlayState.Stopped))
+                    if (ImGui.MenuItem("Save Scene As", "Ctrl+S", false, _playState == PlayState.Stopped))
                     {
                         openPopup = "SaveSceneAsPopup";
                     }
@@ -739,7 +739,7 @@ namespace Engine.Editor
                     {
                         StopSimulation();
                         DestroyNonEditorGameObjects();
-                        _currentScene = null;
+                        _currentScenePath = string.Empty;
                     }
                     ImGui.Separator();
                     if (ImGui.BeginMenu("Publish", _projectContext != null))
@@ -857,7 +857,7 @@ namespace Engine.Editor
                 }
                 if (ImGui.BeginMenu("Game"))
                 {
-                    if (ImGui.MenuItem("Play", "Ctrl+P", _playState == PlayState.Playing, _playState != PlayState.Playing && _currentScene != null)
+                    if (ImGui.MenuItem("Play", "Ctrl+P", _playState == PlayState.Playing, _playState != PlayState.Playing)
                         || (ImGui.GetIO().KeysDown[(int)Key.P] && ImGui.GetIO().CtrlPressed) && _currentScene != null)
                     {
                         StartSimulation();
