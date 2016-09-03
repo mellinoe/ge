@@ -1,6 +1,7 @@
 ﻿using OpenTK.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using Veldrid.Platform;
@@ -29,7 +30,8 @@ namespace Engine
             }
             set
             {
-                Mouse.SetPosition(value.X, value.Y);
+                Point screenPosition = _window.ScreenToClient(new Point((int)value.X, (int)value.Y));
+                Mouse.SetPosition(screenPosition.X, screenPosition.Y);
                 var cursorState = Mouse.GetCursorState();
                 Point windowPoint = _window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
                 _previousSnapshotMousePosition = new Vector2(windowPoint.X, windowPoint.Y);

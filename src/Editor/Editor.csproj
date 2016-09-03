@@ -33,6 +33,7 @@
     <Compile Include="Editor\AssetRefDrawer.cs" />
     <Compile Include="Editor\EditorBehavior.cs" />
     <Compile Include="Editor\EditorCameraMovement.cs" />
+    <Compile Include="Editor\EditorSceneLoaderSystem.cs" />
     <Compile Include="Editor\EditorSystem.cs" />
     <Compile Include="Editor\Graphics\AxesRenderer.cs" />
     <Compile Include="Editor\InMemoryAsset.cs" />

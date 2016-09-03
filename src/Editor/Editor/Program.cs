@@ -51,6 +51,9 @@ namespace Engine.Editor
             AssetSystem assetSystem = new EditorAssetSystem(Path.Combine(AppContext.BaseDirectory, "Assets"), als.Binder);
             game.SystemRegistry.Register(assetSystem);
 
+            EditorSceneLoaderSystem esls = new EditorSceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
+            game.SystemRegistry.Register<SceneLoaderSystem>(esls);
+
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);
             game.SystemRegistry.Register(bus);
             bus.Register(imGuiRenderer);

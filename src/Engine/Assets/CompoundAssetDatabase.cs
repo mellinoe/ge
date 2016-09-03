@@ -15,7 +15,7 @@ namespace Engine.Assets
             }
         }
 
-        public AssetID[] GetAssetsOfType(Type t)
+        public override AssetID[] GetAssetsOfType(Type t)
         {
             List<AssetID> ids = new List<AssetID>();
             foreach (var db in _databases)
@@ -26,17 +26,17 @@ namespace Engine.Assets
             return ids.ToArray();
         }
 
-        public T LoadAsset<T>(AssetRef<T> assetRef)
+        public override T LoadAsset<T>(AssetRef<T> assetRef, bool cache)
         {
-            return LoadAsset<T>(assetRef.ID);
+            return LoadAsset<T>(assetRef.ID, cache);
         }
 
-        public T LoadAsset<T>(AssetID assetID)
+        public override T LoadAsset<T>(AssetID assetID, bool cache)
         {
             foreach (var db in _databases)
             {
                 T asset;
-                if (db.TryLoadAsset<T>(assetID, out asset))
+                if (db.TryLoadAsset<T>(assetID, cache, out asset))
                 {
                     return asset;
                 }
@@ -45,12 +45,12 @@ namespace Engine.Assets
             throw new InvalidOperationException("No asset with ID " + assetID + " was found in any asset database.");
         }
 
-        public object LoadAsset(AssetID assetID)
+        public override object LoadAsset(AssetID assetID, bool cache)
         {
             foreach (var db in _databases)
             {
                 object asset;
-                if (db.TryLoadAsset<object>(assetID, out asset))
+                if (db.TryLoadAsset(assetID, cache, out asset))
                 {
                     return asset;
                 }
@@ -59,11 +59,11 @@ namespace Engine.Assets
             throw new InvalidOperationException("No asset with ID " + assetID + " was found in any asset database.");
         }
 
-        public bool TryLoadAsset<T>(AssetID assetID, out T asset)
+        public override bool TryLoadAsset<T>(AssetID assetID, bool cache, out T asset)
         {
             foreach (var db in _databases)
             {
-                if (db.TryLoadAsset<T>(assetID, out asset))
+                if (db.TryLoadAsset<T>(assetID, cache, out asset))
                 {
                     return true;
                 }

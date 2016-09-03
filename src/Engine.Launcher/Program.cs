@@ -78,6 +78,9 @@ namespace Engine
             });
             game.SystemRegistry.Register(inputSystem);
 
+            SceneLoaderSystem sls = new SceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
+            game.SystemRegistry.Register(sls);
+
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
             gs.AddFreeRenderItem(imGuiRenderer);
 

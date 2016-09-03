@@ -48,5 +48,10 @@ namespace Engine
                 Process.Start("explorer", args);
             }
         }
+
+        public static bool IsEditorObject(GameObject go)
+        {
+            return go.Name.StartsWith("__");
+        }
     }
 }

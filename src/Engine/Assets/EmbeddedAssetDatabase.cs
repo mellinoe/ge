@@ -22,22 +22,22 @@ namespace Engine.Assets
             _assets.Add(id, asset);
         }
 
-        public T LoadAsset<T>(AssetRef<T> assetRef)
+        public override T LoadAsset<T>(AssetRef<T> assetRef, bool cache)
         {
             return LoadAsset<T>(assetRef.ID);
         }
 
-        public T LoadAsset<T>(AssetID assetID)
+        public override T LoadAsset<T>(AssetID assetID, bool cache)
         {
             return MaterializeAsset<T>(_assets[assetID]);
         }
 
-        public object LoadAsset(AssetID assetID)
+        public override object LoadAsset(AssetID assetID, bool cache)
         {
             return MaterializeAsset<object>(_assets[assetID]);
         }
 
-        public AssetID[] GetAssetsOfType(Type t)
+        public override AssetID[] GetAssetsOfType(Type t)
         {
             List<AssetID> ids = new List<AssetID>();
             foreach (var kvp in _assets)
@@ -52,7 +52,7 @@ namespace Engine.Assets
             return ids.ToArray();
         }
 
-        public bool TryLoadAsset<T>(AssetID id, out T asset)
+        public override bool TryLoadAsset<T>(AssetID id, bool cache, out T asset)
         {
             object assetAsObject;
             if (_assets.TryGetValue(id, out assetAsObject))

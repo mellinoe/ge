@@ -75,6 +75,7 @@
     <Compile Include="Physics\PhysicsSystem.cs" />
     <Compile Include="Physics\SphereCollider.cs" />
     <Compile Include="Prefabs.cs" />
+    <Compile Include="SceneHelpers.cs" />
     <Compile Include="ScoreSystem.cs" />
     <Compile Include="SystemRegistry.cs" />
     <Compile Include="Transform.cs" />

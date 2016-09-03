@@ -75,7 +75,7 @@ namespace Engine.Editor
         private ProjectContext _projectContext;
         private ProjectPublisher _projectPublisher = new ProjectPublisher();
 
-        private InMemoryAsset<SceneAsset> _currentScene;
+        private InMemoryAsset<SceneAsset> _currentScene = new InMemoryAsset<SceneAsset>();
         private string _currentScenePath;
         private readonly Vector4 _disabledGrey = new Vector4(0.65f, 0.65f, 0.65f, 0.35f);
 
@@ -912,7 +912,7 @@ namespace Engine.Editor
                 }
             }
 
-            if (_playState == PlayState.Stopped && _input.GetKeyDown(Key.S) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
+            if (_playState == PlayState.Stopped && !string.IsNullOrEmpty(_currentScenePath) && _input.GetKeyDown(Key.S) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
             {
                 SaveCurrentScene(_currentScenePath);
             }
@@ -1192,7 +1192,16 @@ namespace Engine.Editor
 
         private void SaveScene(SceneAsset scene, string path)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new InvalidOperationException("Invalid path.");
+            }
+
             path = path.Trim(s_pathTrimChar);
+            if (!Path.IsPathRooted(path))
+            {
+                path = _projectContext.GetPath(path);
+            }
             Console.WriteLine("Saving scene: " + path);
             using (var fs = File.CreateText(path))
             {
@@ -1224,24 +1233,19 @@ namespace Engine.Editor
 
         private void SerializeGameObjectsToScene(InMemoryAsset<SceneAsset> asset)
         {
-            SerializedGameObject[] sGos = _goQuery.GetAllGameObjects().Where(go => !IsEditorObject(go))
+            SerializedGameObject[] sGos = _goQuery.GetAllGameObjects().Where(go => !EditorUtility.IsEditorObject(go))
                 .Select(go => new SerializedGameObject(go)).ToArray();
             asset.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
         }
 
         private void DestroyNonEditorGameObjects()
         {
-            foreach (var nonEditorGo in _goQuery.GetUnparentedGameObjects().Where(go => !IsEditorObject(go)))
+            foreach (var nonEditorGo in _goQuery.GetUnparentedGameObjects().Where(go => !EditorUtility.IsEditorObject(go)))
             {
                 nonEditorGo.Destroy();
             }
 
             _sceneCam = null;
-        }
-
-        private bool IsEditorObject(GameObject go)
-        {
-            return go.Name.StartsWith("__");
         }
 
         private void UpdateUpdateables(float deltaSeconds)
