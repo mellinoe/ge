@@ -39,7 +39,7 @@ namespace Engine.Graphics
         {
             _rc = rc;
             _input = input;
-            CreateFontsTexture(rc);
+            ImGui.LoadDefaultFont();
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
             InitializeContextObjects(rc);
@@ -63,6 +63,7 @@ namespace Engine.Graphics
                 Blend.SourceAlpha, Blend.InverseSourceAlpha, BlendFunction.Add);
             _depthDisabledState = factory.CreateDepthStencilState(false, DepthComparison.Always);
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
+            RecreateFontDeviceTexture(rc);
             _material = factory.CreateMaterial(
                 rc,
                 "imgui-vertex", "imgui-frag",
@@ -81,6 +82,24 @@ namespace Engine.Graphics
                 {
                     new TextureDataInputElement("surfaceTexture", _fontTexture)
                 }));
+
+        }
+
+        public unsafe void RecreateFontDeviceTexture(RenderContext rc)
+        {
+            var io = ImGui.GetIO();
+            // Build
+            _textureData = io.FontAtlas.GetTexDataAsRGBA32();
+            int[] pixels = new int[_textureData.Width * _textureData.Height];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = ((int*)_textureData.Pixels)[i];
+            }
+
+            _fontTexture = new RawTextureDataArray<int>(pixels, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
+
+            // Store our identifier
+            io.FontAtlas.SetTexID(_fontAtlasID);
 
             var deviceTexture = rc.ResourceFactory.CreateTexture(_fontTexture.PixelData, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
@@ -179,28 +198,6 @@ namespace Engine.Graphics
             io.CtrlPressed = _controlDown;
             io.AltPressed = _altDown;
             io.ShiftPressed = _shiftDown;
-        }
-
-        private unsafe void CreateFontsTexture(RenderContext rc)
-        {
-            ImGui.LoadDefaultFont();
-            IO io = ImGui.GetIO();
-
-            // Build
-            _textureData = io.FontAtlas.GetTexDataAsRGBA32();
-            int[] pixels = new int[_textureData.Width * _textureData.Height];
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                pixels[i] = ((int*)_textureData.Pixels)[i];
-            }
-
-            _fontTexture = new RawTextureDataArray<int>(pixels, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
-
-            // Store our identifier
-            io.FontAtlas.SetTexID(_fontAtlasID);
-
-            // Cleanup (don't clear the input data if you want to append new fonts later)
-            io.FontAtlas.ClearTexData();
         }
 
         private static unsafe void SetOpenTKKeyMappings()

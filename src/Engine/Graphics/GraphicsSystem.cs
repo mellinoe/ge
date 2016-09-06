@@ -31,6 +31,7 @@ namespace Engine.Graphics
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
         private OctreeRenderer<RenderItem> _octreeRenderer;
+        public ImGuiRenderer ImGuiRenderer { get; private set; }
 
         public ShadowMapStage ShadowMapStage { get; }
 
@@ -75,6 +76,12 @@ namespace Engine.Graphics
             _frustum = frustum;
             ((StandardPipelineStage)_pipelineStages[1]).CameraFrustum = frustum;
             ((StandardPipelineStage)_pipelineStages[2]).CameraFrustum = frustum;
+        }
+
+        public void SetImGuiRenderer(ImGuiRenderer imGuiRenderer)
+        {
+            ImGuiRenderer = imGuiRenderer;
+            AddFreeRenderItem(imGuiRenderer);
         }
 
         public void SetMainCamera(Camera camera)

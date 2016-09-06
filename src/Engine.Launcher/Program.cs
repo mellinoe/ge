@@ -1,4 +1,5 @@
 ﻿using Engine.Assets;
+using Engine.Audio;
 using Engine.Behaviors;
 using Engine.Editor;
 using Engine.Graphics;
@@ -81,8 +82,11 @@ namespace Engine
             SceneLoaderSystem sls = new SceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register(sls);
 
+            AudioSystem audioSystem = new AudioSystem();
+            game.SystemRegistry.Register(audioSystem);
+
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
-            gs.AddFreeRenderItem(imGuiRenderer);
+            gs.SetImGuiRenderer(imGuiRenderer);
 
             AssetSystem assetSystem = new AssetSystem(Path.Combine(AppContext.BaseDirectory, projectManifest.AssetRoot), als.Binder);
             game.SystemRegistry.Register(assetSystem);
@@ -100,7 +104,7 @@ namespace Engine
 #endif
 
             SceneAsset scene;
-            AssetID mainSceneID = projectManifest.OpeningScene;
+            AssetID mainSceneID = projectManifest.OpeningScene.ID;
             if (mainSceneID.IsEmpty)
             {
                 var scenes = assetSystem.Database.GetAssetsOfType(typeof(SceneAsset));

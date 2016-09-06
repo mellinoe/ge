@@ -19,6 +19,7 @@ using Engine.Editor.Commands;
 using Engine.GUI;
 using Engine.Editor.Graphics;
 using Engine.ProjectSystem;
+using Engine.Audio;
 
 namespace Engine.Editor
 {
@@ -109,6 +110,8 @@ namespace Engine.Editor
 
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<ImageProcessorTexture>>(DrawTextureRef));
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<MeshData>>(DrawMeshRef));
+            DrawerCache.AddDrawer(new FuncDrawer<AssetRef<SceneAsset>>(DrawSceneRef));
+            DrawerCache.AddDrawer(new FuncDrawer<AssetRef<WaveFile>>(DrawWaveRef));
 
             var genericHandler = new GenericAssetMenuHandler(); _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
@@ -155,6 +158,16 @@ namespace Engine.Editor
             }
         }
 
+        private bool DrawSceneRef(string label, ref AssetRef<SceneAsset> sceneRef, RenderContext rc)
+        {
+            return DrawAssetRef(label, ref sceneRef, _as.Database);
+        }
+
+        private bool DrawWaveRef(string label, ref AssetRef<WaveFile> waveRef, RenderContext rc)
+        {
+            return DrawAssetRef(label, ref waveRef, _as.Database);
+        }
+
         public IEnumerable<Type> DiscoverComponentsFromAssembly(Assembly assembly)
         {
             IEnumerable<Type> discovered = assembly.GetTypes()
@@ -172,9 +185,9 @@ namespace Engine.Editor
         {
             if (_playState != PlayState.Playing)
             {
+                _editorCameraGO.Enabled = false;
                 if (_sceneCam != null)
                 {
-                    _editorCameraGO.Enabled = false;
                     _sceneCam.Enabled = true;
                 }
                 else
@@ -205,8 +218,9 @@ namespace Engine.Editor
                 if (_sceneCam != null)
                 {
                     _sceneCam.Enabled = false;
-                    _editorCameraGO.Enabled = true;
                 }
+
+                _editorCameraGO.Enabled = true;
             }
         }
 
@@ -282,21 +296,21 @@ namespace Engine.Editor
 
             if (!mr.Mesh.HasValue)
             {
-                AssetRef<MeshData> result = DrawAssetRef("Model", mr.Mesh.GetRef(), _as.Database);
-                if (result != null)
+                AssetRef<MeshData> assetRef = mr.Mesh.GetRef();
+                if (DrawAssetRef("Model", ref assetRef, _as.Database))
                 {
-                    c = SetValueActionCommand.New<AssetRef<MeshData>>(val => mr.Mesh = val, mr.Mesh.GetRef(), result);
-                    mr.Mesh = result;
+                    c = SetValueActionCommand.New<AssetRef<MeshData>>(val => mr.Mesh = val, mr.Mesh.GetRef(), assetRef);
+                    mr.Mesh = assetRef;
                 }
             }
 
             if (!mr.Texture.HasValue)
             {
-                AssetRef<TextureData> result = DrawAssetRef("Surface Texture", mr.Texture.GetRef(), _as.Database);
-                if (result != null)
+                AssetRef<TextureData> assetRef = mr.Texture.GetRef();
+                if (DrawAssetRef("Texture", ref assetRef, _as.Database))
                 {
-                    c = SetValueActionCommand.New<AssetRef<TextureData>>(val => mr.Texture = val, mr.Texture.GetRef(), result);
-                    mr.Texture = result;
+                    c = SetValueActionCommand.New<AssetRef<TextureData>>(val => mr.Texture = val, mr.Texture.GetRef(), assetRef);
+                    mr.Texture = assetRef;
                 }
             }
 
@@ -310,11 +324,10 @@ namespace Engine.Editor
 
         private bool DrawTextureRef(string label, ref RefOrImmediate<ImageProcessorTexture> obj, RenderContext rc)
         {
-            AssetRef<ImageProcessorTexture> oldRef = obj.GetRef() ?? new AssetRef<ImageProcessorTexture>();
-            AssetRef<ImageProcessorTexture> newRef = DrawAssetRef(label, oldRef, _as.Database);
-            if (newRef != null)
+            AssetRef<ImageProcessorTexture> meshRef = obj.GetRef() ?? new AssetRef<ImageProcessorTexture>();
+            if (DrawAssetRef(label, ref meshRef, _as.Database))
             {
-                obj = new RefOrImmediate<ImageProcessorTexture>(new AssetRef<ImageProcessorTexture>(newRef.ID), null);
+                obj = new RefOrImmediate<ImageProcessorTexture>(new AssetRef<ImageProcessorTexture>(meshRef.ID), null);
                 return true;
             }
 
@@ -323,18 +336,17 @@ namespace Engine.Editor
 
         private bool DrawMeshRef(string label, ref RefOrImmediate<MeshData> obj, RenderContext rc)
         {
-            AssetRef<MeshData> oldRef = obj.GetRef() ?? new AssetRef<MeshData>();
-            AssetRef<MeshData> newRef = DrawAssetRef(label, oldRef, _as.Database);
-            if (newRef != null)
+            AssetRef<MeshData> meshRef = obj.GetRef() ?? new AssetRef<MeshData>();
+            if (DrawAssetRef(label, ref meshRef, _as.Database))
             {
-                obj = new RefOrImmediate<MeshData>(new AssetRef<MeshData>(newRef.ID), null);
+                obj = new RefOrImmediate<MeshData>(new AssetRef<MeshData>(meshRef.ID), null);
                 return true;
             }
 
             return false;
         }
 
-        private static AssetRef<T> DrawAssetRef<T>(string label, AssetRef<T> existingRef, AssetDatabase database)
+        private static bool DrawAssetRef<T>(string label, ref AssetRef<T> existingRef, AssetDatabase database)
         {
             AssetID result = default(AssetID);
             AssetID[] assets = database.GetAssetsOfType(typeof(T));
@@ -355,11 +367,12 @@ namespace Engine.Editor
 
             if (result != default(AssetID) && result != existingRef.ID)
             {
-                return new AssetRef<T>(result);
+                existingRef = new AssetRef<T>(result);
+                return true;
             }
             else
             {
-                return null;
+                return false;
             }
         }
 
@@ -1028,7 +1041,10 @@ namespace Engine.Editor
             if (_playState == PlayState.Playing)
             {
                 _editorCameraGO.Enabled = false;
-                _sceneCam.Enabled = true;
+                if (_sceneCam != null)
+                {
+                    _sceneCam.Enabled = true;
+                }
             }
         }
 
@@ -1548,8 +1564,9 @@ namespace Engine.Editor
                 ImGui.SameLine();
                 ImGui.Text(go.ID.ToString());
 
-                ImGui.EndChildFrame();
             }
+
+            ImGui.EndChildFrame();
             ImGui.PopStyleVar();
 
             int id = 0;

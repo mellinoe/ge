@@ -2,6 +2,7 @@
 using Engine.Assets;
 using Newtonsoft.Json;
 using Veldrid.Assets;
+using Engine.Audio;
 
 namespace Engine.Editor
 {
@@ -28,6 +29,9 @@ namespace Engine.Editor
             compoundDB.AddDatabase(new EditorEmbeddedAssets());
             _projectAssetDatabase = new LooseFileDatabase("Assets");
             _projectAssetDatabase.DefaultSerializer.Binder = binder;
+            _projectAssetDatabase.RegisterTypeLoader(typeof(WaveFile), new WaveFileLoader());
+            LooseFileDatabase.AddExtensionTypeMapping(".wav", typeof(WaveFile));
+
             compoundDB.AddDatabase(_projectAssetDatabase);
             return compoundDB;
         }

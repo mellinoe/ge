@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Engine.Audio;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using Veldrid.Assets;
@@ -21,6 +22,8 @@ namespace Engine.Assets
         {
             var fileAssets = new LooseFileDatabase(_assetRootPath);
             fileAssets.DefaultSerializer.Binder = binder;
+            fileAssets.RegisterTypeLoader(typeof(WaveFile), new WaveFileLoader());
+            LooseFileDatabase.AddExtensionTypeMapping(".wav", typeof(WaveFile));
             var embeddedAssets = new EngineEmbeddedAssets();
             var compoundDB = new CompoundAssetDatabase();
             compoundDB.AddDatabase(fileAssets);

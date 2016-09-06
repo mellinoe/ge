@@ -22,6 +22,14 @@
     <Compile Include="Assets\EngineEmbeddedAssets.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Assets\SerializedPrefab.cs" />
+    <Compile Include="Audio\AudioBuffer.cs" />
+    <Compile Include="Audio\AudioEngine.cs" />
+    <Compile Include="Audio\AudioListener.cs" />
+    <Compile Include="Audio\AudioPositionKind.cs" />
+    <Compile Include="Audio\AudioSource.cs" />
+    <Compile Include="Audio\AudioSourceComponent.cs" />
+    <Compile Include="Audio\WaveFile.cs" />
+    <Compile Include="Audio\WaveFileLoader.cs" />
     <Compile Include="Behaviors\BallLauncher.cs" />
     <Compile Include="Behaviors\Behavior.cs" />
     <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
@@ -128,6 +136,7 @@
     <EmbeddedResource Include="Assets\GLSL\shadowmap-vertex.glsl" />
     <EmbeddedResource Include="Assets\GLSL\simple-2d-frag.glsl" />
     <EmbeddedResource Include="Assets\GLSL\simple-2d-vertex.glsl" />
+    <Compile Include="Audio\AudioSystem.cs" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>

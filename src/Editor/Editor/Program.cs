@@ -14,6 +14,7 @@ using Veldrid.Assets;
 using ImGuiNET;
 using System.Reflection;
 using Engine.ProjectSystem;
+using Engine.Audio;
 
 namespace Engine.Editor
 {
@@ -29,7 +30,7 @@ namespace Engine.Editor
             GraphicsSystem gs = new GraphicsSystem(window, EditorPreferences.Instance.PreferOpenGL);
             gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
             game.SystemRegistry.Register(gs);
-            game.LimitFrameRate = false;
+            game.LimitFrameRate = true;
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
@@ -43,7 +44,7 @@ namespace Engine.Editor
             game.SystemRegistry.Register(inputSystem);
 
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
-            gs.AddFreeRenderItem(imGuiRenderer);
+            gs.SetImGuiRenderer(imGuiRenderer);
 
             var als = new AssemblyLoadSystem();
             game.SystemRegistry.Register(als);
@@ -53,6 +54,9 @@ namespace Engine.Editor
 
             EditorSceneLoaderSystem esls = new EditorSceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register<SceneLoaderSystem>(esls);
+
+            AudioSystem audioSystem = new AudioSystem();
+            game.SystemRegistry.Register(audioSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);
             game.SystemRegistry.Register(bus);
