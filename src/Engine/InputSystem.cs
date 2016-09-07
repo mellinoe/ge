@@ -34,7 +34,7 @@ namespace Engine
                 Mouse.SetPosition(screenPosition.X, screenPosition.Y);
                 var cursorState = Mouse.GetCursorState();
                 Point windowPoint = _window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
-                _previousSnapshotMousePosition = new Vector2(windowPoint.X, windowPoint.Y);
+                _previousSnapshotMousePosition = new Vector2(windowPoint.X / _window.ScaleFactor.X, windowPoint.Y / _window.ScaleFactor.Y);
             }
         }
 
