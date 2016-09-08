@@ -77,11 +77,15 @@ namespace Engine.Graphics
             _textureBinding = _gs.Context.ResourceFactory.CreateShaderTextureBinding(_deviceTexture);
         }
 
+        // Private device resources -- to be disposed.
         private VertexBuffer _vb;
         private IndexBuffer _ib;
+        private DeviceTexture _deviceTexture;
+        private ShaderTextureBinding _textureBinding;
+
+        // Shared device resources
         private Material _regularPassMaterial;
         private Material _shadowPassMaterial;
-        private ShaderTextureBinding _textureBinding;
 
         private static RasterizerState s_wireframeRS;
         private static RasterizerState s_noCullRS;
@@ -193,6 +197,11 @@ namespace Engine.Graphics
         {
             ResourceFactory factory = context.ResourceFactory;
 
+            Debug.Assert(_vb == null);
+            Debug.Assert(_ib == null);
+            Debug.Assert(_deviceTexture == null);
+            Debug.Assert(_textureBinding == null);
+
             _vb = _mesh.CreateVertexBuffer(factory);
             _ib = _mesh.CreateIndexBuffer(factory, out _indexCount);
             _centeredBoundingSphere = _mesh.GetBoundingSphere();
@@ -270,6 +279,8 @@ namespace Engine.Graphics
         {
             _vb.Dispose();
             _ib.Dispose();
+            _deviceTexture.Dispose();
+            _textureBinding.Dispose();
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
@@ -325,7 +336,6 @@ namespace Engine.Graphics
 
         private static readonly string ShadowMapPassVertexShaderSource = "shadowmap-vertex";
         private static readonly string ShadowMapPassFragmentShaderSource = "shadowmap-frag";
-        private DeviceTexture _deviceTexture;
 
         private static MaterialVertexInput s_vertexInputs = new MaterialVertexInput(
             VertexPositionNormalTexture.SizeInBytes,

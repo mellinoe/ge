@@ -28,13 +28,14 @@ namespace Engine.Graphics
             return new ImageProcessorTexture(new Image(1, 1));
         }
 
+        private ConstantBufferDataProvider _perObjectInput;
+
         // Context objects
         private VertexBuffer _vb;
         private IndexBuffer _ib;
         private Material _material;
         private ShaderTextureBinding _cubemapBinding;
         private RasterizerState _rasterizerState;
-        private ConstantBufferDataProvider _perObjectInput;
 
         public Skybox()
         { }
@@ -62,6 +63,12 @@ namespace Engine.Graphics
 
         protected override void Removed(SystemRegistry registry)
         {
+            _vb.Dispose();
+            _ib.Dispose();
+            _material.Dispose();
+            _rasterizerState.Dispose();
+            _cubemapBinding.Dispose();
+            _cubemapBinding.BoundTexture.Dispose();
         }
 
         protected override void OnEnabled()
