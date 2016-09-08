@@ -30,7 +30,7 @@ namespace Engine
             }
             set
             {
-                Point screenPosition = _window.ScreenToClient(new Point((int)value.X, (int)value.Y));
+                Point screenPosition = _window.ClientToScreen(new Point((int)value.X, (int)value.Y));
                 Mouse.SetPosition(screenPosition.X, screenPosition.Y);
                 var cursorState = Mouse.GetCursorState();
                 Point windowPoint = _window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
