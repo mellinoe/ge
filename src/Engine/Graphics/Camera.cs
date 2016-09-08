@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Veldrid;
 using Veldrid.Graphics;
 
@@ -12,13 +13,17 @@ namespace Engine.Graphics
         private GraphicsSystem _gs;
 
         private float _fov = 1.05f;
+        private float _orthographicWidth = 35f;
         private float _nearPlaneDistance = 0.3f;
         private float _farPlaneDistance = 30f;
         private Vector3 _upDirection = Vector3.UnitY;
+        private CameraProjectionType _projectionType = CameraProjectionType.Perspective;
 
+        public CameraProjectionType ProjectionType { get { return _projectionType; } set { _projectionType = value; SetProjectionMatrix(); } }
         public float FieldOfViewRadians { get { return _fov; } set { _fov = value; SetProjectionMatrix(); } }
         public float NearPlaneDistance { get { return _nearPlaneDistance; } set { _nearPlaneDistance = value; SetProjectionMatrix(); } }
         public float FarPlaneDistance { get { return _farPlaneDistance; } set { _farPlaneDistance = value; SetProjectionMatrix(); } }
+        public float OrthographicWidth { get { return _orthographicWidth; } set { _orthographicWidth = value; SetProjectionMatrix(); } }
         public Vector3 UpDirection { get { return _upDirection; } set { _upDirection = value; if (Transform != null) { SetViewMatrix(Transform); } } }
 
         public ConstantBufferDataProvider ViewProvider => _viewProvider;
@@ -98,11 +103,29 @@ namespace Engine.Graphics
                 return;
             }
 
-            _projectionProvider.Data = Matrix4x4.CreatePerspectiveFieldOfView(
-                FieldOfViewRadians,
-                (float)_gs.Context.Window.Width / _gs.Context.Window.Height,
-                NearPlaneDistance,
-                FarPlaneDistance);
+            Matrix4x4 projection;
+            float aspectRatio = (float)_gs.Context.Window.Width / _gs.Context.Window.Height;
+            switch (_projectionType)
+            {
+                case CameraProjectionType.Perspective:
+                    projection = Matrix4x4.CreatePerspectiveFieldOfView(
+                        FieldOfViewRadians,
+                        aspectRatio,
+                        NearPlaneDistance,
+                        FarPlaneDistance);
+                    break;
+                case CameraProjectionType.Orthographic:
+                    projection = Matrix4x4.CreateOrthographic(
+                        _orthographicWidth,
+                        _orthographicWidth / aspectRatio,
+                        NearPlaneDistance,
+                        FarPlaneDistance);
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            _projectionProvider.Data = projection;
 
             UpdateViewFrustum();
         }
@@ -112,5 +135,11 @@ namespace Engine.Graphics
             Veldrid.BoundingFrustum frustum = new Veldrid.BoundingFrustum(_viewProvider.Data * _projectionProvider.Data);
             _gs.SetViewFrustum(ref frustum);
         }
+    }
+
+    public enum CameraProjectionType
+    {
+        Perspective,
+        Orthographic
     }
 }

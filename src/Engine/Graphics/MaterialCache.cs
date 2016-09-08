@@ -35,7 +35,6 @@ namespace Engine.Graphics
             Material m;
             if (!_materials.TryGetValue(key, out m))
             {
-                Console.WriteLine("Caching failed, creating new material.");
                 m = _factory.CreateMaterial(rc, vertexShaderName, pixelShaderName, vertexInputs, globalInputs, perObjectInputs, textureInputs);
                 _materials.Add(key, m);
             }

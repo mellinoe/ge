@@ -75,7 +75,7 @@ namespace Engine.Graphics
                 }),
                 new MaterialInputs<MaterialGlobalInputElement>(new MaterialGlobalInputElement[]
                 {
-                    new MaterialGlobalInputElement("ProjectionMatrixUniform", MaterialInputType.Matrix4x4, _projectionMatrixProvider)
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _projectionMatrixProvider)
                 }),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
                 new MaterialTextureInputs(new MaterialTextureInputElement[]

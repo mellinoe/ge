@@ -244,8 +244,8 @@ namespace Engine.Graphics
                 s_shadowmapGlobalInputs = new MaterialInputs<MaterialGlobalInputElement>(
                     new MaterialGlobalInputElement[]
                     {
-                        new MaterialGlobalInputElement("ProjectionMatrix", MaterialInputType.Matrix4x4, "LightProjMatrix"),
-                        new MaterialGlobalInputElement("ViewMatrix", MaterialInputType.Matrix4x4, "LightViewMatrix")
+                        new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "LightProjMatrix"),
+                        new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "LightViewMatrix")
                     });
             }
 
@@ -363,7 +363,7 @@ namespace Engine.Graphics
         private static MaterialInputs<MaterialPerObjectInputElement> s_shadowmapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
             new MaterialPerObjectInputElement[]
             {
-                new MaterialPerObjectInputElement("WorldMatrix", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
+                new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
     }
 }

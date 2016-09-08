@@ -17,6 +17,8 @@ namespace Engine.Graphics
     {
         private static readonly DynamicDataProvider<LightInfo> s_noLightProvider
             = new DynamicDataProvider<LightInfo>(new LightInfo(RgbaFloat.Black, Vector3.Zero));
+        private static readonly DynamicDataProvider<Vector4> s_noCameraProvider
+            = new DynamicDataProvider<Vector4>();
 
         private static readonly ConstantDataProvider<Matrix4x4> s_identityProvider = new ConstantDataProvider<Matrix4x4>(Matrix4x4.Identity);
 
@@ -64,7 +66,7 @@ namespace Engine.Graphics
             // Placeholder providers so that materials can bind to them.
             Context.RegisterGlobalDataProvider("ViewMatrix", s_identityProvider);
             Context.RegisterGlobalDataProvider("ProjectionMatrix", s_identityProvider);
-            Context.RegisterGlobalDataProvider("CameraInfo", s_identityProvider);
+            Context.RegisterGlobalDataProvider("CameraInfo", s_noCameraProvider);
             Context.RegisterGlobalDataProvider("LightBuffer", s_noLightProvider);
 
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);

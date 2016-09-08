@@ -29,9 +29,7 @@ void main()
 	float w = (projection *  (view * (world * vec4(0, 0, 0, 1)))).w;
 	w *= reciprScaleOnscreen;
 
-	gl_Position = (projection * (view * (world * vec4(input.position * w, 1))));
+	gl_Position = (projection * (view * (world * vec4(in_position * w, 1))));
 
     out_color = in_color;
-
-    return output;
 }
