@@ -92,6 +92,7 @@ namespace Engine.Editor
         private GameObject _parentingTarget;
         private GameObject _newSelectedObject;
         private List<RenderItem> _gsRCHits = new List<RenderItem>();
+        private bool _focusNameField;
 
         public EditorSystem(SystemRegistry registry)
         {
@@ -460,8 +461,8 @@ namespace Engine.Editor
                     int hits = _gs.RayCast(ray, _gsRCHits);
                     if (hits > 0)
                     {
-                        var first = (Component)_gsRCHits.First(ri => ri is Component);
-                        GameObject go = first.GameObject;
+                        var last = (Component)_gsRCHits.Last(ri => ri is Component);
+                        GameObject go = last.GameObject;
                         GameObjectClicked(go);
                     }
                     else
@@ -571,6 +572,11 @@ namespace Engine.Editor
                 ImGui.PushItemWidth(220);
                 ImGui.SameLine();
                 bool save = false;
+                if (_focusNameField)
+                {
+                    ImGuiNative.igSetKeyboardFocusHere(0);
+                    _focusNameField = false;
+                }
                 if (ImGui.InputText("###AssetNameInput", _assetFileNameBufer.Buffer, _assetFileNameBufer.Length, InputTextFlags.EnterReturnsTrue, null))
                 {
                     save = true;
@@ -801,12 +807,14 @@ namespace Engine.Editor
                         var newGo = CreateEmptyGameObject();
                         ClearSelection();
                         SelectObject(newGo);
+                        _focusNameField = true;
                     }
                     if (ImGui.MenuItem("Create Empty Child", _selectedObjects.Any()))
                     {
                         var newChild = CreateEmptyGameObject(_selectedObjects.First().Transform);
                         ClearSelection();
                         SelectObject(newChild);
+                        _focusNameField = true;
                     }
                     if (ImGui.MenuItem("Create Empty Parent", _selectedObjects.Any()))
                     {
@@ -829,10 +837,12 @@ namespace Engine.Editor
                         _undoRedo.CommitCommand(c);
                         ClearSelection();
                         SelectObject(newParent);
+                        _focusNameField = true;
                     }
                     if (ImGui.MenuItem("Create Prefab From Selected", _selectedObjects.Count == 1))
                     {
-                        CreateGameObjectPrefab(_selectedObjects.Single());
+                        _selectedAsset = CreateGameObjectPrefab(_selectedObjects.Single());
+                        _focusNameField = true;
                     }
                     ImGui.Separator();
                     if (ImGui.MenuItem("Unparent Selected", _selectedObjects.Any(go => go.Transform.Parent != null)))
@@ -1006,12 +1016,13 @@ namespace Engine.Editor
             }
         }
 
-        private void CreateGameObjectPrefab(GameObject go)
+        private SerializedPrefab CreateGameObjectPrefab(GameObject go)
         {
             List<GameObject> allChildren = new List<GameObject>();
             CollectChildren(go.Transform, allChildren);
             SerializedPrefab sp = new SerializedPrefab(allChildren);
             _as.ProjectDatabase.SaveDefinition(sp, "NewPrefab.prefab");
+            return sp;
         }
 
         private void CollectChildren(Transform t, List<GameObject> allChildren)
@@ -1365,6 +1376,7 @@ namespace Engine.Editor
             if (ImGui.MenuItem("Clone", string.Empty))
             {
                 CloneGameObject(go, go.Transform.Parent);
+                _focusNameField = true;
             }
             if (ImGui.MenuItem("Delete", string.Empty))
             {
@@ -1557,6 +1569,11 @@ namespace Engine.Editor
                 }
                 ImGui.SameLine(0, 5);
                 _goNameBuffer.StringValue = go.Name;
+                if (_focusNameField)
+                {
+                    ImGuiNative.igSetKeyboardFocusHere(0);
+                    _focusNameField = false;
+                }
                 if (ImGui.InputText("###GoNameInput", _goNameBuffer.Buffer, _goNameBuffer.Length, InputTextFlags.Default, null))
                 {
                     go.Name = _goNameBuffer.ToString();
