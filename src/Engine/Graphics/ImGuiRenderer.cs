@@ -39,7 +39,7 @@ namespace Engine.Graphics
         {
             _rc = rc;
             _input = input;
-            ImGui.LoadDefaultFont();
+            ImGui.GetIO().FontAtlas.AddDefaultFont();
             _projectionMatrixProvider = new DynamicDataProvider<Matrix4x4>();
 
             InitializeContextObjects(rc);
@@ -171,7 +171,7 @@ namespace Engine.Graphics
             float delta = snapshot.WheelDelta;
             io.MouseWheel = delta;
 
-            ImGuiNative.igGetIO()->MouseWheel = delta;
+            ImGui.GetIO().MouseWheel = delta;
 
             foreach (char c in snapshot.KeyCharPresses)
             {

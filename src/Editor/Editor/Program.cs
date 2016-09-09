@@ -22,12 +22,14 @@ namespace Engine.Editor
     {
         public static void Main(string[] args)
         {
+            CommandLineOptions commandLineOptions = new CommandLineOptions(args);
+
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
                 ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.Maximized) 
                 : new SameThreadWindow(960, 540, WindowState.Maximized);
             window.Title = "ge.Editor";
             Game game = new Game();
-            GraphicsSystem gs = new GraphicsSystem(window, EditorPreferences.Instance.PreferOpenGL);
+            GraphicsSystem gs = new GraphicsSystem(window, commandLineOptions.PreferOpenGL);
             gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
             game.SystemRegistry.Register(gs);
             game.LimitFrameRate = true;
@@ -70,7 +72,7 @@ namespace Engine.Editor
 
             window.Closed += game.Exit;
 
-            var editorSystem = new EditorSystem(game.SystemRegistry);
+            var editorSystem = new EditorSystem(game.SystemRegistry, commandLineOptions);
             editorSystem.DiscoverComponentsFromAssembly(typeof(Program).GetTypeInfo().Assembly);
             // Editor system registers itself.
 

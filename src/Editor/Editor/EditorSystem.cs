@@ -56,6 +56,7 @@ namespace Engine.Editor
         private readonly GraphicsSystem _gs;
         private readonly BehaviorUpdateSystem _bus;
         private readonly AssemblyLoadSystem _als;
+        private readonly CommandLineOptions _commandLineOptions;
 
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
         private readonly List<EditorBehavior> _newStarts = new List<EditorBehavior>();
@@ -94,7 +95,7 @@ namespace Engine.Editor
         private List<RenderItem> _gsRCHits = new List<RenderItem>();
         private bool _focusNameField;
 
-        public EditorSystem(SystemRegistry registry)
+        public EditorSystem(SystemRegistry registry, CommandLineOptions commandLineOptions)
         {
             _registry = registry;
             _physics = registry.GetSystem<PhysicsSystem>();
@@ -104,6 +105,7 @@ namespace Engine.Editor
             _as = (EditorAssetSystem)registry.GetSystem<AssetSystem>();
             _bus = registry.GetSystem<BehaviorUpdateSystem>();
             _als = registry.GetSystem<AssemblyLoadSystem>();
+            _commandLineOptions = commandLineOptions;
 
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Transform>(DrawTransform));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
@@ -146,11 +148,13 @@ namespace Engine.Editor
 
             DiscoverComponentsFromAssembly(typeof(Game).GetTypeInfo().Assembly);
 
-            if (!string.IsNullOrEmpty(EditorPreferences.Instance.LastOpenedProjectRoot))
+            string projectToLoad = commandLineOptions.Project ?? EditorPreferences.Instance.LastOpenedProjectRoot;
+            if (!string.IsNullOrEmpty(projectToLoad))
             {
-                if (LoadProject(EditorPreferences.Instance.LastOpenedProjectRoot))
+                if (LoadProject(projectToLoad))
                 {
-                    var latestScene = EditorPreferences.Instance.GetLastOpenedScene(_projectContext.ProjectRootPath);
+                    var latestScene = commandLineOptions.Scene
+                        ?? EditorPreferences.Instance.GetLastOpenedScene(_projectContext.ProjectRootPath);
                     if (!string.IsNullOrEmpty(latestScene))
                     {
                         LoadScene(latestScene);
@@ -574,7 +578,7 @@ namespace Engine.Editor
                 bool save = false;
                 if (_focusNameField)
                 {
-                    ImGuiNative.igSetKeyboardFocusHere(0);
+                    ImGui.SetKeyboardFocusHere();
                     _focusNameField = false;
                 }
                 if (ImGui.InputText("###AssetNameInput", _assetFileNameBufer.Buffer, _assetFileNameBufer.Length, InputTextFlags.EnterReturnsTrue, null))
@@ -950,7 +954,7 @@ namespace Engine.Editor
                 ImGui.Text("Path to project root:");
                 if (openPopup != null)
                 {
-                    ImGuiNative.igSetKeyboardFocusHere(0);
+                    ImGui.SetKeyboardFocusHere();
                 }
                 if (ImGui.InputText(string.Empty, _filenameInputBuffer.Buffer, _filenameInputBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
                 {
@@ -977,7 +981,7 @@ namespace Engine.Editor
                 ImGui.Text("Destination Path:");
                 if (openPopup != null)
                 {
-                    ImGuiNative.igSetKeyboardFocusHere(0);
+                    ImGui.SetKeyboardFocusHere();
                 }
                 if (ImGui.InputText(string.Empty, _filenameInputBuffer.Buffer, _filenameInputBuffer.Length, InputTextFlags.EnterReturnsTrue, null))
                 {
@@ -1155,33 +1159,20 @@ namespace Engine.Editor
 
         private bool LoadScene(string path)
         {
-            if (!File.Exists(path))
-            {
-                return false;
-            }
-
             path = path.Trim(s_pathTrimChar);
             Console.WriteLine("Opening scene: " + path);
 
-            try
-            {
-                SceneAsset loadedAsset;
-                using (var fs = File.OpenRead(path))
-                {
-                    var jtr = new JsonTextReader(new StreamReader(fs));
-                    loadedAsset = _as.ProjectDatabase.DefaultSerializer.Deserialize<SceneAsset>(jtr);
-                }
-
-                if (_currentScene == null)
-                {
-                    _currentScene = new InMemoryAsset<SceneAsset>();
-                }
-                _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
-            }
-            catch
+            SceneAsset loadedAsset;
+            if (!_as.ProjectDatabase.TryLoadAsset(path, out loadedAsset))
             {
                 return false;
             }
+
+            if (_currentScene == null)
+            {
+                _currentScene = new InMemoryAsset<SceneAsset>();
+            }
+            _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
 
             StopSimulation();
             DestroyNonEditorGameObjects();
@@ -1571,7 +1562,7 @@ namespace Engine.Editor
                 _goNameBuffer.StringValue = go.Name;
                 if (_focusNameField)
                 {
-                    ImGuiNative.igSetKeyboardFocusHere(0);
+                    ImGui.SetKeyboardFocusHere();
                     _focusNameField = false;
                 }
                 if (ImGui.InputText("###GoNameInput", _goNameBuffer.Buffer, _goNameBuffer.Length, InputTextFlags.Default, null))

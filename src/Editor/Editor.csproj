@@ -19,6 +19,7 @@
   <ItemGroup>
     <Compile Include="EditorUtility.cs" />
     <Compile Include="Editor\AssetMenuHandler.cs" />
+    <Compile Include="Editor\CommandLineOptions.cs" />
     <Compile Include="Editor\Commands\CreateGameObjectCommand.cs" />
     <Compile Include="Editor\Commands\RawCommand.cs" />
     <Compile Include="Editor\Commands\SetValueActionCommand.cs" />

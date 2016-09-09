@@ -74,7 +74,7 @@ namespace Engine.Editor
 
                         if (scrollToBottom)
                         {
-                            ImGuiNative.igSetScrollHere();
+                            ImGui.SetScrollHere();
                         }
 
                         ImGui.EndChild();
@@ -82,7 +82,7 @@ namespace Engine.Editor
 
                     if (_focusInput)
                     {
-                        ImGuiNative.igSetKeyboardFocusHere(0);
+                        ImGui.SetKeyboardFocusHere();
                         _focusInput = false;
                     }
                     if (ImGui.InputText(
