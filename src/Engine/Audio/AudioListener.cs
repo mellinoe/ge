@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Engine.Audio
+﻿namespace Engine.Audio
 {
     public class AudioListener : Component
     {

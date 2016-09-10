@@ -12,12 +12,19 @@ namespace Engine.Audio
 
         private readonly AudioSource _freeSoundSource;
 
+        public AudioEngine Engine => _engine;
+
         public AudioSystem()
         {
-            _engine = new AudioEngine();
-            _freeSoundSource = new AudioSource();
+            _engine = CreateDefaultAudioEngine();
+            _freeSoundSource = _engine.ResourceFactory.CreateAudioSource();
             _freeSoundSource.Position = new Vector3();
             _freeSoundSource.PositionKind = AudioPositionKind.ListenerRelative;
+        }
+
+        private AudioEngine CreateDefaultAudioEngine()
+        {
+            return new OpenAL.OpenALAudioEngine();
         }
 
         protected override void UpdateCore(float deltaSeconds)
@@ -39,7 +46,7 @@ namespace Engine.Audio
             AudioBuffer buffer;
             if (!_buffers.TryGetValue(wave, out buffer))
             {
-                buffer = new AudioBuffer();
+                buffer = _engine.ResourceFactory.CreateAudioBuffer();
                 buffer.BufferData(wave.Data, wave.Format, wave.SizeInBytes, wave.Frequency);
             }
 

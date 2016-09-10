@@ -39,6 +39,8 @@ namespace Engine.Graphics
 
         public MaterialCache MaterialCache { get; }
 
+        public BufferCache BufferCache { get; }
+
         public RenderContext Context { get; }
 
         public Camera MainCamera => _mainCamera;
@@ -53,6 +55,7 @@ namespace Engine.Graphics
             _window = window;
             Context = CreatePlatformDefaultContext(window, preferOpenGL);
             MaterialCache = new MaterialCache(Context.ResourceFactory);
+            BufferCache = new BufferCache(Context.ResourceFactory);
 
             ShadowMapStage = new ShadowMapStage(Context);
             _pipelineStages = new PipelineStage[]

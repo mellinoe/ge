@@ -165,7 +165,6 @@ namespace Engine.Graphics
                 rc.SetRasterizerState(rc.DefaultRasterizerState);
             }
 
-            _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
             rc.DrawIndexedPrimitives(_indexCount, 0);
         }
 
@@ -175,7 +174,7 @@ namespace Engine.Graphics
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
             _mesh = Mesh.Get(_ad);
-            InitializeContextObjects(_gs.Context, _gs.MaterialCache);
+            InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
         }
 
         protected override void Removed(SystemRegistry registry)
@@ -193,7 +192,7 @@ namespace Engine.Graphics
             _gs.RemoveRenderItem(this);
         }
 
-        private unsafe void InitializeContextObjects(RenderContext context, MaterialCache cache)
+        private unsafe void InitializeContextObjects(RenderContext context, MaterialCache materialCache, BufferCache bufferCache)
         {
             ResourceFactory factory = context.ResourceFactory;
 
@@ -202,8 +201,8 @@ namespace Engine.Graphics
             Debug.Assert(_deviceTexture == null);
             Debug.Assert(_textureBinding == null);
 
-            _vb = _mesh.CreateVertexBuffer(factory);
-            _ib = _mesh.CreateIndexBuffer(factory, out _indexCount);
+            _vb = bufferCache.GetVertexBuffer(_mesh);
+            _ib = bufferCache.GetIndexBuffer(_mesh, out _indexCount);
             _centeredBoundingSphere = _mesh.GetBoundingSphere();
             _centeredBoundingBox = _mesh.GetBoundingBox();
 
@@ -222,7 +221,7 @@ namespace Engine.Graphics
                     });
             }
 
-            _regularPassMaterial = cache.GetMaterial(
+            _regularPassMaterial = materialCache.GetMaterial(
                 context,
                 RegularPassVertexShaderSource,
                 RegularPassFragmentShaderSource,
@@ -249,7 +248,7 @@ namespace Engine.Graphics
                     });
             }
 
-            _shadowPassMaterial = cache.GetMaterial(
+            _shadowPassMaterial = materialCache.GetMaterial(
                 context,
                 ShadowMapPassVertexShaderSource,
                 ShadowMapPassFragmentShaderSource,

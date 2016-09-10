@@ -62,7 +62,7 @@ namespace Engine.Audio
         {
             _assetSystem = registry.GetSystem<AssetSystem>();
             _audioSystem = registry.GetSystem<AudioSystem>();
-            _source = new AudioSource();
+            _source = _audioSystem.Engine.ResourceFactory.CreateAudioSource();
             OnTransformChanged(Transform);
             _source.Gain = _gain;
             _source.Looping = Looping;

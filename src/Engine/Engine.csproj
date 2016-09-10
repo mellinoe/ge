@@ -23,11 +23,17 @@
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Assets\SerializedPrefab.cs" />
     <Compile Include="Audio\AudioBuffer.cs" />
+    <Compile Include="Audio\AudioSource.cs" />
+    <Compile Include="Audio\BufferAudioFormat.cs" />
+    <Compile Include="Audio\OpenAL\AudioBuffer.cs" />
     <Compile Include="Audio\AudioEngine.cs" />
     <Compile Include="Audio\AudioListener.cs" />
     <Compile Include="Audio\AudioPositionKind.cs" />
-    <Compile Include="Audio\AudioSource.cs" />
+    <Compile Include="Audio\AudioResourceFactory.cs" />
+    <Compile Include="Audio\OpenAL\AudioSource.cs" />
     <Compile Include="Audio\AudioSourceComponent.cs" />
+    <Compile Include="Audio\OpenAL\OpenALAudioEngine.cs" />
+    <Compile Include="Audio\OpenAL\OpenALResourceFactory.cs" />
     <Compile Include="Audio\WaveFile.cs" />
     <Compile Include="Audio\WaveFileLoader.cs" />
     <Compile Include="Behaviors\BallLauncher.cs" />
@@ -45,6 +51,7 @@
     <Compile Include="Debug\DebugConsole.cs" />
     <Compile Include="FrameTimeAverager.cs" />
     <Compile Include="Graphics\BoundsRenderItem.cs" />
+    <Compile Include="Graphics\BufferCache.cs" />
     <Compile Include="Graphics\Camera.cs" />
     <Compile Include="Graphics\CommonModels.cs" />
     <Compile Include="Component.cs" />
