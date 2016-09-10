@@ -28,7 +28,7 @@
       <SdkItemNames Include="Veldrid.dll" />
       <SdkItemNames Include="Veldrid.Assets.dll" />
       <SdkItemNames Include="BEPUphysics.dll" />
-      <SdkItemNames Include="BEPUutilities.dll" />
+      <SdkItemNames Include="BEPUUtilities.dll" />
 
       <SdkCopyItems Include="$(OutputPath)%(SdkItemNames.Identity)" />
     </ItemGroup>

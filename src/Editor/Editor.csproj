@@ -92,7 +92,6 @@
     </Content>
     <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\ubuntu-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Editor\cimgui.so</Link>
     </Content>
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-vertex.glsl" />
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-frag.glsl" />
