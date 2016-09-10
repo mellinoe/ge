@@ -276,8 +276,6 @@ namespace Engine.Graphics
 
         public void ClearDeviceResources()
         {
-            _vb.Dispose();
-            _ib.Dispose();
             _deviceTexture.Dispose();
             _textureBinding.Dispose();
         }
