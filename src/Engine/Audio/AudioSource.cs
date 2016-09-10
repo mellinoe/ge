@@ -11,7 +11,7 @@ namespace Engine.Audio
         public abstract Vector3 Direction { get; set; }
         public abstract AudioPositionKind PositionKind { get; set; }
         public abstract void Dispose();
-        public abstract void Play(AudioBuffer _buffer);
+        public abstract void Play(AudioBuffer buffer);
         public abstract void Stop();
     }
 }

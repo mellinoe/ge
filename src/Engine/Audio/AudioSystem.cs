@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Engine.Audio.OpenAL;
+using Engine.Audio.XAudio;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid.Assets;
 
 namespace Engine.Audio
@@ -24,7 +27,14 @@ namespace Engine.Audio
 
         private AudioEngine CreateDefaultAudioEngine()
         {
-            return new OpenAL.OpenALAudioEngine();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return new XAudio2Engine();
+            }
+            else
+            {
+                return new OpenALEngine();
+            }
         }
 
         protected override void UpdateCore(float deltaSeconds)

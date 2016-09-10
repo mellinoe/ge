@@ -1,17 +1,16 @@
 ﻿using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
 using System.Numerics;
-using System;
 
 namespace Engine.Audio.OpenAL
 {
-    public class OpenALAudioEngine : AudioEngine
+    public class OpenALEngine : AudioEngine
     {
         private readonly AudioContext _context;
 
         public override AudioResourceFactory ResourceFactory { get; }
 
-        public OpenALAudioEngine()
+        public OpenALEngine()
         {
             _context = new AudioContext();
             _context.MakeCurrent();

@@ -8,12 +8,13 @@
     "System.Net.Primitives": "4.0.11",
     "System.Reflection.TypeExtensions": "4.1.0",
     "System.Runtime.Loader": "4.0.0",
-	"System.CommandLine": "0.1.0-e160908-1",
+    "System.CommandLine": "0.1.0-e160908-1",
     "BEPUphysics": { "target": "project" },
     "BEPUutilities": { "target": "project" },
     "ImGui.NET": { "target": "project" },
     "Veldrid": { "target": "project" },
-    "Veldrid.Assets": { "target": "project" }
+    "Veldrid.Assets": { "target": "project" },
+    "Engine": { "target": "project" }
   },
   "runtimes": {
     "win7-x64": { },
