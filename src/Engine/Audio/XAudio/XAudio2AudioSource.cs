@@ -2,7 +2,6 @@
 using SharpDX.XAudio2;
 using SharpDX.Multimedia;
 using SharpDX.X3DAudio;
-using System;
 using SharpDX.Mathematics.Interop;
 
 namespace Engine.Audio.XAudio
@@ -19,6 +18,7 @@ namespace Engine.Audio.XAudio
         private int _channelCount = 1;
 
         private static readonly Listener s_centeredListener = CreateCenteredListener();
+        private bool _sourcePositionDirty;
 
         public XAudio2AudioSource(XAudio2Engine engine)
         {
@@ -49,10 +49,7 @@ namespace Engine.Audio.XAudio
                 if (orientFront.X != value.X || orientFront.Y != value.Y || orientFront.Z != -value.Z)
                 {
                     _emitter.OrientFront = new RawVector3(value.X, value.Y, -value.Z);
-                    if (_sourceVoice.State.BuffersQueued != 0)
-                    {
-                        UpdateSourcePosition();
-                    }
+                    SourcePositionShouldChange();
                 }
             }
         }
@@ -94,10 +91,7 @@ namespace Engine.Audio.XAudio
                 if (emitterPos.X != value.X || emitterPos.Y != value.Y || emitterPos.Z != -value.Z)
                 {
                     _emitter.Position = new RawVector3(value.X, value.Y, -value.Z);
-                    if (_sourceVoice.State.BuffersQueued != 0)
-                    {
-                        UpdateSourcePosition();
-                    }
+                    SourcePositionShouldChange();
                 }
             }
         }
@@ -113,11 +107,20 @@ namespace Engine.Audio.XAudio
                 if (_positionKind != value)
                 {
                     _positionKind = value;
-                    if (_sourceVoice.State.BuffersQueued != 0)
-                    {
-                        UpdateSourcePosition();
-                    }
+                    SourcePositionShouldChange();
                 }
+            }
+        }
+
+        private void SourcePositionShouldChange()
+        {
+            if (_sourceVoice.State.BuffersQueued != 0)
+            {
+                UpdateSourcePosition();
+            }
+            else
+            {
+                _sourcePositionDirty = true; // Defer position calculations until audio is actually going to be playing.
             }
         }
 
@@ -140,6 +143,12 @@ namespace Engine.Audio.XAudio
                 _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat);
                 _sourceVoice.SetVolume(volume);
                 _emitter.ChannelAzimuths = new[] { 0.0f };
+            }
+
+            if (_sourcePositionDirty)
+            {
+                UpdateSourcePosition();
+                _sourcePositionDirty = false;
             }
 
             _audioBuffer.Stream = xa2Buffer.DataStream;
