@@ -47,6 +47,10 @@ namespace Engine.Physics
         protected override void PostAttached(SystemRegistry registry)
         {
             _as = registry.GetSystem<AssetSystem>();
+            if (_mesh.GetRef() != null)
+            {
+                SetEntity(CreateEntity());
+            }
         }
 
         protected override void OnEnabled()
