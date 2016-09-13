@@ -133,10 +133,12 @@ namespace Engine.Audio.XAudio
             _emitter.ChannelCount = _channelCount;
             if (_channelCount > 1)
             {
+                float volume = _sourceVoice.Volume;
                 _sourceVoice.DestroyVoice();
                 _sourceVoice.Dispose();
                 WaveFormat waveFormat = new WaveFormat(xa2Buffer.Frequency, GetChannelCount(xa2Buffer.Format));
                 _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat);
+                _sourceVoice.SetVolume(volume);
                 _emitter.ChannelAzimuths = new[] { 0.0f };
             }
 
