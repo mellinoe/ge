@@ -82,7 +82,7 @@ namespace Engine
             SceneLoaderSystem sls = new SceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register(sls);
 
-            AudioSystem audioSystem = new AudioSystem();
+            AudioSystem audioSystem = new AudioSystem( AudioEngineOptions.Default);
             game.SystemRegistry.Register(audioSystem);
 
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);

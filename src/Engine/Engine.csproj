@@ -23,8 +23,13 @@
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Assets\SerializedPrefab.cs" />
     <Compile Include="Audio\AudioBuffer.cs" />
+    <Compile Include="Audio\AudioEngineOptions.cs" />
     <Compile Include="Audio\AudioSource.cs" />
     <Compile Include="Audio\BufferAudioFormat.cs" />
+    <Compile Include="Audio\Null\NullAudioBuffer.cs" />
+    <Compile Include="Audio\Null\NullAudioEngine.cs" />
+    <Compile Include="Audio\Null\NullAudioResourceFactory.cs" />
+    <Compile Include="Audio\Null\NullAudioSource.cs" />
     <Compile Include="Audio\OpenAL\OpenALAudioBuffer.cs" />
     <Compile Include="Audio\AudioEngine.cs" />
     <Compile Include="Audio\AudioListener.cs" />

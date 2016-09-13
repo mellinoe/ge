@@ -52,7 +52,12 @@ namespace Engine.Editor
             EditorSceneLoaderSystem esls = new EditorSceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register<SceneLoaderSystem>(esls);
 
-            AudioSystem audioSystem = new AudioSystem();
+            CommandLineOptions.AudioEnginePreference? audioPreference = commandLineOptions.AudioPreference;
+            AudioEngineOptions audioEngineOptions =
+                !audioPreference.HasValue ? AudioEngineOptions.Default
+                : audioPreference == CommandLineOptions.AudioEnginePreference.None ? AudioEngineOptions.UseNullAudio
+                : AudioEngineOptions.UseOpenAL;
+            AudioSystem audioSystem = new AudioSystem(audioEngineOptions);
             game.SystemRegistry.Register(audioSystem);
 
             BehaviorUpdateSystem bus = new BehaviorUpdateSystem(game.SystemRegistry);

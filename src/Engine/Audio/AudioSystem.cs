@@ -1,4 +1,5 @@
-﻿using Engine.Audio.OpenAL;
+﻿using Engine.Audio.Null;
+using Engine.Audio.OpenAL;
 using Engine.Audio.XAudio;
 using System;
 using System.Collections.Generic;
@@ -17,23 +18,27 @@ namespace Engine.Audio
 
         public AudioEngine Engine => _engine;
 
-        public AudioSystem()
+        public AudioSystem(AudioEngineOptions options)
         {
-            _engine = CreateDefaultAudioEngine();
+            _engine = CreateDefaultAudioEngine(options);
             _freeSoundSource = _engine.ResourceFactory.CreateAudioSource();
             _freeSoundSource.Position = new Vector3();
             _freeSoundSource.PositionKind = AudioPositionKind.ListenerRelative;
         }
 
-        private AudioEngine CreateDefaultAudioEngine()
+        private AudioEngine CreateDefaultAudioEngine(AudioEngineOptions options)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (options == AudioEngineOptions.UseNullAudio)
             {
-                return new XAudio2Engine();
+                return new NullAudioEngine();
+            }
+            else if (options == AudioEngineOptions.UseOpenAL || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return new OpenALEngine();
             }
             else
             {
-                return new OpenALEngine();
+                return new XAudio2Engine();
             }
         }
 
