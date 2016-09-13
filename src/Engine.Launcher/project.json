@@ -5,6 +5,7 @@
     "System.AppContext": "4.1.0",
     "System.Collections.Generic.MultiValueDictionary": "0.1.0-e160604-1",
     "System.Collections.Immutable": "1.2.0",
+    "System.CommandLine": "0.1.0-e160908-1",
     "System.Net.Primitives": "4.0.11",
     "Engine": { "target": "project" }
   },

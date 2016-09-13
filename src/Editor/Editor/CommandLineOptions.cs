@@ -26,8 +26,8 @@ namespace Engine.Editor
                 syntax.DefineOption(
                     "audio",
                     ref _audioPreference,
-                    s => (AudioEnginePreference)Enum.Parse(typeof(AudioEnginePreference), s),
-                    "Prefer using the OpenGL rendering backend.");
+                    s => (AudioEnginePreference)Enum.Parse(typeof(AudioEnginePreference), s, true),
+                    "Specifies the audio engine to use.");
             });
         }
 

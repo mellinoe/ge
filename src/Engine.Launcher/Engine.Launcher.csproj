@@ -49,6 +49,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EngineLaunchOptions.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>

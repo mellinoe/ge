@@ -17,8 +17,10 @@ namespace Engine
 {
     public static class Program
     {
-        public static int Main()
+        public static int Main(string[] args)
         {
+            EngineLaunchOptions launchOptions = new EngineLaunchOptions(args);
+
             ProjectManifest projectManifest;
             string currentDir = AppContext.BaseDirectory;
             string manifestName = null;
@@ -57,7 +59,7 @@ namespace Engine
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
             window.Title = "ge.Main";
             window.Visible = true;
-            GraphicsSystem gs = new GraphicsSystem(window);
+            GraphicsSystem gs = new GraphicsSystem(window, launchOptions.PreferOpenGL);
             game.SystemRegistry.Register(gs);
             window.Closed += game.Exit;
 
@@ -82,7 +84,12 @@ namespace Engine
             SceneLoaderSystem sls = new SceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register(sls);
 
-            AudioSystem audioSystem = new AudioSystem( AudioEngineOptions.Default);
+            EngineLaunchOptions.AudioEnginePreference? audioPreference = launchOptions.AudioPreference;
+            AudioEngineOptions audioEngineOptions =
+                !audioPreference.HasValue ? AudioEngineOptions.Default
+                : audioPreference == EngineLaunchOptions.AudioEnginePreference.None ? AudioEngineOptions.UseNullAudio
+                : AudioEngineOptions.UseOpenAL;
+            AudioSystem audioSystem = new AudioSystem(audioEngineOptions);
             game.SystemRegistry.Register(audioSystem);
 
             ImGuiRenderer imGuiRenderer = new ImGuiRenderer(gs.Context, window.NativeWindow, inputSystem);
