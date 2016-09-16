@@ -43,5 +43,19 @@ namespace Engine.Editor
                 _data = ms.ToArray();
             }
         }
+
+        public void UpdateAsset(JsonSerializer serializer, object asset)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new StreamWriter(ms))
+                using (var jtw = new JsonTextWriter(writer))
+                {
+                    serializer.Serialize(jtw, asset);
+                }
+
+                _data = ms.ToArray();
+            }
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace Engine.Assets
         public EngineEmbeddedAssets()
         {
             RegisterAsset(PlaneModelID, PlaneModel.MeshData);
-            RegisterAsset(SphereModelID, SphereModel.SphereMeshData);
+            RegisterAsset(SphereModelID, SphereModel.MeshData);
             RegisterAsset(CubeModelID, CubeModel.MeshData);
             RegisterAsset(PinkTextureID, CreatePinkTexture());
             RegisterSkyboxTextures();

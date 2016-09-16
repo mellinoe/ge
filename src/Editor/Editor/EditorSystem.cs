@@ -91,9 +91,12 @@ namespace Engine.Editor
         private string _statusBarText = string.Empty;
         private Vector4 _statusBarTextColor;
         private GameObject _parentingTarget;
+        private InMemoryAsset<Component> _componentCopySource;
+        private string _componentCopySourceType;
         private GameObject _newSelectedObject;
         private List<RenderItem> _gsRCHits = new List<RenderItem>();
         private bool _focusNameField;
+        private static readonly Type s_transformType = typeof(Transform);
 
         public EditorSystem(SystemRegistry registry, CommandLineOptions commandLineOptions)
         {
@@ -1601,6 +1604,16 @@ namespace Engine.Editor
             }
             ImGui.PopStyleColor();
 
+            ImGui.PushStyleColor(ColorTarget.Button, RgbaFloat.Blue.ToVector4());
+            if (_componentCopySource != null)
+            {
+                if (ImGui.Button($"Paste {_componentCopySourceType}"))
+                {
+                    go.AddComponent(_componentCopySource.GetAsset(_as.ProjectDatabase.DefaultSerializer));
+                }
+            }
+            ImGui.PopStyleColor();
+
             if (ImGui.BeginPopup("###NewComponentAdder"))
             {
                 foreach (Type option in _newComponentOptions)
@@ -1643,6 +1656,12 @@ namespace Engine.Editor
                         var go = component.GameObject;
                         Command command = new RawCommand(() => go.RemoveComponent(component), () => go.AddComponent(component));
                         _undoRedo.CommitCommand(command);
+                    }
+                    if (ImGui.MenuItem("Copy Component", component.GetType() != s_transformType))
+                    {
+                        _componentCopySource = new InMemoryAsset<Component>();
+                        _componentCopySource.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, componentAsObject);
+                        _componentCopySourceType = component.GetType().Name;
                     }
                     ImGui.EndPopup();
                 }

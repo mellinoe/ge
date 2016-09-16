@@ -18,6 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="EditorUtility.cs" />
+    <Compile Include="Editor\ArrowPointerModel.cs" />
     <Compile Include="Editor\AssetMenuHandler.cs" />
     <Compile Include="Editor\CommandLineOptions.cs" />
     <Compile Include="Editor\Commands\CreateGameObjectCommand.cs" />
@@ -56,6 +57,8 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
+    <EmbeddedResource Include="Editor\Assets\HLSL\arrow-pointer-frag.hlsl" />
+    <EmbeddedResource Include="Editor\Assets\HLSL\arrow-pointer-vertex.hlsl" />
     <EmbeddedResource Include="Editor\Assets\HLSL\unlit-vertex.hlsl" />
     <EmbeddedResource Include="Editor\Assets\HLSL\unlit-frag.hlsl" />
     <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
@@ -95,6 +98,8 @@
     </Content>
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-vertex.glsl" />
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-frag.glsl" />
+    <EmbeddedResource Include="Editor\Assets\Models\ArrowPointer.obj" />
+    <EmbeddedResource Include="Editor\Assets\Models\ArrowPointerThin.obj" />
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />

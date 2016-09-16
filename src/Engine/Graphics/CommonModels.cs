@@ -79,7 +79,7 @@ namespace Engine.Graphics
     public static class SphereModel
     {
         private static readonly ConstructedMeshInfo s_sphereMeshInfo = LoadShereMesh();
-        public static MeshData SphereMeshData => s_sphereMeshInfo;
+        public static MeshData MeshData => s_sphereMeshInfo;
 
         private static ConstructedMeshInfo LoadShereMesh()
         {
@@ -92,6 +92,5 @@ namespace Engine.Graphics
 
         public static VertexPositionNormalTexture[] Vertices => s_sphereMeshInfo.Vertices;
         public static int[] Indices => s_sphereMeshInfo.Indices;
-
     }
 }

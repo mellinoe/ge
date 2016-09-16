@@ -24,6 +24,17 @@ namespace Engine.Editor.Graphics
         private RasterizerState _rs;
         private int _lineIndicesCount;
 
+        private readonly VertexBuffer _pointerVB;
+        private readonly IndexBuffer _pointerIB;
+        private readonly int _pointerIndexCount;
+        private readonly Material _pointerMaterial;
+        private readonly DeviceTexture _redTexture;
+        private readonly DeviceTexture _greenTexture;
+        private readonly DeviceTexture _blueTexture;
+        private readonly ShaderTextureBinding _redBinding;
+        private readonly ShaderTextureBinding _greenBinding;
+        private readonly ShaderTextureBinding _blueBinding;
+
         public Vector3 Position { get; set; }
         public Vector3 Scale { get; set; } = Vector3.One;
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
@@ -60,6 +71,17 @@ namespace Engine.Editor.Graphics
                 0);
             _lineIndicesCount = 6;
             _material = CreateMaterial(rc);
+
+            _pointerVB = ArrowPointerModel.MeshData.CreateVertexBuffer(rc.ResourceFactory);
+            _pointerIB = ArrowPointerModel.MeshData.CreateIndexBuffer(rc.ResourceFactory, out _pointerIndexCount);
+            _pointerMaterial = CreatePointerMaterial(rc);
+            _redTexture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Red).CreateDeviceTexture(rc.ResourceFactory);
+            _greenTexture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Green).CreateDeviceTexture(rc.ResourceFactory);
+            _blueTexture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Blue).CreateDeviceTexture(rc.ResourceFactory);
+            _redBinding = rc.ResourceFactory.CreateShaderTextureBinding(_redTexture);
+            _greenBinding = rc.ResourceFactory.CreateShaderTextureBinding(_greenTexture);
+            _blueBinding = rc.ResourceFactory.CreateShaderTextureBinding(_blueTexture);
+
             _dss = rc.ResourceFactory.CreateDepthStencilState(false, DepthComparison.Always);
             _rs = rc.ResourceFactory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
         }
@@ -77,6 +99,22 @@ namespace Engine.Editor.Graphics
                 new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 16)),
                 MaterialTextureInputs.Empty);
+        }
+
+        private Material CreatePointerMaterial(RenderContext rc)
+        {
+            return rc.ResourceFactory.CreateMaterial(rc, "arrow-pointer-vertex", "arrow-pointer-frag",
+                new MaterialVertexInput(
+                    VertexPositionNormalTexture.SizeInBytes,
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_normal", VertexSemanticType.Normal, VertexElementFormat.Float3),
+                    new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)),
+                new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix")),
+                new MaterialInputs<MaterialPerObjectInputElement>(
+                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 16)),
+                new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture")));
         }
 
         public BoundingBox Bounds
@@ -110,19 +148,42 @@ namespace Engine.Editor.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            DepthStencilState previousDSS = rc.DepthStencilState;
+            rc.DepthStencilState = _dss;
+            RasterizerState previousRS = rc.RasterizerState;
+            rc.RasterizerState = _rs;
+            BlendState previousBlendState = rc.BlendState;
+            rc.BlendState = rc.AlphaBlend;
+
+            // Draw Pointers
+            rc.SetMaterial(_pointerMaterial);
+            Matrix4x4 pointerScale = Matrix4x4.CreateScale(0.1f);
+
+            _worldProvider.Data = pointerScale * GetWorldMatrix();
+            _pointerMaterial.ApplyPerObjectInput(_worldProvider);
+            _pointerMaterial.UseTexture(0, _greenBinding);
+            rc.SetVertexBuffer(_pointerVB);
+            rc.SetIndexBuffer(_pointerIB);
+            rc.DrawIndexedPrimitives(_pointerIndexCount, 0);
+
+            _worldProvider.Data = pointerScale * Matrix4x4.CreateRotationX(-(float)Math.PI / 2f) * GetWorldMatrix();
+            _pointerMaterial.ApplyPerObjectInput(_worldProvider);
+            _pointerMaterial.UseTexture(0, _blueBinding);
+            rc.DrawIndexedPrimitives(_pointerIndexCount, 0);
+
+            _worldProvider.Data = pointerScale * Matrix4x4.CreateRotationZ(-(float)Math.PI / 2f) * GetWorldMatrix();
+            _pointerMaterial.ApplyPerObjectInput(_worldProvider);
+            _pointerMaterial.UseTexture(0, _redBinding);
+            rc.DrawIndexedPrimitives(_pointerIndexCount, 0);
+
             _worldProvider.Data = GetWorldMatrix();
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
             _material.ApplyPerObjectInput(_worldProvider);
-            DepthStencilState previousDSS = rc.DepthStencilState;
-            rc.DepthStencilState = _dss;
-            RasterizerState previousRS = rc.RasterizerState;
-            rc.RasterizerState = _rs;
-            rc.DrawIndexedPrimitives(_lineIndicesCount, 0, PrimitiveTopology.LineList);
 
-            BlendState previousBlendState = rc.BlendState;
-            rc.BlendState = rc.AlphaBlend;
+            // Draw Planes
+
             Vector3 difference = Vector3.Transform(_gs.MainCamera.Transform.Position - Position, Quaternion.Inverse(Rotation));
 
             Vector3 xzOffset = (Math.Sign(difference.X) * Vector3.UnitX
@@ -140,8 +201,8 @@ namespace Engine.Editor.Graphics
             DrawXYPlane(rc);
             DrawYZPlane(rc);
 
-            rc.DepthStencilState = previousDSS;
             rc.RasterizerState = previousRS;
+            rc.DepthStencilState = previousDSS;
             rc.BlendState = previousBlendState;
         }
 

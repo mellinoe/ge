@@ -12,7 +12,7 @@ namespace Engine.Assets
 
         public void GenerateGameObjects()
         {
-            Dictionary<ulong, GameObject> nameToGO = new Dictionary<ulong, GameObject>();
+            Dictionary<ulong, GameObject> idToGO = new Dictionary<ulong, GameObject>();
 
             foreach (var sgo in GameObjects)
             {
@@ -26,7 +26,7 @@ namespace Engine.Assets
                     go.AddComponent(component);
                 }
 
-                nameToGO.Add(sgo.ID, go);
+                idToGO.Add(sgo.ID, go);
             }
 
             foreach (var sgo in GameObjects)
@@ -34,8 +34,8 @@ namespace Engine.Assets
                 ulong parentID= sgo.Transform.ParentID;
                 if (parentID != 0)
                 {
-                    var parent = nameToGO[parentID];
-                    nameToGO[sgo.ID].Transform.Parent = parent.Transform;
+                    var parent = idToGO[parentID];
+                    idToGO[sgo.ID].Transform.Parent = parent.Transform;
                 }
             }
         }

@@ -116,6 +116,25 @@ namespace Engine
             return null;
         }
 
+        public IEnumerable<T> GetComponentsByInterface<T>()
+        {
+            foreach (var kvp in _components)
+            {
+                foreach (var component in kvp.Value)
+                {
+                    if (component is T)
+                    {
+                        yield return (T)(object)component;
+                    }
+                }
+            }
+        }
+
+        public T GetComponentByInterface<T>()
+        {
+            return GetComponentsByInterface<T>().FirstOrDefault();
+        }
+
         internal void SetRegistry(SystemRegistry systemRegistry)
         {
             _registry = systemRegistry;
