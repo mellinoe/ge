@@ -3,7 +3,7 @@
 	url = https://github.com/mellinoe/corebuild.git
 [submodule "ext/imgui.net"]
 	path = ext/imgui.net
-	url = git@github.com:mellinoe/imgui.net
+	url = https://github.com/mellinoe/imgui.net
 [submodule "ext/veldrid"]
 	path = ext/veldrid
-	url = git@github.com:mellinoe/veldrid
+	url = https://github.com/mellinoe/veldrid
