@@ -27,10 +27,27 @@ namespace Engine.Editor
 
         protected override void Start(SystemRegistry registry)
         {
+            GameObject.RemoveComponent(this);
             _ccs = registry.GetSystem<ConsoleCommandSystem>();
-            _ccs.Print += AddLine;
-            _gs = registry.GetSystem<GraphicsSystem>();
-            _input = registry.GetSystem<InputSystem>();
+            if (_ccs != null)
+            {
+                _ccs.Print += AddLine;
+                _gs = registry.GetSystem<GraphicsSystem>();
+                _input = registry.GetSystem<InputSystem>();
+            }
+            else
+            {
+                Enabled = false;
+            }
+        }
+
+        protected override void OnEnabled()
+        {
+            base.OnEnabled();
+            if (_ccs == null)
+            {
+                Enabled = false;
+            }
         }
 
         public unsafe override void Update(float deltaSeconds)
