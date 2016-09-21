@@ -18,16 +18,19 @@ namespace Engine.Editor
         public static void Main(string[] args)
         {
             CommandLineOptions commandLineOptions = new CommandLineOptions(args);
+            // Force-load prefs.
+            var prefs = EditorPreferences.Instance;
 
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
                 ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.Maximized) 
                 : new SameThreadWindow(960, 540, WindowState.Maximized);
             window.Title = "ge.Editor";
             Game game = new Game();
-            GraphicsSystem gs = new GraphicsSystem(window, commandLineOptions.PreferOpenGL);
+            GraphicsSystem gs = new GraphicsSystem(window, prefs.RenderQuality, commandLineOptions.PreferOpenGL);
             gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
             game.SystemRegistry.Register(gs);
-            game.LimitFrameRate = true;
+            game.LimitFrameRate = false;
+
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
@@ -75,9 +78,6 @@ namespace Engine.Editor
             var editorSystem = new EditorSystem(game.SystemRegistry, commandLineOptions);
             editorSystem.DiscoverComponentsFromAssembly(typeof(Program).GetTypeInfo().Assembly);
             // Editor system registers itself.
-
-            // Force-load prefs.
-            var prefs = EditorPreferences.Instance;
 
             game.RunMainLoop();
 

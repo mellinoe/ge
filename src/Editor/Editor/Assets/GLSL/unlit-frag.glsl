@@ -1,7 +1,7 @@
-﻿in vec4 in_color;
-out vec4 out_color;
+﻿in vec4 out_color;
+out vec4 outputColor;
 
 void main()
 {
-	out_color = in_color;
+    outputColor = out_color;
 }

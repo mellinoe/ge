@@ -8,7 +8,6 @@ cbuffer ProjectionMatrixBuffer : register(b1)
     float4x4 projection;
 }
 
-
 struct VertexInput
 {
     float3 position : POSITION;

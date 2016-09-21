@@ -20,6 +20,8 @@ using Engine.GUI;
 using Engine.Editor.Graphics;
 using Engine.ProjectSystem;
 using Engine.Audio;
+using Veldrid.Graphics.Direct3D;
+using SharpDX.Direct3D11;
 
 namespace Engine.Editor
 {
@@ -805,6 +807,12 @@ namespace Engine.Editor
                     {
                         _gs.ToggleOctreeVisualizer();
                     }
+                    float renderQuality = _gs.RenderQuality;
+                    if (ImGui.DragFloat("Render Quality", ref renderQuality, 0.1f, 1f, 0.01f))
+                    {
+                        _gs.RenderQuality = renderQuality;
+                        EditorPreferences.Instance.RenderQuality = renderQuality;
+                    }
                     ImGui.EndMenu();
                 }
                 if (ImGui.BeginMenu("GameObject"))
@@ -908,6 +916,24 @@ namespace Engine.Editor
                     if (ImGui.MenuItem("Stop", "Ctrl+P", _playState == PlayState.Stopped, _playState != PlayState.Stopped))
                     {
                         StopSimulation();
+                    }
+
+                    ImGui.EndMenu();
+                }
+                if (ImGui.BeginMenu("Debug"))
+                {
+                    if (ImGui.BeginMenu("Direct3D", _gs.Context is D3DRenderContext))
+                    {
+                        if (ImGui.MenuItem("Report Live Objects (Summary)"))
+                        {
+                            ((D3DRenderContext)_gs.Context).Device.QueryInterface<DeviceDebug>().ReportLiveDeviceObjects(ReportingLevel.Summary);
+                        }
+                        if (ImGui.MenuItem("Report Live Objects (Detailed)"))
+                        {
+                            ((D3DRenderContext)_gs.Context).Device.QueryInterface<DeviceDebug>().ReportLiveDeviceObjects(ReportingLevel.Detail);
+                        }
+
+                        ImGui.EndMenu();
                     }
 
                     ImGui.EndMenu();
@@ -1152,7 +1178,7 @@ namespace Engine.Editor
         {
             Window window = _gs.Context.Window;
             WindowState state = window.WindowState;
-            window.WindowState = state != WindowState.FullScreen ? WindowState.FullScreen : WindowState.Normal;
+            window.WindowState = state != WindowState.BorderlessFullScreen ? WindowState.BorderlessFullScreen : WindowState.Normal;
         }
 
         private void ExitEditor()

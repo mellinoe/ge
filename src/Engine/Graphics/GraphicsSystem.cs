@@ -33,6 +33,12 @@ namespace Engine.Graphics
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
         private OctreeRenderer<RenderItem> _octreeRenderer;
+        private float _preUpscaleQuality = 1.0f;
+        private Framebuffer _upscaleSource;
+        private readonly UpscaleStage _upscaleStage;
+        private readonly StandardPipelineStage _standardStage;
+        private readonly StandardPipelineStage _overlayStage;
+
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
         public ShadowMapStage ShadowMapStage { get; }
@@ -45,7 +51,19 @@ namespace Engine.Graphics
 
         public Camera MainCamera => _mainCamera;
 
-        public GraphicsSystem(OpenTKWindow window, bool preferOpenGL = false)
+        public float RenderQuality
+        {
+            get { return _preUpscaleQuality; }
+            set
+            {
+                if (value != _preUpscaleQuality)
+                {
+                    SetPreupscaleQuality(value);
+                }
+            }
+        }
+
+        public GraphicsSystem(OpenTKWindow window, float renderQuality = 1f, bool preferOpenGL = false)
         {
             if (window == null)
             {
@@ -54,33 +72,37 @@ namespace Engine.Graphics
 
             _window = window;
             Context = CreatePlatformDefaultContext(window, preferOpenGL);
+            Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));
             MaterialCache = new MaterialCache(Context.ResourceFactory);
             BufferCache = new BufferCache(Context.ResourceFactory);
 
             ShadowMapStage = new ShadowMapStage(Context);
+            _upscaleStage = new UpscaleStage(Context, "Upscale", null, null);
+            _standardStage = new StandardPipelineStage(Context, "Standard");
+            _overlayStage = new StandardPipelineStage(Context, "Overlay");
             _pipelineStages = new PipelineStage[]
             {
                 ShadowMapStage,
-                new StandardPipelineStage(Context, "Standard"),
-                new StandardPipelineStage(Context, "Overlay")
+                _standardStage,
+                _upscaleStage,
+                _overlayStage,
             };
             _renderer = new Renderer(Context, _pipelineStages);
+            SetPreupscaleQuality(renderQuality);
 
             // Placeholder providers so that materials can bind to them.
             Context.RegisterGlobalDataProvider("ViewMatrix", s_identityProvider);
             Context.RegisterGlobalDataProvider("ProjectionMatrix", s_identityProvider);
             Context.RegisterGlobalDataProvider("CameraInfo", s_noCameraProvider);
             Context.RegisterGlobalDataProvider("LightBuffer", s_noLightProvider);
-
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
-            Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
         {
             _frustum = frustum;
-            ((StandardPipelineStage)_pipelineStages[1]).CameraFrustum = frustum;
-            ((StandardPipelineStage)_pipelineStages[2]).CameraFrustum = frustum;
+            _standardStage.CameraFrustum = frustum;
+            _overlayStage.CameraFrustum = frustum;
         }
 
         public void SetImGuiRenderer(ImGuiRenderer imGuiRenderer)
@@ -244,6 +266,12 @@ namespace Engine.Graphics
             UpdatePointLightBuffer();
 
             _visiblityManager.Octree.ApplyPendingMoves();
+
+            if (_upscaleSource != null)
+            {
+                Context.SetFramebuffer(_upscaleSource);
+                Context.ClearBuffer();
+            }
             _renderer.RenderFrame(_visiblityManager, _mainCamera.Transform.Position);
         }
 
@@ -269,6 +297,34 @@ namespace Engine.Graphics
             }
 
             _pointLightsProvider.Data = plb;
+        }
+
+        private void SetPreupscaleQuality(float value)
+        {
+            Debug.Assert(value > 0 && value <= 1);
+            _preUpscaleQuality = value;
+
+            if (_preUpscaleQuality == 1)
+            {
+                _upscaleSource?.ColorTexture?.Dispose();
+                _upscaleSource?.DepthTexture?.Dispose();
+                _upscaleSource?.Dispose();
+                _upscaleSource = null;
+                _upscaleStage.Enabled = false;
+                _standardStage.OverrideFramebuffer = null;
+            }
+            else
+            {
+                int width = (int)(Context.Window.Width * value);
+                int height = (int)(width * ((float)Context.Window.Height / Context.Window.Width));
+                _upscaleSource?.ColorTexture?.Dispose();
+                _upscaleSource?.DepthTexture?.Dispose();
+                _upscaleSource?.Dispose();
+                _upscaleSource = Context.ResourceFactory.CreateFramebuffer(width, height);
+                _standardStage.OverrideFramebuffer = _upscaleSource;
+                _upscaleStage.SourceTexture = _upscaleSource.ColorTexture;
+                _upscaleStage.Enabled = true;
+            }
         }
 
         private class BoundsRenderItemEntry

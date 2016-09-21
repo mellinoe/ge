@@ -59,7 +59,7 @@ namespace Engine
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
             window.Title = "ge.Main";
             window.Visible = true;
-            GraphicsSystem gs = new GraphicsSystem(window, launchOptions.PreferOpenGL);
+            GraphicsSystem gs = new GraphicsSystem(window, preferOpenGL: launchOptions.PreferOpenGL);
             game.SystemRegistry.Register(gs);
             window.Closed += game.Exit;
 
@@ -76,7 +76,7 @@ namespace Engine
                 }
                 if (input.GetKeyDown(Key.F11))
                 {
-                    window.WindowState = window.WindowState == WindowState.Normal ? WindowState.FullScreen : WindowState.Normal;
+                    window.WindowState = window.WindowState == WindowState.Normal ? WindowState.BorderlessFullScreen : WindowState.Normal;
                 }
             });
             game.SystemRegistry.Register(inputSystem);

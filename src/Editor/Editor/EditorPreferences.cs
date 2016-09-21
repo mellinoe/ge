@@ -7,11 +7,19 @@ namespace Engine.Editor
 {
     public class EditorPreferences : Preferences<EditorPreferences, EditorPreferences.Info>
     {
+        private float _renderQuality = 1f;
+
         public Dictionary<string, List<string>> OpenedSceneHistory { get; set; } = new Dictionary<string, List<string>>();
 
         public string LastOpenedProjectRoot { get; set; }
 
         public bool PreferOpenGL { get; set; }
+
+        public float RenderQuality
+        {
+            get { return _renderQuality; }
+            set { _renderQuality = MathUtil.Clamp(value, 0.1f, 1); }
+        }
 
         public string GetLastOpenedScene(string project)
         {

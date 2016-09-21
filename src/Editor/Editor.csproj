@@ -48,15 +48,15 @@
     <Compile Include="PrefabAssetHandler.cs" />
     <Compile Include="ProjectContext.cs" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' ">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ubuntu_Release|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'OSX_Release|x64' " />
   <ItemGroup>
+    <EmbeddedResource Include="Editor\Assets\GLSL\arrow-pointer-vertex.glsl" />
+    <EmbeddedResource Include="Editor\Assets\GLSL\arrow-pointer-frag.glsl" />
     <EmbeddedResource Include="Editor\Assets\HLSL\arrow-pointer-frag.hlsl" />
     <EmbeddedResource Include="Editor\Assets\HLSL\arrow-pointer-vertex.hlsl" />
     <EmbeddedResource Include="Editor\Assets\HLSL\unlit-vertex.hlsl" />

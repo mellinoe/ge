@@ -9,6 +9,5 @@ SamplerState RegularSampler : register(s0);
 
 float4 PS(PixelInput input) : SV_Target
 {
-    float r = surfaceTexture.Sample(RegularSampler, input.texCoord).r;
-    return float4(r, r, r, 1);
+    return surfaceTexture.Sample(RegularSampler, input.texCoord);
 }
