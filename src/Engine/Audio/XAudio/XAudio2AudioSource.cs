@@ -143,6 +143,7 @@ namespace Engine.Audio.XAudio
                 _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat);
                 _sourceVoice.SetVolume(volume);
                 _emitter.ChannelAzimuths = new[] { 0.0f };
+                _dspSettings = new DspSettings(_channelCount, 2);
                 UpdateSourcePosition();
             }
 
