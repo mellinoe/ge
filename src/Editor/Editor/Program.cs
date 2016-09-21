@@ -29,7 +29,7 @@ namespace Engine.Editor
             GraphicsSystem gs = new GraphicsSystem(window, prefs.RenderQuality, commandLineOptions.PreferOpenGL);
             gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
             game.SystemRegistry.Register(gs);
-            game.LimitFrameRate = false;
+            game.LimitFrameRate = true;
 
 
             InputSystem inputSystem = new InputSystem(window);

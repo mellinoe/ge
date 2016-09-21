@@ -59,7 +59,7 @@ namespace Engine
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
             window.Title = "ge.Main";
             window.Visible = true;
-            GraphicsSystem gs = new GraphicsSystem(window, preferOpenGL: launchOptions.PreferOpenGL);
+            GraphicsSystem gs = new GraphicsSystem(window, renderQuality:1f, preferOpenGL: launchOptions.PreferOpenGL);
             game.SystemRegistry.Register(gs);
             window.Closed += game.Exit;
 
