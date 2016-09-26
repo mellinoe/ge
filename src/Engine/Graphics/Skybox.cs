@@ -137,8 +137,8 @@ namespace Engine.Graphics
                     bottomPin.Ptr,
                     front.Width,
                     front.Height,
-                    RgbaFloat.SizeInBytes,
-                    PixelFormat.R32_G32_B32_A32_Float);
+                    front.PixelSizeInBytes,
+                    front.Format);
                 _cubemapBinding = factory.CreateShaderTextureBinding(cubemapTexture);
             }
         }
