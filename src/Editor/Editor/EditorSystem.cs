@@ -116,7 +116,7 @@ namespace Engine.Editor
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<MeshRenderer>(DrawMeshRenderer));
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Component>(GenericDrawer));
 
-            DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<ImageProcessorTexture>>(DrawTextureRef));
+            DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<TextureData>>(DrawTextureRef));
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<MeshData>>(DrawMeshRef));
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<SceneAsset>>(DrawSceneRef));
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<WaveFile>>(DrawWaveRef));
@@ -332,12 +332,12 @@ namespace Engine.Editor
             return c;
         }
 
-        private bool DrawTextureRef(string label, ref RefOrImmediate<ImageProcessorTexture> obj, RenderContext rc)
+        private bool DrawTextureRef(string label, ref RefOrImmediate<TextureData> obj, RenderContext rc)
         {
-            AssetRef<ImageProcessorTexture> meshRef = obj.GetRef() ?? new AssetRef<ImageProcessorTexture>();
+            AssetRef<TextureData> meshRef = obj.GetRef() ?? new AssetRef<TextureData>();
             if (DrawAssetRef(label, ref meshRef, _as.Database))
             {
-                obj = new RefOrImmediate<ImageProcessorTexture>(new AssetRef<ImageProcessorTexture>(meshRef.ID), null);
+                obj = new RefOrImmediate<TextureData>(new AssetRef<TextureData>(meshRef.ID), null);
                 return true;
             }
 

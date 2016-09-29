@@ -9,7 +9,7 @@ namespace Engine.Graphics
     {
         private DynamicDataProvider<Matrix4x4> _viewProvider = new DynamicDataProvider<Matrix4x4>();
         private DynamicDataProvider<Matrix4x4> _projectionProvider = new DynamicDataProvider<Matrix4x4>();
-        private DynamicDataProvider<Vector4> _cameraInfoProvider = new DynamicDataProvider<Vector4>();
+        private DynamicDataProvider<CameraInfo> _cameraInfoProvider = new DynamicDataProvider<CameraInfo>();
         private GraphicsSystem _gs;
 
         private float _fov = 1.05f;
@@ -91,7 +91,7 @@ namespace Engine.Graphics
                 GameObject.Transform.Position + GameObject.Transform.Forward,
                 _upDirection);
 
-            _cameraInfoProvider.Data = new Vector4(Transform.Position, 1f);
+            _cameraInfoProvider.Data = new CameraInfo(Transform.Position, Transform.Forward);
 
             UpdateViewFrustum();
         }
@@ -141,5 +141,27 @@ namespace Engine.Graphics
     {
         Perspective,
         Orthographic
+    }
+
+    public struct CameraInfo : IEquatable<CameraInfo>
+    {
+        public readonly Vector3 Position;
+        private float __unused;
+        public readonly Vector3 LookDirection;
+        private float __unused2;
+
+        public CameraInfo(Vector3 position, Vector3 lookDirection)
+        {
+            Position = position;
+            LookDirection = lookDirection;
+
+            __unused = 0;
+            __unused2 = 0;
+        }
+
+        public bool Equals(CameraInfo other)
+        {
+            return other.Position.Equals(Position) && other.LookDirection.Equals(LookDirection);
+        }
     }
 }

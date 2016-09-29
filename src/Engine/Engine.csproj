@@ -10,7 +10,9 @@
     <NuGetTargetMoniker>.NETStandard,Version=v1.6</NuGetTargetMoniker>
     <ProjectGuid>{9BFBA3A1-21D4-4CBD-B0E1-A4F3AB80FD30}</ProjectGuid>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Compile Include="Assets\AssetSystem.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="Graphics\ImGuiImageHelper.cs" />
     <Compile Include="Graphics\ImGuiRenderer.cs" />
     <Compile Include="Graphics\MaterialCache.cs" />
+    <Compile Include="Graphics\ParticleSystem.cs" />
     <Compile Include="Graphics\PointLight.cs" />
     <Compile Include="Graphics\PointLightInfo.cs" />
     <Compile Include="Graphics\Skybox.cs" />
@@ -160,6 +163,11 @@
     <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_lf.png" />
     <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_rt.png" />
     <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_up.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\HLSL\billboard-geometry.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\particle-fragment.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\passthrough-vertex.hlsl" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>
