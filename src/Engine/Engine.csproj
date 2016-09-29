@@ -12,9 +12,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\AssetSystem.cs" />
     <Compile Include="Assets\CompoundAssetDatabase.cs" />

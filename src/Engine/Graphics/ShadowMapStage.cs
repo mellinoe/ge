@@ -32,7 +32,6 @@ namespace Engine.Graphics
         {
             RenderContext = rc;
             _contextBindingName = contextBindingName;
-            InitializeContextObjects(rc);
             rc.RegisterGlobalDataProvider("LightViewMatrix", _lightViewProvider);
             rc.RegisterGlobalDataProvider("LightProjMatrix", _lightProjectionProvider);
         }
