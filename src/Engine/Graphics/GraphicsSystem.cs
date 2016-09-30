@@ -35,10 +35,12 @@ namespace Engine.Graphics
         private OctreeRenderer<RenderItem> _octreeRenderer;
         private float _preUpscaleQuality = 1.0f;
         private Framebuffer _upscaleSource;
+        private Framebuffer _alphaBlendFramebuffer;
         private readonly UpscaleStage _upscaleStage;
         private readonly StandardPipelineStage _standardStage;
         private readonly StandardPipelineStage _overlayStage;
         private readonly StandardPipelineStage _alphaBlendStage;
+        private ShaderTextureBinding _upscaleDepthView;
 
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
@@ -63,6 +65,8 @@ namespace Engine.Graphics
                 }
             }
         }
+
+        public ShaderTextureBinding StandardStageDepthView => _upscaleDepthView;
 
         public GraphicsSystem(OpenTKWindow window, float renderQuality = 1f, bool preferOpenGL = false)
         {
@@ -307,34 +311,26 @@ namespace Engine.Graphics
         {
             Debug.Assert(value > 0 && value <= 1);
             _preUpscaleQuality = value;
-
-            if (_preUpscaleQuality == 1)
-            {
-                _upscaleSource?.ColorTexture?.Dispose();
-                _upscaleSource?.DepthTexture?.Dispose();
-                _upscaleSource?.Dispose();
-                _upscaleSource = null;
-                _upscaleStage.Enabled = false;
-                SetOverrideFramebuffers(null);
-            }
-            else
-            {
-                int width = (int)(Context.Window.Width * value);
-                int height = (int)(width * ((float)Context.Window.Height / Context.Window.Width));
-                _upscaleSource?.ColorTexture?.Dispose();
-                _upscaleSource?.DepthTexture?.Dispose();
-                _upscaleSource?.Dispose();
-                _upscaleSource = Context.ResourceFactory.CreateFramebuffer(width, height);
-                SetOverrideFramebuffers(_upscaleSource);
-                _upscaleStage.SourceTexture = _upscaleSource.ColorTexture;
-                _upscaleStage.Enabled = true;
-            }
+            int width = (int)(Context.Window.Width * value);
+            int height = (int)(width * ((float)Context.Window.Height / Context.Window.Width));
+            _upscaleSource?.ColorTexture?.Dispose();
+            _upscaleSource?.DepthTexture?.Dispose();
+            _upscaleSource?.Dispose();
+            _upscaleDepthView?.Dispose();
+            _upscaleSource = Context.ResourceFactory.CreateFramebuffer(width, height);
+            _alphaBlendFramebuffer?.Dispose();
+            _alphaBlendFramebuffer = Context.ResourceFactory.CreateFramebuffer();
+            _alphaBlendFramebuffer.ColorTexture = _upscaleSource.ColorTexture;
+            _alphaBlendStage.OverrideFramebuffer = _alphaBlendFramebuffer;
+            _upscaleDepthView = Context.ResourceFactory.CreateShaderTextureBinding(_upscaleSource.DepthTexture);
+            _upscaleStage.SourceTexture = _upscaleSource.ColorTexture;
+            _upscaleStage.Enabled = true;
+            SetOverrideFramebuffers(_upscaleSource);
         }
 
         private void SetOverrideFramebuffers(Framebuffer buffer)
         {
             _standardStage.OverrideFramebuffer = buffer;
-            _alphaBlendStage.OverrideFramebuffer = buffer;
         }
 
         private class BoundsRenderItemEntry

@@ -15,8 +15,11 @@ namespace Engine.Graphics
     {
         private static readonly string[] s_stages = { "AlphaBlend" };
         private float _extents = 1f;
+
+        // Actual CPU-side vertex buffer data.
         private RawList<InstanceData> _instanceData;
-        private RawList<float> _ages;
+        // Housekeeping info for particles.
+        private RawList<ParticleState> _particleState;
 
         private GraphicsSystem _gs;
         private AssetDatabase _ad;
@@ -33,12 +36,14 @@ namespace Engine.Graphics
         private readonly DynamicDataProvider<RgbaFloat> _colorTintProvider = new DynamicDataProvider<RgbaFloat>(RgbaFloat.White);
         private readonly ConstantBufferDataProvider[] _providers;
         private float _accumulator;
+        private IComparer<InstanceData> _cameraDistanceComparer;
+        private DepthStencilState _depthStencilState;
 
         public ParticleSystem()
         {
             _providers = new ConstantBufferDataProvider[] { _worldProvider, _colorTintProvider };
             _instanceData = new RawList<InstanceData>();
-            _ages = new RawList<float>();
+            _particleState = new RawList<ParticleState>();
         }
 
         public ParticleSimulationSpace SimulationSpace { get; set; } = ParticleSimulationSpace.Local;
@@ -105,6 +110,13 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            Array.Sort(_instanceData.Elements, _particleState.Elements, 0, _instanceData.Count, _cameraDistanceComparer);
+            Console.WriteLine("**********Distances*********");
+            foreach (var particle in _instanceData)
+            {
+                Console.WriteLine("Distance: " + Vector3.Distance(_gs.MainCamera.Transform.Position, particle.Offset));
+            }
+
             _instanceDataVB.SetVertexData(new ArraySegment<InstanceData>(_instanceData.Elements, 0, _instanceData.Count), InstanceData.VertexDescriptor, 0);
             _worldProvider.Data = SimulationSpace == ParticleSimulationSpace.Local ? Transform.GetWorldMatrix() : Matrix4x4.Identity;
             rc.SetVertexBuffer(_instanceDataVB);
@@ -112,9 +124,12 @@ namespace Engine.Graphics
             rc.SetMaterial(_material);
             _material.ApplyPerObjectInputs(_providers);
             rc.SetTexture(0, _textureBinding);
+            rc.SetTexture(1, _gs.StandardStageDepthView);
             rc.SetBlendState(rc.AlphaBlend);
+            rc.DepthStencilState = _depthStencilState;
             rc.DrawInstancedPrimitives(1, _instanceData.Count, PrimitiveTopology.PointList);
             rc.SetBlendState(rc.OverrideBlend);
+            rc.DepthStencilState = rc.DefaultDepthStencilState;
         }
 
         protected override void PostEnabled()
@@ -132,7 +147,7 @@ namespace Engine.Graphics
             _gs = registry.GetSystem<GraphicsSystem>();
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
-
+            _cameraDistanceComparer = new CameraDistanceComparer(_gs);
             InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
         }
 
@@ -147,23 +162,24 @@ namespace Engine.Graphics
 
             for (int i = 0; i < _instanceData.Count; i++)
             {
-                float age = _ages[i];
+                float age = _particleState[i].Age;
                 if (age >= ParticleLifetime)
                 {
                     _instanceData.RemoveAt(i);
-                    _ages.RemoveAt(i);
+                    _particleState.RemoveAt(i);
                     i--;
                 }
                 else
                 {
-                    _ages.Elements[i] += deltaSeconds;
+                    _particleState.Elements[i].Age += deltaSeconds;
+
                     float alpha = 1f;
                     if (AlphaFade)
                     {
                         alpha = 1f - (age / ParticleLifetime);
                     }
-
                     _instanceData.Elements[i].Alpha = alpha;
+
                     Vector3 offset = _instanceData.Elements[i].Offset;
                     offset += Vector3.UnitY * -10f * Gravity * deltaSeconds;
                     _instanceData.Elements[i].Offset = offset;
@@ -175,7 +191,7 @@ namespace Engine.Graphics
         {
             Vector3 position = SimulationSpace == ParticleSimulationSpace.Global ? Transform.Position : Vector3.Zero;
             _instanceData.Add(new InstanceData(position, 1f));
-            _ages.Add(0);
+            _particleState.Add(new ParticleState());
         }
 
         private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
@@ -209,9 +225,10 @@ namespace Engine.Graphics
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
                     new MaterialPerObjectInputElement("ColorTintBuffer", MaterialInputType.Custom, _colorTintProvider.DataSizeInBytes)));
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet,
-                new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture")));
+                new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture")));
 
             _material = new Material(rc, shaderSet, constantBindings, textureSlots);
+            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, false);
         }
 
         protected override void PostRemoved(SystemRegistry registry)
@@ -258,6 +275,31 @@ namespace Engine.Graphics
             }
 
             public static VertexDescriptor VertexDescriptor => new VertexDescriptor(SizeInBytes, ElementCount);
+        }
+
+        // CPU-side housekeeping state for individual particles.
+        private struct ParticleState
+        {
+            public float Age;
+            public float Velocity;
+        }
+
+        private class CameraDistanceComparer : IComparer<InstanceData>
+        {
+            private readonly GraphicsSystem _gs;
+
+            public CameraDistanceComparer(GraphicsSystem gs)
+            {
+                _gs = gs;
+            }
+
+            public int Compare(InstanceData id1, InstanceData id2)
+            {
+                float distance1 = Vector3.Distance(_gs.MainCamera.Transform.Position, id1.Offset);
+                float distance2 = Vector3.Distance(_gs.MainCamera.Transform.Position, id2.Offset);
+
+                return distance2.CompareTo(distance1);
+            }
         }
     }
 }
