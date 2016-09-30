@@ -1,13 +1,13 @@
 ﻿struct VertexInput
 {
     float3 offset : POSITION;
-    float alpha : NORMAL;
+    float alpha : TEXCOORD0;
 };
 
 struct GeoInput
 {
     float3 offset : POSITION;
-    float alpha : NORMAL;
+    float alpha : TEXCOORD0;
 };
 
 GeoInput VS(VertexInput input)

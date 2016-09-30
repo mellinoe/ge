@@ -24,21 +24,21 @@ cbuffer WorldMatrixBuffer : register(b3)
 struct GeoInput
 {
     float3 offset : POSITION;
-    float alpha : NORMAL;
+    float alpha : TEXCOORD0;
 };
 
 struct PixelInput
 {
     float4 position : SV_POSITION;
-    float alpha : NORMAL;
-    float2 texCoord : TEXCOORD0;
+    float alpha : TEXCOORD0;
+    float2 texCoord : TEXCOORD1;
 };
 
 [maxvertexcount(4)]
 void GS(point GeoInput input[1], inout TriangleStream<PixelInput> outputStream)
 {
     float4 inPos = float4(0, 0, 0, 1);
-    float3 worldCenter = input[0].offset + mul(world, inPos).xyz;
+    float3 worldCenter = mul(world, inPos + float4(input[0].offset, 0)).xyz;
     float3 globalUp = float3(0, 1, 0);
     float3 right = normalize(cross(cameraLookDirection, globalUp));
     float3 up = normalize(cross(right.xyz, cameraLookDirection));

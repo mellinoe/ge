@@ -38,6 +38,7 @@ namespace Engine.Graphics
         private readonly UpscaleStage _upscaleStage;
         private readonly StandardPipelineStage _standardStage;
         private readonly StandardPipelineStage _overlayStage;
+        private readonly StandardPipelineStage _alphaBlendStage;
 
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
@@ -79,11 +80,13 @@ namespace Engine.Graphics
             ShadowMapStage = new ShadowMapStage(Context);
             _upscaleStage = new UpscaleStage(Context, "Upscale", null, null);
             _standardStage = new StandardPipelineStage(Context, "Standard");
+            _alphaBlendStage = new StandardPipelineStage(Context, "AlphaBlend");
             _overlayStage = new StandardPipelineStage(Context, "Overlay");
             _pipelineStages = new PipelineStage[]
             {
                 ShadowMapStage,
                 _standardStage,
+                _alphaBlendStage,
                 _upscaleStage,
                 _overlayStage,
             };
@@ -102,6 +105,7 @@ namespace Engine.Graphics
         {
             _frustum = frustum;
             _standardStage.CameraFrustum = frustum;
+            _alphaBlendStage.CameraFrustum = frustum;
             _overlayStage.CameraFrustum = frustum;
         }
 
@@ -311,7 +315,7 @@ namespace Engine.Graphics
                 _upscaleSource?.Dispose();
                 _upscaleSource = null;
                 _upscaleStage.Enabled = false;
-                _standardStage.OverrideFramebuffer = null;
+                SetOverrideFramebuffers(null);
             }
             else
             {
@@ -321,10 +325,16 @@ namespace Engine.Graphics
                 _upscaleSource?.DepthTexture?.Dispose();
                 _upscaleSource?.Dispose();
                 _upscaleSource = Context.ResourceFactory.CreateFramebuffer(width, height);
-                _standardStage.OverrideFramebuffer = _upscaleSource;
+                SetOverrideFramebuffers(_upscaleSource);
                 _upscaleStage.SourceTexture = _upscaleSource.ColorTexture;
                 _upscaleStage.Enabled = true;
             }
+        }
+
+        private void SetOverrideFramebuffers(Framebuffer buffer)
+        {
+            _standardStage.OverrideFramebuffer = buffer;
+            _alphaBlendStage.OverrideFramebuffer = buffer;
         }
 
         private class BoundsRenderItemEntry

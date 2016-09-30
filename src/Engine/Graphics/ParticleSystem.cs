@@ -1,7 +1,6 @@
 ﻿using Engine.Assets;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using Veldrid;
 using Veldrid.Assets;
 using Veldrid.Graphics;
@@ -10,7 +9,7 @@ namespace Engine.Graphics
 {
     public class ParticleSystem : Component, BoundsRenderItem
     {
-        private static readonly string[] s_stages = { "Standard" };
+        private static readonly string[] s_stages = { "AlphaBlend" };
         private float _extents = 1f;
         private InstanceData[] _instanceData;
 
@@ -137,7 +136,7 @@ namespace Engine.Graphics
             VertexInputLayout inputLayout = factory.CreateInputLayout(vs,
                 new MaterialVertexInput(InstanceData.SizeInBytes,
                     new MaterialVertexInputElement("in_offset", VertexSemanticType.Position, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
-                    new MaterialVertexInputElement("in_alpha", VertexSemanticType.Normal, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1)));
+                    new MaterialVertexInputElement("in_alpha", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1)));
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, gs, fs);
             ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
                 new MaterialInputs<MaterialGlobalInputElement>(
