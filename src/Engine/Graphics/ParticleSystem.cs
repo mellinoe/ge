@@ -1,17 +1,22 @@
-﻿using Engine.Assets;
+﻿using BEPUutilities.DataStructures;
+using Engine.Assets;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
 using Veldrid.Assets;
 using Veldrid.Graphics;
+using System;
+using Engine.Behaviors;
 
 namespace Engine.Graphics
 {
-    public class ParticleSystem : Component, BoundsRenderItem
+    public class ParticleSystem : Behavior, BoundsRenderItem
     {
         private static readonly string[] s_stages = { "AlphaBlend" };
         private float _extents = 1f;
-        private InstanceData[] _instanceData;
+        private RawList<InstanceData> _instanceData;
+        private RawList<float> _ages;
 
         private GraphicsSystem _gs;
         private AssetDatabase _ad;
@@ -23,7 +28,36 @@ namespace Engine.Graphics
         private Material _material;
         private DeviceTexture _deviceTexture;
         private ShaderTextureBinding _textureBinding;
+
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
+        private readonly DynamicDataProvider<RgbaFloat> _colorTintProvider = new DynamicDataProvider<RgbaFloat>(RgbaFloat.White);
+        private readonly ConstantBufferDataProvider[] _providers;
+        private float _accumulator;
+
+        public ParticleSystem()
+        {
+            _providers = new ConstantBufferDataProvider[] { _worldProvider, _colorTintProvider };
+            _instanceData = new RawList<InstanceData>();
+            _ages = new RawList<float>();
+        }
+
+        public ParticleSimulationSpace SimulationSpace { get; set; } = ParticleSimulationSpace.Local;
+
+        public float EmissionRate { get; set; } = 1f;
+
+        public float SpawnPeriodSeconds => 1 / EmissionRate;
+
+        public float ParticleLifetime { get; set; } = 5f;
+
+        public bool AlphaFade { get; set; } = true;
+
+        public float Gravity { get; set; } = 0f;
+
+        public RgbaFloat ColorTint
+        {
+            get { return _colorTintProvider.Data; }
+            set { _colorTintProvider.Data = value; }
+        }
 
         public RefOrImmediate<TextureData> Texture
         {
@@ -38,17 +72,7 @@ namespace Engine.Graphics
             }
         }
 
-        private void RecreateTexture()
-        {
-            _deviceTexture.Dispose();
-            _textureBinding.Dispose();
-
-            _texture = _textureRef.Get(_ad);
-            _deviceTexture = _texture.CreateDeviceTexture(_gs.Context.ResourceFactory);
-            _textureBinding = _gs.Context.ResourceFactory.CreateShaderTextureBinding(_deviceTexture);
-        }
-
-
+        [JsonIgnore]
         public BoundingBox Bounds
         {
             get
@@ -81,45 +105,83 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            _worldProvider.Data = Transform.GetWorldMatrix();
+            _instanceDataVB.SetVertexData(new ArraySegment<InstanceData>(_instanceData.Elements, 0, _instanceData.Count), InstanceData.VertexDescriptor, 0);
+            _worldProvider.Data = SimulationSpace == ParticleSimulationSpace.Local ? Transform.GetWorldMatrix() : Matrix4x4.Identity;
             rc.SetVertexBuffer(_instanceDataVB);
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
-            _material.ApplyPerObjectInput(_worldProvider);
+            _material.ApplyPerObjectInputs(_providers);
             rc.SetTexture(0, _textureBinding);
             rc.SetBlendState(rc.AlphaBlend);
-            rc.DrawInstancedPrimitives(1, _instanceData.Length, PrimitiveTopology.PointList);
+            rc.DrawInstancedPrimitives(1, _instanceData.Count, PrimitiveTopology.PointList);
             rc.SetBlendState(rc.OverrideBlend);
         }
 
-        protected override void OnEnabled()
+        protected override void PostEnabled()
         {
             _gs.AddRenderItem(this, Transform);
         }
 
-        protected override void OnDisabled()
+        protected override void PostDisabled()
         {
             _gs.RemoveRenderItem(this);
         }
 
-        protected override void Attached(SystemRegistry registry)
+        protected override void PostAttached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
-            _instanceData = new[]
-            {
-                new InstanceData(new Vector3(-3, 0, 0), 1.0f),
-                new InstanceData(new Vector3(3, 0, 0), 1.0f)
-            };
 
             InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
+        }
+
+        public override void Update(float deltaSeconds)
+        {
+            _accumulator += deltaSeconds;
+            while (_accumulator >= SpawnPeriodSeconds)
+            {
+                _accumulator -= SpawnPeriodSeconds;
+                SpawnParticle();
+            }
+
+            for (int i = 0; i < _instanceData.Count; i++)
+            {
+                float age = _ages[i];
+                if (age >= ParticleLifetime)
+                {
+                    _instanceData.RemoveAt(i);
+                    _ages.RemoveAt(i);
+                    i--;
+                }
+                else
+                {
+                    _ages.Elements[i] += deltaSeconds;
+                    float alpha = 1f;
+                    if (AlphaFade)
+                    {
+                        alpha = 1f - (age / ParticleLifetime);
+                    }
+
+                    _instanceData.Elements[i].Alpha = alpha;
+                    Vector3 offset = _instanceData.Elements[i].Offset;
+                    offset += Vector3.UnitY * -10f * Gravity * deltaSeconds;
+                    _instanceData.Elements[i].Offset = offset;
+                }
+            }
+        }
+
+        private void SpawnParticle()
+        {
+            Vector3 position = SimulationSpace == ParticleSimulationSpace.Global ? Transform.Position : Vector3.Zero;
+            _instanceData.Add(new InstanceData(position, 1f));
+            _ages.Add(0);
         }
 
         private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
         {
             ResourceFactory factory = rc.ResourceFactory;
-            _instanceDataVB = factory.CreateVertexBuffer(_instanceData, new VertexDescriptor(InstanceData.SizeInBytes, InstanceData.ElementCount), true);
+            _instanceDataVB = factory.CreateVertexBuffer(InstanceData.SizeInBytes * 10, true);
             _ib = factory.CreateIndexBuffer(new[] { 0 }, false);
 
             if (_texture == null)
@@ -144,16 +206,27 @@ namespace Engine.Graphics
                     new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
                     new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo")),
                 new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes)));
+                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
+                    new MaterialPerObjectInputElement("ColorTintBuffer", MaterialInputType.Custom, _colorTintProvider.DataSizeInBytes)));
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet,
                 new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture")));
 
             _material = new Material(rc, shaderSet, constantBindings, textureSlots);
         }
 
-        protected override void Removed(SystemRegistry registry)
+        protected override void PostRemoved(SystemRegistry registry)
         {
             ClearDeviceResources();
+        }
+
+        private void RecreateTexture()
+        {
+            _deviceTexture.Dispose();
+            _textureBinding.Dispose();
+
+            _texture = _textureRef.Get(_ad);
+            _deviceTexture = _texture.CreateDeviceTexture(_gs.Context.ResourceFactory);
+            _textureBinding = _gs.Context.ResourceFactory.CreateShaderTextureBinding(_deviceTexture);
         }
 
         private void ClearDeviceResources()
@@ -164,12 +237,18 @@ namespace Engine.Graphics
             _textureBinding.Dispose();
         }
 
+        public enum ParticleSimulationSpace
+        {
+            Local,
+            Global,
+        }
+
         private struct InstanceData
         {
             public const byte SizeInBytes = 16;
             public const byte ElementCount = 2;
 
-            public readonly Vector3 Offset;
+            public Vector3 Offset;
             public float Alpha;
 
             public InstanceData(Vector3 offset, float alpha)
@@ -177,6 +256,8 @@ namespace Engine.Graphics
                 Offset = offset;
                 Alpha = alpha;
             }
+
+            public static VertexDescriptor VertexDescriptor => new VertexDescriptor(SizeInBytes, ElementCount);
         }
     }
 }

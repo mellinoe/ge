@@ -41,9 +41,8 @@ namespace Engine.Editor
             }
         }
 
-        protected override void OnEnabled()
+        protected override void PostEnabled()
         {
-            base.OnEnabled();
             if (_ccs == null)
             {
                 Enabled = false;
