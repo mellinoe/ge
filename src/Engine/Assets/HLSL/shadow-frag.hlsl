@@ -7,10 +7,10 @@
 
 cbuffer CameraInfoBuffer : register(b5)
 {
-	float3 cameraPosition_worldSpace;
-	float __padding1;
+    float3 cameraPosition_worldSpace;
+    float NearPlaneDistance;
     float3 cameraLookDirection;
-    float __padding3;
+    float FarPlaneDistance;
 }
 
 #define MAX_POINT_LIGHTS 4

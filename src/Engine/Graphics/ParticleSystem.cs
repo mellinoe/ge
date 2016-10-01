@@ -8,6 +8,7 @@ using Veldrid.Assets;
 using Veldrid.Graphics;
 using System;
 using Engine.Behaviors;
+using System.Runtime.InteropServices;
 
 namespace Engine.Graphics
 {
@@ -19,7 +20,7 @@ namespace Engine.Graphics
         // Actual CPU-side vertex buffer data.
         private RawList<InstanceData> _instanceData;
         // Housekeeping info for particles.
-        private RawList<ParticleState> _particleState;
+        private RawList<ParticleState> _particleStates;
 
         private GraphicsSystem _gs;
         private AssetDatabase _ad;
@@ -33,7 +34,8 @@ namespace Engine.Graphics
         private ShaderTextureBinding _textureBinding;
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
-        private readonly DynamicDataProvider<RgbaFloat> _colorTintProvider = new DynamicDataProvider<RgbaFloat>(RgbaFloat.White);
+        private readonly DynamicDataProvider<ParticleProperties> _particleProperties
+            = new DynamicDataProvider<ParticleProperties>(new ParticleProperties() { Softness = 0.4f, ColorTint = RgbaFloat.White });
         private readonly ConstantBufferDataProvider[] _providers;
         private float _accumulator;
         private IComparer<InstanceData> _cameraDistanceComparer;
@@ -41,9 +43,9 @@ namespace Engine.Graphics
 
         public ParticleSystem()
         {
-            _providers = new ConstantBufferDataProvider[] { _worldProvider, _colorTintProvider };
+            _providers = new ConstantBufferDataProvider[] { _worldProvider, _particleProperties };
             _instanceData = new RawList<InstanceData>();
-            _particleState = new RawList<ParticleState>();
+            _particleStates = new RawList<ParticleState>();
         }
 
         public ParticleSimulationSpace SimulationSpace { get; set; } = ParticleSimulationSpace.Local;
@@ -60,8 +62,14 @@ namespace Engine.Graphics
 
         public RgbaFloat ColorTint
         {
-            get { return _colorTintProvider.Data; }
-            set { _colorTintProvider.Data = value; }
+            get { return _particleProperties.Data.ColorTint; }
+            set { var props = _particleProperties.Data; props.ColorTint = value; _particleProperties.Data = props; }
+        }
+
+        public float Softness
+        {
+            get { return _particleProperties.Data.Softness; }
+            set { var props = _particleProperties.Data; props.Softness = value; _particleProperties.Data = props; }
         }
 
         public RefOrImmediate<TextureData> Texture
@@ -110,12 +118,7 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
-            Array.Sort(_instanceData.Elements, _particleState.Elements, 0, _instanceData.Count, _cameraDistanceComparer);
-            Console.WriteLine("**********Distances*********");
-            foreach (var particle in _instanceData)
-            {
-                Console.WriteLine("Distance: " + Vector3.Distance(_gs.MainCamera.Transform.Position, particle.Offset));
-            }
+            Array.Sort(_instanceData.Elements, _particleStates.Elements, 0, _instanceData.Count, _cameraDistanceComparer);
 
             _instanceDataVB.SetVertexData(new ArraySegment<InstanceData>(_instanceData.Elements, 0, _instanceData.Count), InstanceData.VertexDescriptor, 0);
             _worldProvider.Data = SimulationSpace == ParticleSimulationSpace.Local ? Transform.GetWorldMatrix() : Matrix4x4.Identity;
@@ -162,16 +165,16 @@ namespace Engine.Graphics
 
             for (int i = 0; i < _instanceData.Count; i++)
             {
-                float age = _particleState[i].Age;
+                float age = _particleStates[i].Age;
                 if (age >= ParticleLifetime)
                 {
                     _instanceData.RemoveAt(i);
-                    _particleState.RemoveAt(i);
+                    _particleStates.RemoveAt(i);
                     i--;
                 }
                 else
                 {
-                    _particleState.Elements[i].Age += deltaSeconds;
+                    _particleStates.Elements[i].Age += deltaSeconds;
 
                     float alpha = 1f;
                     if (AlphaFade)
@@ -191,7 +194,7 @@ namespace Engine.Graphics
         {
             Vector3 position = SimulationSpace == ParticleSimulationSpace.Global ? Transform.Position : Vector3.Zero;
             _instanceData.Add(new InstanceData(position, 1f));
-            _particleState.Add(new ParticleState());
+            _particleStates.Add(new ParticleState());
         }
 
         private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
@@ -223,7 +226,7 @@ namespace Engine.Graphics
                     new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo")),
                 new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("ColorTintBuffer", MaterialInputType.Custom, _colorTintProvider.DataSizeInBytes)));
+                    new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, _particleProperties.DataSizeInBytes)));
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet,
                 new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture")));
 
@@ -260,6 +263,7 @@ namespace Engine.Graphics
             Global,
         }
 
+        // Vertex buffer per-instance data.
         private struct InstanceData
         {
             public const byte SizeInBytes = 16;
@@ -277,7 +281,21 @@ namespace Engine.Graphics
             public static VertexDescriptor VertexDescriptor => new VertexDescriptor(SizeInBytes, ElementCount);
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ParticleProperties : IEquatable<ParticleProperties>
+        {
+            public RgbaFloat ColorTint;
+            public float Softness;
+            private readonly Vector3 __unused;
+
+            public bool Equals(ParticleProperties other)
+            {
+                return other.ColorTint.Equals(ColorTint) && other.Softness.Equals(Softness);
+            }
+        }
+
         // CPU-side housekeeping state for individual particles.
+        [StructLayout(LayoutKind.Sequential)]
         private struct ParticleState
         {
             public float Age;

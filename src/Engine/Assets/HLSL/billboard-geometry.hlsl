@@ -11,9 +11,9 @@ cbuffer ViewMatrixBuffer : register(b1)
 cbuffer CameraInfoBuffer : register(b2)
 {
     float3 cameraWorldPosition;
-    float __unused1;
+    float NearPlaneDistance;
     float3 cameraLookDirection;
-    float __unused2;
+    float FarPlaneDistance;
 }
 
 cbuffer WorldMatrixBuffer : register(b3)
@@ -32,6 +32,7 @@ struct PixelInput
     float4 position : SV_POSITION;
     float alpha : TEXCOORD0;
     float2 texCoord : TEXCOORD1;
+    float4 clipCoords : TEXCOORD2;
 };
 
 [maxvertexcount(4)]
@@ -62,9 +63,11 @@ void GS(point GeoInput input[1], inout TriangleStream<PixelInput> outputStream)
 
     for (int i = 0; i < 4; i++)
     {
-        output.position = mul(projection, mul(view, float4(worldPositions[i], 1)));
+        float4 outPosition = mul(projection, mul(view, float4(worldPositions[i], 1)));
+        output.position = outPosition;
         output.texCoord = uvs[i];
         output.alpha = input[0].alpha;
+        output.clipCoords = outPosition;
         outputStream.Append(output);
     }
 }

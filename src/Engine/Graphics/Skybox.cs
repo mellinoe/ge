@@ -105,6 +105,7 @@ namespace Engine.Graphics
             RecreateCubemapTexture();
 
             _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false);
+            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, false);
         }
 
         private void RecreateCubemapTexture()
@@ -160,11 +161,14 @@ namespace Engine.Graphics
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
             RasterizerState previousRasterState = rc.RasterizerState;
+            DepthStencilState previousDepthStencilState = rc.DepthStencilState;
             rc.SetRasterizerState(_rasterizerState);
+            rc.SetDepthStencilState(_depthStencilState);
             _material.UseTexture(0, _cubemapBinding);
             _material.ApplyPerObjectInput(_perObjectInput);
             rc.DrawIndexedPrimitives(s_indices.Length, 0);
             rc.SetRasterizerState(previousRasterState);
+            rc.SetDepthStencilState(previousDepthStencilState);
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
@@ -293,5 +297,6 @@ namespace Engine.Graphics
             16,17,18, 16,18,19,
             20,21,22, 20,22,23,
         };
+        private DepthStencilState _depthStencilState;
     }
 }

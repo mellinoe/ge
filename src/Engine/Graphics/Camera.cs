@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using Veldrid.Graphics;
 
@@ -91,7 +92,7 @@ namespace Engine.Graphics
                 GameObject.Transform.Position + GameObject.Transform.Forward,
                 _upDirection);
 
-            _cameraInfoProvider.Data = new CameraInfo(Transform.Position, Transform.Forward);
+            _cameraInfoProvider.Data = new CameraInfo(Transform.Position, Transform.Forward, NearPlaneDistance, FarPlaneDistance);
 
             UpdateViewFrustum();
         }
@@ -126,6 +127,7 @@ namespace Engine.Graphics
             }
 
             _projectionProvider.Data = projection;
+            _cameraInfoProvider.Data = new CameraInfo(Transform.Position, Transform.Forward, NearPlaneDistance, FarPlaneDistance);
 
             UpdateViewFrustum();
         }
@@ -143,20 +145,20 @@ namespace Engine.Graphics
         Orthographic
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct CameraInfo : IEquatable<CameraInfo>
     {
         public readonly Vector3 Position;
-        private float __unused;
+        public readonly float NearPlaneDistance;
         public readonly Vector3 LookDirection;
-        private float __unused2;
+        public readonly float FarPlaneDistance;
 
-        public CameraInfo(Vector3 position, Vector3 lookDirection)
+        public CameraInfo(Vector3 position, Vector3 lookDirection, float near, float far)
         {
             Position = position;
             LookDirection = lookDirection;
-
-            __unused = 0;
-            __unused2 = 0;
+            NearPlaneDistance = near;
+            FarPlaneDistance = far;
         }
 
         public bool Equals(CameraInfo other)
