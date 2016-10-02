@@ -65,7 +65,7 @@ namespace Engine.Editor
         {
             PreferencesInfo info = new TInfo();
             string preferencesFile = Path.Combine(GetAppDataFolder(), info.StoragePath);
-            string json = JsonConvert.SerializeObject(this);
+            string json = JsonConvert.SerializeObject(this, Formatting.Indented);
             string directory = Path.GetDirectoryName(preferencesFile);
             if (!Directory.Exists(directory))
             {
