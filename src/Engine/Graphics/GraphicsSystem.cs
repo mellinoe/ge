@@ -17,8 +17,8 @@ namespace Engine.Graphics
     {
         private static readonly DynamicDataProvider<LightInfo> s_noLightProvider
             = new DynamicDataProvider<LightInfo>(new LightInfo(RgbaFloat.Black, Vector3.Zero));
-        private static readonly DynamicDataProvider<Vector4> s_noCameraProvider
-            = new DynamicDataProvider<Vector4>();
+        private static readonly DynamicDataProvider<CameraInfo> s_noCameraProvider
+            = new DynamicDataProvider<CameraInfo>();
 
         private static readonly ConstantDataProvider<Matrix4x4> s_identityProvider = new ConstantDataProvider<Matrix4x4>(Matrix4x4.Identity);
 
@@ -41,6 +41,7 @@ namespace Engine.Graphics
         private readonly StandardPipelineStage _overlayStage;
         private readonly StandardPipelineStage _alphaBlendStage;
         private ShaderTextureBinding _upscaleDepthView;
+        private bool _needsPreupscaleChange;
 
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
@@ -103,6 +104,8 @@ namespace Engine.Graphics
             Context.RegisterGlobalDataProvider("CameraInfo", s_noCameraProvider);
             Context.RegisterGlobalDataProvider("LightBuffer", s_noLightProvider);
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
+
+            window.Resized += OnWindowResized;
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
@@ -271,6 +274,11 @@ namespace Engine.Graphics
 
         protected override void UpdateCore(float deltaSeconds)
         {
+            if (_needsPreupscaleChange)
+            {
+                SetPreupscaleQuality(_preUpscaleQuality);
+                _needsPreupscaleChange = false;
+            }
             UpdatePointLightBuffer();
 
             _visiblityManager.Octree.ApplyPendingMoves();
@@ -318,19 +326,29 @@ namespace Engine.Graphics
             _upscaleSource?.Dispose();
             _upscaleDepthView?.Dispose();
             _upscaleSource = Context.ResourceFactory.CreateFramebuffer(width, height);
-            _alphaBlendFramebuffer?.Dispose();
-            _alphaBlendFramebuffer = Context.ResourceFactory.CreateFramebuffer();
+
+            if (_alphaBlendFramebuffer == null)
+            {
+                _alphaBlendFramebuffer = Context.ResourceFactory.CreateFramebuffer();
+            }
             _alphaBlendFramebuffer.ColorTexture = _upscaleSource.ColorTexture;
-            _alphaBlendStage.OverrideFramebuffer = _alphaBlendFramebuffer;
+
             _upscaleDepthView = Context.ResourceFactory.CreateShaderTextureBinding(_upscaleSource.DepthTexture);
             _upscaleStage.SourceTexture = _upscaleSource.ColorTexture;
             _upscaleStage.Enabled = true;
-            SetOverrideFramebuffers(_upscaleSource);
+
+            SetOverrideFramebuffers();
         }
 
-        private void SetOverrideFramebuffers(Framebuffer buffer)
+        private void SetOverrideFramebuffers()
         {
-            _standardStage.OverrideFramebuffer = buffer;
+            _standardStage.OverrideFramebuffer = _upscaleSource;
+            _alphaBlendStage.OverrideFramebuffer = _alphaBlendFramebuffer;
+        }
+
+        private void OnWindowResized()
+        {
+            _needsPreupscaleChange = true;
         }
 
         private class BoundsRenderItemEntry

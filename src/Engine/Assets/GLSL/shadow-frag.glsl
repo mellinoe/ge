@@ -10,7 +10,9 @@ uniform LightInfoBuffer
 uniform CameraInfoBuffer
 {
 	vec3 cameraPosition_worldSpace;
-	float _padding1;
+    float NearPlaneDistance;
+    vec3 cameraLookDirection;
+    float FarPlaneDistance;
 };
 
 #define MAX_POINT_LIGHTS 4

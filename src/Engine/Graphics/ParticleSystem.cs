@@ -9,13 +9,13 @@ using Veldrid.Graphics;
 using System;
 using Engine.Behaviors;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace Engine.Graphics
 {
     public class ParticleSystem : Behavior, BoundsRenderItem
     {
         private static readonly string[] s_stages = { "AlphaBlend" };
-        private float _extents = 1f;
 
         // Actual CPU-side vertex buffer data.
         private RawList<InstanceData> _instanceData;
@@ -72,6 +72,8 @@ namespace Engine.Graphics
             set { var props = _particleProperties.Data; props.Softness = value; _particleProperties.Data = props; }
         }
 
+        public float StartingSize { get; set; } = 1f;
+
         public RefOrImmediate<TextureData> Texture
         {
             get { return _textureRef; }
@@ -90,8 +92,14 @@ namespace Engine.Graphics
         {
             get
             {
-                Vector3 center = Transform.Position;
-                return new BoundingBox(center - Vector3.One * _extents, center + Vector3.One * _extents);
+                if (_instanceData.Count > 0)
+                {
+                    return BoundingBox.CreateFromVertices(_instanceData.Select(id => id.Offset).ToArray());
+                }
+                else
+                {
+                    return new BoundingBox();
+                }
             }
         }
 
@@ -193,7 +201,7 @@ namespace Engine.Graphics
         private void SpawnParticle()
         {
             Vector3 position = SimulationSpace == ParticleSimulationSpace.Global ? Transform.Position : Vector3.Zero;
-            _instanceData.Add(new InstanceData(position, 1f));
+            _instanceData.Add(new InstanceData(position, 1f, StartingSize));
             _particleStates.Add(new ParticleState());
         }
 
@@ -217,21 +225,22 @@ namespace Engine.Graphics
             VertexInputLayout inputLayout = factory.CreateInputLayout(vs,
                 new MaterialVertexInput(InstanceData.SizeInBytes,
                     new MaterialVertexInputElement("in_offset", VertexSemanticType.Position, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
-                    new MaterialVertexInputElement("in_alpha", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1)));
+                    new MaterialVertexInputElement("in_alpha", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1),
+                    new MaterialVertexInputElement("in_size", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1)));
             ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, gs, fs);
             ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
                 new MaterialInputs<MaterialGlobalInputElement>(
                     new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
                     new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
-                    new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo")),
+                    new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo")
+                    ),
                 new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
                     new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, _particleProperties.DataSizeInBytes)));
             ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet,
                 new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture")));
-
             _material = new Material(rc, shaderSet, constantBindings, textureSlots);
-            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, false);
+            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true);
         }
 
         protected override void PostRemoved(SystemRegistry registry)
@@ -266,16 +275,18 @@ namespace Engine.Graphics
         // Vertex buffer per-instance data.
         private struct InstanceData
         {
-            public const byte SizeInBytes = 16;
-            public const byte ElementCount = 2;
+            public const byte SizeInBytes = 20;
+            public const byte ElementCount = 3;
 
             public Vector3 Offset;
             public float Alpha;
+            public float Size;
 
-            public InstanceData(Vector3 offset, float alpha)
+            public InstanceData(Vector3 offset, float alpha, float size)
             {
                 Offset = offset;
                 Alpha = alpha;
+                Size = size;
             }
 
             public static VertexDescriptor VertexDescriptor => new VertexDescriptor(SizeInBytes, ElementCount);

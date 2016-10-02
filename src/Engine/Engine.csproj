@@ -10,9 +10,7 @@
     <NuGetTargetMoniker>.NETStandard,Version=v1.6</NuGetTargetMoniker>
     <ProjectGuid>{9BFBA3A1-21D4-4CBD-B0E1-A4F3AB80FD30}</ProjectGuid>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Compile Include="Assets\AssetSystem.cs" />
@@ -34,6 +32,7 @@
     <Compile Include="Audio\AudioListener.cs" />
     <Compile Include="Audio\AudioPositionKind.cs" />
     <Compile Include="Audio\AudioResourceFactory.cs" />
+    <Compile Include="Audio\AudioSystem.cs" />
     <Compile Include="Audio\OpenAL\OpenALAudioSource.cs" />
     <Compile Include="Audio\AudioSourceComponent.cs" />
     <Compile Include="Audio\OpenAL\OpenALEngine.cs" />
@@ -120,7 +119,35 @@
     <EmbeddedResource Include="Assets\HLSL\skybox-frag.hlsl" />
     <EmbeddedResource Include="Assets\HLSL\skybox-vertex.hlsl" />
     <EmbeddedResource Include="Assets\HLSL\textured-vertex.hlsl" />
-    <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
+    <EmbeddedResource Include="Assets\Models\Sphere.obj" />
+    <EmbeddedResource Include="Assets\GLSL\imgui-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\imgui-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\lit-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\skybox-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\skybox-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\textured-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadow-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadow-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadowmap-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadowmap-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\simple-2d-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\simple-2d-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\geometry-frag.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\geometry-vertex.glsl" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_bk.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_dn.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_ft.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_lf.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_rt.png" />
+    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_up.png" />
+    <EmbeddedResource Include="Assets\HLSL\billboard-geometry.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\particle-fragment.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\passthrough-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\GLSL\billboard-geometry.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\particle-fragment.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\passthrough-vertex.glsl" />
+    <None Include="project.json" />
+        <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{2665014F-0FEC-4268-8F77-7B029921AB09}</Project>
       <Name>ImGui.NET</Name>
     </ProjectReference>
@@ -140,34 +167,6 @@
       <Project>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</Project>
       <Name>BEPUutilities</Name>
     </ProjectReference>
-    <EmbeddedResource Include="Assets\Models\Sphere.obj" />
-    <EmbeddedResource Include="Assets\GLSL\imgui-frag.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\imgui-vertex.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\lit-frag.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\skybox-frag.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\skybox-vertex.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\textured-vertex.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\shadow-frag.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\shadow-vertex.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\shadowmap-frag.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\shadowmap-vertex.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\simple-2d-frag.glsl" />
-    <EmbeddedResource Include="Assets\GLSL\simple-2d-vertex.glsl" />
-    <Compile Include="Audio\AudioSystem.cs" />
-    <None Include="project.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_bk.png" />
-    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_dn.png" />
-    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_ft.png" />
-    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_lf.png" />
-    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_rt.png" />
-    <EmbeddedResource Include="Assets\Textures\cloudtop\cloudtop_up.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\HLSL\billboard-geometry.hlsl" />
-    <EmbeddedResource Include="Assets\HLSL\particle-fragment.hlsl" />
-    <EmbeddedResource Include="Assets\HLSL\passthrough-vertex.hlsl" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

@@ -18,7 +18,7 @@ struct PixelInput
     float4 position : SV_POSITION;
     float alpha : TEXCOORD0;
     float2 texCoord : TEXCOORD1;
-    float4 clipCoords : TEXCOORD2;
+    float fragDepth : TEXCOORD2;
 };
 
 sampler sampler0;
@@ -33,7 +33,7 @@ float4 PS(PixelInput input) : SV_Target
     color = color * colorTint;
 
     float depthThreshold = softness;
-    float fragDepth = input.clipCoords.z;
+    float fragDepth = input.fragDepth;
 
     float zNear = NearPlaneDistance;
     float zFar = FarPlaneDistance;

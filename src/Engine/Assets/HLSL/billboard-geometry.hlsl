@@ -25,6 +25,7 @@ struct GeoInput
 {
     float3 offset : POSITION;
     float alpha : TEXCOORD0;
+    float size : TEXCOORD1;
 };
 
 struct PixelInput
@@ -32,23 +33,24 @@ struct PixelInput
     float4 position : SV_POSITION;
     float alpha : TEXCOORD0;
     float2 texCoord : TEXCOORD1;
-    float4 clipCoords : TEXCOORD2;
+    float fragDepth : TEXCOORD2;
 };
 
 [maxvertexcount(4)]
 void GS(point GeoInput input[1], inout TriangleStream<PixelInput> outputStream)
 {
-    float4 inPos = float4(0, 0, 0, 1);
-    float3 worldCenter = mul(world, inPos + float4(input[0].offset, 0)).xyz;
+    float3 worldCenter = mul(world, float4(input[0].offset, 1)).xyz;
     float3 globalUp = float3(0, 1, 0);
     float3 right = normalize(cross(cameraLookDirection, globalUp));
     float3 up = normalize(cross(right.xyz, cameraLookDirection));
+    
+    float halfWidth = 0.5 * input[0].size; // Half-width of each edge of the generated quad.
     float3 worldPositions[4] =
     {
-        worldCenter - right * .5 + up * .5,
-        worldCenter + right * .5 + up * .5,
-        worldCenter - right * .5 - up * .5,
-        worldCenter + right * .5 - up * .5,
+        worldCenter - right * halfWidth + up * halfWidth,
+        worldCenter + right * halfWidth + up * halfWidth,
+        worldCenter - right * halfWidth - up * halfWidth,
+        worldCenter + right * halfWidth - up * halfWidth,
     };
 
     float2 uvs[4] = 
@@ -67,7 +69,7 @@ void GS(point GeoInput input[1], inout TriangleStream<PixelInput> outputStream)
         output.position = outPosition;
         output.texCoord = uvs[i];
         output.alpha = input[0].alpha;
-        output.clipCoords = outPosition;
+        output.fragDepth = outPosition.z;
         outputStream.Append(output);
     }
 }
