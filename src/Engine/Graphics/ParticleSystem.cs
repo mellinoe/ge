@@ -17,10 +17,15 @@ namespace Engine.Graphics
     {
         private static readonly string[] s_stages = { "AlphaBlend" };
 
+        private readonly Random _random = new Random();
+
         // Actual CPU-side vertex buffer data.
         private RawList<InstanceData> _instanceData;
         // Housekeeping info for particles.
         private RawList<ParticleState> _particleStates;
+
+        private Vector3 _currentMinParticleOffset;
+        private Vector3 _currentMaxParticleOffset;
 
         private GraphicsSystem _gs;
         private AssetDatabase _ad;
@@ -60,6 +65,12 @@ namespace Engine.Graphics
 
         public float Gravity { get; set; } = 0f;
 
+        public ParticleEmissionShape EmissionShape { get; set; } = ParticleEmissionShape.Sphere;
+
+        public float EmissionShapeSize { get; set; } = 1f;
+
+        public float InitialSpeed { get; set; } = 2f;
+
         public RgbaFloat ColorTint
         {
             get { return _particleProperties.Data.ColorTint; }
@@ -94,11 +105,19 @@ namespace Engine.Graphics
             {
                 if (_instanceData.Count > 0)
                 {
-                    return BoundingBox.CreateFromVertices(_instanceData.Select(id => id.Offset).ToArray());
+                    Vector3 min = _currentMinParticleOffset;
+                    Vector3 max = _currentMaxParticleOffset;
+                    if (SimulationSpace == ParticleSimulationSpace.Local)
+                    {
+                        min = Vector3.Transform(min, Transform.GetWorldMatrix());
+                        max = Vector3.Transform(max, Transform.GetWorldMatrix());
+                    }
+
+                    return new BoundingBox(min, max);
                 }
                 else
                 {
-                    return new BoundingBox();
+                    return new BoundingBox(Transform.Position - Vector3.One * .1f, Transform.Position + Vector3.One * .1f);
                 }
             }
         }
@@ -171,6 +190,8 @@ namespace Engine.Graphics
                 SpawnParticle();
             }
 
+            _currentMinParticleOffset = new Vector3(float.MaxValue);
+            _currentMaxParticleOffset = new Vector3(float.MinValue);
             for (int i = 0; i < _instanceData.Count; i++)
             {
                 float age = _particleStates[i].Age;
@@ -191,18 +212,76 @@ namespace Engine.Graphics
                     }
                     _instanceData.Elements[i].Alpha = alpha;
 
+                    if (Gravity != 0f)
+                    {
+                        _particleStates.Elements[i].Velocity += Vector3.UnitY * -10f * deltaSeconds * Gravity;
+                    }
+
                     Vector3 offset = _instanceData.Elements[i].Offset;
-                    offset += Vector3.UnitY * -10f * Gravity * deltaSeconds;
+                    offset += _particleStates[i].Velocity * deltaSeconds;
                     _instanceData.Elements[i].Offset = offset;
+
+                    _currentMinParticleOffset = Vector3.Min(_currentMinParticleOffset, _instanceData.Elements[i].Offset);
+                    _currentMaxParticleOffset = Vector3.Max(_currentMaxParticleOffset, _instanceData.Elements[i].Offset);
                 }
             }
         }
 
         private void SpawnParticle()
         {
-            Vector3 position = SimulationSpace == ParticleSimulationSpace.Global ? Transform.Position : Vector3.Zero;
+            Vector3 position = Vector3.Zero;
+            Vector3 initialVelocity = Vector3.Zero;
+            Vector3 emissionDirection = Vector3.Zero;
+
+            switch (EmissionShape)
+            {
+                case ParticleEmissionShape.Sphere:
+                    {
+                        emissionDirection = GetRandomPointOnSphere();
+                        break;
+                    }
+                case ParticleEmissionShape.Hemisphere:
+                    {
+                        emissionDirection = GetRandomPointOnSphere();
+                        emissionDirection.Y = Math.Abs(emissionDirection.Y);
+                        break;
+                    }
+                default:
+                    throw new InvalidOperationException("Invalid emission shape: " + EmissionShape);
+            }
+
+            emissionDirection = Vector3.Normalize(Vector3.Transform(emissionDirection, Transform.Rotation));
+
+            if (SimulationSpace == ParticleSimulationSpace.Global)
+            {
+                position = Vector3.Transform(position, Transform.GetWorldMatrix());
+            }
+
+            if (emissionDirection != Vector3.Zero)
+            {
+                position += emissionDirection * EmissionShapeSize * Transform.Scale;
+                initialVelocity = Vector3.Normalize(emissionDirection) * InitialSpeed;
+            }
+
             _instanceData.Add(new InstanceData(position, 1f, StartingSize));
-            _particleStates.Add(new ParticleState());
+            _particleStates.Add(new ParticleState() { Velocity = initialVelocity });
+        }
+
+        private Vector3 GetRandomPointOnSphere()
+        {
+            // http://mathworld.wolfram.com/SpherePointPicking.html
+            double x1 = _random.NextDouble() * 2 - 1;
+            double x2 = _random.NextDouble() * 2 - 1;
+            while (x1 * x1 + x2 * x2 >= 1)
+            {
+                x1 = _random.NextDouble() * 2 - 1;
+                x2 = _random.NextDouble() * 2 - 1;
+            }
+
+            float x = (float)(2 * x1 * Math.Sqrt(1 - (x1 * x1) - (x2 * x2)));
+            float y = (float)(2 * x2 * Math.Sqrt(1 - (x1 * x1) - (x2 * x2)));
+            float z = (float)(1 - 2 * ((x1 * x1) + (x2 * x2)));
+            return new Vector3(x, y, z);
         }
 
         private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
@@ -241,6 +320,11 @@ namespace Engine.Graphics
                 new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture")));
             _material = new Material(rc, shaderSet, constantBindings, textureSlots);
             _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true);
+
+#if DEBUG_PARTICLE_BOUNDS
+            //var briwr = new BoundsRenderItemWireframeRenderer(this, rc);
+            //_gs.AddRenderItem(briwr, Transform);
+#endif
         }
 
         protected override void PostRemoved(SystemRegistry registry)
@@ -264,12 +348,6 @@ namespace Engine.Graphics
             _ib.Dispose();
             _material.Dispose();
             _textureBinding.Dispose();
-        }
-
-        public enum ParticleSimulationSpace
-        {
-            Local,
-            Global,
         }
 
         // Vertex buffer per-instance data.
@@ -310,7 +388,7 @@ namespace Engine.Graphics
         private struct ParticleState
         {
             public float Age;
-            public float Velocity;
+            public Vector3 Velocity;
         }
 
         private class CameraDistanceComparer : IComparer<InstanceData>
@@ -330,5 +408,17 @@ namespace Engine.Graphics
                 return distance2.CompareTo(distance1);
             }
         }
+    }
+
+    public enum ParticleSimulationSpace
+    {
+        Local,
+        Global,
+    }
+
+    public enum ParticleEmissionShape
+    {
+        Sphere,
+        Hemisphere,
     }
 }
