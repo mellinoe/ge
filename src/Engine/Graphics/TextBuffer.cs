@@ -95,21 +95,24 @@ namespace Engine.Graphics
 
         public void Render(TextureAtlas atlas, ConstantBufferDataProvider offsetProvider)
         {
-            var previousDSS = _rc.DepthStencilState;
-            _rc.DepthStencilState = _dss;
-            var previousBlendState = _rc.BlendState;
-            _rc.VertexBuffer = _vb;
-            _rc.IndexBuffer = _ib;
-            _rc.Material = _material;
-            _screenOrthoProjection.Data = Matrix4x4.CreateOrthographicOffCenter(0, _rc.Window.Width, _rc.Window.Height, 0, -1f, 1f);
-            _providers[1] = offsetProvider;
-            _providers[2] = atlas.AtlasInfo;
-            _material.ApplyPerObjectInputs(_providers);
-            _rc.SetTexture(0, atlas.TextureBinding);
-            _rc.BlendState = _rc.AlphaBlend;
-            _rc.DrawIndexedPrimitives(_characterCount * 6, 0);
-            _rc.BlendState = previousBlendState;
-            _rc.DepthStencilState = previousDSS;
+            if (_vb != null) // If the VertexBuffer hasn't been created, then no text has been appended yet.
+            {
+                var previousDSS = _rc.DepthStencilState;
+                _rc.DepthStencilState = _dss;
+                var previousBlendState = _rc.BlendState;
+                _rc.VertexBuffer = _vb;
+                _rc.IndexBuffer = _ib;
+                _rc.Material = _material;
+                _screenOrthoProjection.Data = Matrix4x4.CreateOrthographicOffCenter(0, _rc.Window.Width, _rc.Window.Height, 0, -1f, 1f);
+                _providers[1] = offsetProvider;
+                _providers[2] = atlas.AtlasInfo;
+                _material.ApplyPerObjectInputs(_providers);
+                _rc.SetTexture(0, atlas.TextureBinding);
+                _rc.BlendState = _rc.AlphaBlend;
+                _rc.DrawIndexedPrimitives(_characterCount * 6, 0);
+                _rc.BlendState = previousBlendState;
+                _rc.DepthStencilState = previousDSS;
+            }
         }
 
         private Material CreateMaterial(RenderContext rc)
