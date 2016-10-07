@@ -22,6 +22,7 @@ using Engine.ProjectSystem;
 using Engine.Audio;
 using Veldrid.Graphics.Direct3D;
 using SharpDX.Direct3D11;
+using SharpFont;
 
 namespace Engine.Editor
 {
@@ -120,6 +121,7 @@ namespace Engine.Editor
             DrawerCache.AddDrawer(new FuncDrawer<RefOrImmediate<MeshData>>(DrawMeshRef));
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<SceneAsset>>(DrawSceneRef));
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<WaveFile>>(DrawWaveRef));
+            DrawerCache.AddDrawer(new FuncDrawer<AssetRef<FontFace>>(DrawFontRef));
 
             var genericHandler = new GenericAssetMenuHandler(); _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
@@ -176,6 +178,11 @@ namespace Engine.Editor
         private bool DrawWaveRef(string label, ref AssetRef<WaveFile> waveRef, RenderContext rc)
         {
             return DrawAssetRef(label, ref waveRef, _as.Database);
+        }
+
+        private bool DrawFontRef(string label, ref AssetRef<FontFace> fontRef, RenderContext rc)
+        {
+            return DrawAssetRef(label, ref fontRef, _as.Database);
         }
 
         public IEnumerable<Type> DiscoverComponentsFromAssembly(Assembly assembly)

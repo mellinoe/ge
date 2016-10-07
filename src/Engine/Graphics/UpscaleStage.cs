@@ -52,7 +52,7 @@ namespace Engine.Graphics
                     new MaterialGlobalInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _identityProvider),
                     new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _identityProvider)),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
-                new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture")));
+                MaterialTextureInputs.Empty);
 
             if (sourceTexture != null)
             {
@@ -89,7 +89,6 @@ namespace Engine.Graphics
             RenderContext.SetVertexBuffer(_quadVB);
             RenderContext.SetIndexBuffer(_quadIB);
             RenderContext.SetMaterial(_quadMaterial);
-            _quadMaterial.UseDefaultTextures();
             _quadMaterial.UseTexture(0, _textureBinding);
             RenderContext.DrawIndexedPrimitives(6, 0);
         }

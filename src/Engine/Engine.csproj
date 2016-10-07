@@ -17,6 +17,7 @@
     <Compile Include="Assets\CompoundAssetDatabase.cs" />
     <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
     <Compile Include="Assets\EngineEmbeddedAssets.cs" />
+    <Compile Include="Graphics\FontFaceLoader.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Assets\SerializedPrefab.cs" />
     <Compile Include="Audio\AudioBuffer.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="GameObject.cs" />
     <Compile Include="GameObjectQuerySystem.cs" />
     <Compile Include="GameSystem.cs" />
+    <Compile Include="Graphics\CommonStages.cs" />
     <Compile Include="Graphics\DirectionalLight.cs" />
     <Compile Include="Graphics\GraphicsSystem.cs" />
     <Compile Include="Graphics\MeshRenderer.cs" />
@@ -76,6 +78,9 @@
     <Compile Include="Graphics\PointLight.cs" />
     <Compile Include="Graphics\PointLightInfo.cs" />
     <Compile Include="Graphics\Skybox.cs" />
+    <Compile Include="Graphics\Text2D.cs" />
+    <Compile Include="Graphics\TextBuffer.cs" />
+    <Compile Include="Graphics\TextureAtlas.cs" />
     <Compile Include="Graphics\UpscaleStage.cs" />
     <Compile Include="GUI\FilePicker.cs" />
     <Compile Include="Physics\Conversions.cs" />
@@ -146,8 +151,12 @@
     <EmbeddedResource Include="Assets\GLSL\billboard-geometry.glsl" />
     <EmbeddedResource Include="Assets\GLSL\particle-fragment.glsl" />
     <EmbeddedResource Include="Assets\GLSL\passthrough-vertex.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\text-fragment.glsl" />
+    <EmbeddedResource Include="Assets\GLSL\text-vertex.glsl" />
+    <EmbeddedResource Include="Assets\HLSL\text-fragment.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\text-vertex.hlsl" />
     <None Include="project.json" />
-        <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
+    <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{2665014F-0FEC-4268-8F77-7B029921AB09}</Project>
       <Name>ImGui.NET</Name>
     </ProjectReference>
@@ -158,6 +167,9 @@
     <ProjectReference Include="..\..\ext\veldrid\src\Veldrid.Assets\Veldrid.Assets.csproj">
       <Project>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</Project>
       <Name>Veldrid.Assets</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ext\sharpfont\SharpFont\SharpFont.NETCore.csproj">
+      <Name>SharpFont</Name>
     </ProjectReference>
     <ProjectReference Include="..\BEPU\BEPUphysics\BEPUphysics.csproj">
       <Project>{C0D52C9F-14B8-4008-8DDC-109C27561A5C}</Project>

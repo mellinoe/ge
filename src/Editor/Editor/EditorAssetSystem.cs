@@ -3,6 +3,8 @@ using Engine.Assets;
 using Newtonsoft.Json;
 using Veldrid.Assets;
 using Engine.Audio;
+using Engine.Graphics;
+using SharpFont;
 
 namespace Engine.Editor
 {
@@ -31,6 +33,8 @@ namespace Engine.Editor
             _projectAssetDatabase.DefaultSerializer.Binder = binder;
             _projectAssetDatabase.RegisterTypeLoader(typeof(WaveFile), new WaveFileLoader());
             LooseFileDatabase.AddExtensionTypeMapping(".wav", typeof(WaveFile));
+            _projectAssetDatabase.RegisterTypeLoader(typeof(FontFace), new FontFaceLoader());
+            LooseFileDatabase.AddExtensionTypeMapping(".ttf", typeof(FontFace));
 
             compoundDB.AddDatabase(_projectAssetDatabase);
             return compoundDB;

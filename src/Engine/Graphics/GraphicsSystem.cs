@@ -245,6 +245,17 @@ namespace Engine.Graphics
             _boundsRenderItemEntries.Remove(bri);
         }
 
+        public void NotifyBoundsChanged(BoundsRenderItem bri)
+        {
+            BoundsRenderItemEntry brie;
+            if (!_boundsRenderItemEntries.TryGetValue(bri, out brie))
+            {
+                throw new InvalidOperationException($"GraphicsSystem was notified of bounds change, but item was not registered. Item: {bri}");
+            }
+
+            brie.OnTransformChanged(brie.Transform);
+        }
+
         public int RayCast(Ray ray, List<RenderItem> hits)
         {
             hits.Clear();

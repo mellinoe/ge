@@ -1,5 +1,7 @@
 ﻿using Engine.Audio;
+using Engine.Graphics;
 using Newtonsoft.Json;
+using SharpFont;
 using System;
 using System.IO;
 using Veldrid.Assets;
@@ -24,6 +26,8 @@ namespace Engine.Assets
             fileAssets.DefaultSerializer.Binder = binder;
             fileAssets.RegisterTypeLoader(typeof(WaveFile), new WaveFileLoader());
             LooseFileDatabase.AddExtensionTypeMapping(".wav", typeof(WaveFile));
+            fileAssets.RegisterTypeLoader(typeof(FontFace), new FontFaceLoader());
+            LooseFileDatabase.AddExtensionTypeMapping(".ttf", typeof(FontFace));
             var embeddedAssets = new EngineEmbeddedAssets();
             var compoundDB = new CompoundAssetDatabase();
             compoundDB.AddDatabase(fileAssets);

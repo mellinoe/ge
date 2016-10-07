@@ -107,7 +107,7 @@ namespace Engine.Graphics
 
         public IEnumerable<string> GetStagesParticipated()
         {
-            yield return "Overlay";
+            return CommonStages.Overlay;
         }
 
         public unsafe void Render(RenderContext rc, string pipelineStage)

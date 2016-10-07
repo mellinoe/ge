@@ -73,6 +73,9 @@
       <Project>{881C55C7-0D91-4A87-B47A-46042C6F4CA0}</Project>
       <Name>Veldrid.Assets</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\ext\sharpfont\SharpFont\SharpFont.NETCore.csproj">
+      <Name>SharpFont</Name>
+    </ProjectReference>
     <ProjectReference Include="..\BEPU\BEPUphysics\BEPUphysics.csproj">
       <Project>{C0D52C9F-14B8-4008-8DDC-109C27561A5C}</Project>
       <Name>BEPUphysics</Name>

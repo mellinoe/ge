@@ -7,3 +7,6 @@
 [submodule "ext/veldrid"]
 	path = ext/veldrid
 	url = https://github.com/mellinoe/veldrid
+[submodule "ext/sharpfont"]
+	path = ext/sharpfont
+	url = https://github.com/mellinoe/sharpfont
