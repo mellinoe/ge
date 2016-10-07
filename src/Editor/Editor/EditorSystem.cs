@@ -623,11 +623,22 @@ namespace Engine.Editor
             }
         }
 
+        private DirectoryNode _projectRootDirectoryNode;
+        private TimeSpan _rootNodeRefreshPeriod = TimeSpan.FromSeconds(1);
+        private DateTime _lastRootNodeRefreshTime = DateTime.MinValue;
+
         private void DrawProjectAssets()
         {
+            DateTime now = DateTime.UtcNow;
+            if (now - _lastRootNodeRefreshTime > _rootNodeRefreshPeriod)
+            {
+                _projectRootDirectoryNode = _as.ProjectDatabase.GetRootDirectoryGraph();
+                _lastRootNodeRefreshTime = now;
+            }
+
             if (!string.IsNullOrEmpty(_projectContext?.ProjectRootPath))
             {
-                DrawRecursiveNode(_as.ProjectDatabase.GetRootDirectoryGraph(), false);
+                DrawRecursiveNode(_projectRootDirectoryNode, false);
             }
         }
 
@@ -929,6 +940,10 @@ namespace Engine.Editor
                 }
                 if (ImGui.BeginMenu("Debug"))
                 {
+                    if (ImGui.MenuItem("Debugger Break", Debugger.IsAttached))
+                    {
+                        Debugger.Break();
+                    }
                     if (ImGui.BeginMenu("Direct3D", _gs.Context is D3DRenderContext))
                     {
                         if (ImGui.MenuItem("Report Live Objects (Summary)"))
