@@ -43,7 +43,7 @@ namespace Engine.Graphics
             = new DynamicDataProvider<ParticleProperties>(new ParticleProperties() { Softness = 0.4f, ColorTint = RgbaFloat.White });
         private readonly ConstantBufferDataProvider[] _providers;
         private float _accumulator;
-        private IComparer<InstanceData> _cameraDistanceComparer;
+        private CameraDistanceComparer _cameraDistanceComparer;
         private DepthStencilState _depthStencilState;
 
         public ParticleSystem()
@@ -153,6 +153,7 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            _cameraDistanceComparer.UpdateCameraPosition();
             Array.Sort(_instanceData.Elements, _particleStates.Elements, 0, _instanceData.Count, _cameraDistanceComparer);
 
             _instanceDataVB.SetVertexData(new ArraySegment<InstanceData>(_instanceData.Elements, 0, _instanceData.Count), InstanceData.VertexDescriptor, 0);
@@ -404,16 +405,22 @@ namespace Engine.Graphics
         private class CameraDistanceComparer : IComparer<InstanceData>
         {
             private readonly GraphicsSystem _gs;
+            private Vector3 _currentCameraPosition;
 
             public CameraDistanceComparer(GraphicsSystem gs)
             {
                 _gs = gs;
             }
 
+            public void UpdateCameraPosition()
+            {
+                _currentCameraPosition = _gs.MainCamera.Transform.Position;
+            }
+
             public int Compare(InstanceData id1, InstanceData id2)
             {
-                float distance1 = Vector3.Distance(_gs.MainCamera.Transform.Position, id1.Offset);
-                float distance2 = Vector3.Distance(_gs.MainCamera.Transform.Position, id2.Offset);
+                float distance1 = Vector3.DistanceSquared(_currentCameraPosition, id1.Offset);
+                float distance2 = Vector3.DistanceSquared(_currentCameraPosition, id2.Offset);
 
                 return distance2.CompareTo(distance1);
             }
