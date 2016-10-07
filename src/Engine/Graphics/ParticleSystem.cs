@@ -122,6 +122,14 @@ namespace Engine.Graphics
             }
         }
 
+        public void EmitParticles(int numParticles)
+        {
+            for (int i = 0; i < numParticles; i++)
+            {
+                SpawnParticle();
+            }
+        }
+
         public bool Cull(ref BoundingFrustum visibleFrustum)
         {
             return visibleFrustum.Contains(Bounds) == ContainmentType.Disjoint;
@@ -225,6 +233,8 @@ namespace Engine.Graphics
                     _currentMaxParticleOffset = Vector3.Max(_currentMaxParticleOffset, _instanceData.Elements[i].Offset);
                 }
             }
+
+            _gs.NotifyBoundsChanged(this);
         }
 
         private void SpawnParticle()
@@ -322,8 +332,8 @@ namespace Engine.Graphics
             _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true);
 
 #if DEBUG_PARTICLE_BOUNDS
-            //var briwr = new BoundsRenderItemWireframeRenderer(this, rc);
-            //_gs.AddRenderItem(briwr, Transform);
+            var briwr = new BoundsRenderItemWireframeRenderer(this, rc);
+            _gs.AddRenderItem(briwr, Transform);
 #endif
         }
 
