@@ -14,6 +14,8 @@ struct PS_INPUT
 sampler sampler0;
 Texture2D<uint> FontAtlas;
 
+static const float alphaCutoff = 0.05;
+
 float4 PS(PS_INPUT input) : SV_TARGET
 {
     int3 pixelCoords = int3(input.texCoords * AtlasWidth, 0);
@@ -21,5 +23,10 @@ float4 PS(PS_INPUT input) : SV_TARGET
     float floatSample = (float)fontSample / 255.0;
     float4 outputColor = input.color;
     outputColor.a *= floatSample;
+    if (outputColor.a <= alphaCutoff)
+    {
+        discard;
+    }
+
     return outputColor;
 }
