@@ -5,6 +5,8 @@ using System.Numerics;
 using Veldrid;
 using Veldrid.Assets;
 using Veldrid.Graphics;
+using System;
+using Newtonsoft.Json;
 
 namespace Engine.Graphics
 {
@@ -12,15 +14,27 @@ namespace Engine.Graphics
     {
         private GraphicsSystem _gs;
         private AssetSystem _as;
-        private TextBuffer _textBuffer;
-        private TextureAtlas _textureAtlas;
-        private TextAnalyzer _textAnalyzer;
         private DynamicDataProvider<Vector4> _textOffset = new DynamicDataProvider<Vector4>();
+        private Vector2 _absoluteOffset;
+        private Vector2 _relativeOffset;
+        private TextAnchor _anchor = TextAnchor.Left;
+
+        private TextBuffer _textBuffer;
+        private TextAnalyzer _textAnalyzer;
+
+        private TextBuffer _shadowTextBuffer;
+        private TextAnalyzer _shadowTextAnalyzer;
+        private bool _drawOutlines;
+        private Vector2 _outlineSize;
+
+        private TextureAtlas _textureAtlas;
 
         private string _text;
         private bool _textChanged;
+        private bool _fontChanged;
         private AssetRef<FontFace> _fontRef;
         private float _fontSize = 10;
+        private FontFace _font;
 
         public string Text
         {
@@ -38,7 +52,7 @@ namespace Engine.Graphics
         public AssetRef<FontFace> Font
         {
             get { return _fontRef; }
-            set { _fontRef = value; _textChanged = true; }
+            set { _fontRef = value; _fontChanged = true; }
         }
 
         public float FontSize
@@ -47,10 +61,34 @@ namespace Engine.Graphics
             set { _fontSize = value; _textChanged = true; }
         }
 
-        public Vector2 ScreenPosition
+        public Vector2 ScreenAbsoluteOffset
         {
-            get { return _textOffset.Data.XY(); }
-            set { _textOffset.Data = new Vector4(value, 0, 0); }
+            get { return _absoluteOffset; }
+            set { _absoluteOffset = value; UpdateTextOffset(); }
+        }
+
+        public Vector2 ScreenRelativePosition
+        {
+            get { return _relativeOffset; }
+            set { _relativeOffset = value; UpdateTextOffset(); }
+        }
+
+        public TextAnchor Anchor
+        {
+            get { return _anchor; ; }
+            set { _anchor = value; UpdateTextOffset(); }
+        }
+
+        public bool DrawOutlines
+        {
+            get { return _drawOutlines; }
+            set { _drawOutlines = value; _textChanged = true; }
+        }
+
+        public Vector2 OutlineSize
+        {
+            get { return _outlineSize; }
+            set { _outlineSize = value; _textChanged = true; }
         }
 
         protected override void Attached(SystemRegistry registry)
@@ -60,6 +98,7 @@ namespace Engine.Graphics
             _textBuffer = new TextBuffer(_gs.Context);
             _textureAtlas = new TextureAtlas(_gs.Context, 2048);
             _textAnalyzer = new TextAnalyzer(_textureAtlas);
+            _gs.Context.WindowResized += OnWindowResized;
         }
 
         protected override void Removed(SystemRegistry registry)
@@ -96,23 +135,112 @@ namespace Engine.Graphics
         {
             if (_fontRef != null && !_fontRef.ID.IsEmpty)
             {
-                if (_textChanged)
+                if (_textChanged || _fontChanged)
                 {
                     _textChanged = false;
-                    _textBuffer.Clear();
-                    _textAnalyzer.Clear();
-                    FontFace font = _as.Database.LoadAsset(_fontRef);
-                    _textBuffer.Append(
-                        _textAnalyzer,
-                        font,
-                        _text,
-                        FontSize * _gs.Context.Window.ScaleFactor.X,
-                        _textureAtlas.Width,
-                        new System.Drawing.RectangleF(0, 0, 1000, 1000));
+                    RecreateTextBuffers();
                 }
 
+                _shadowTextBuffer?.Render(_textureAtlas, _textOffset);
                 _textBuffer.Render(_textureAtlas, _textOffset);
             }
         }
+
+        private void RecreateTextBuffers()
+        {
+            _textBuffer.Clear();
+            _textAnalyzer.Clear();
+            _shadowTextBuffer?.Clear();
+            _shadowTextAnalyzer?.Clear();
+
+            if (_fontChanged)
+            {
+                _fontChanged = false;
+                _font = _as.Database.LoadAsset(_fontRef);
+            }
+
+            if (_drawOutlines)
+            {
+                _textBuffer.OuterMargins = _outlineSize;
+            }
+            else
+            {
+                _textBuffer.OuterMargins = Vector2.Zero;
+            }
+
+            _textBuffer.Append(
+                _textAnalyzer,
+                _font,
+                _text,
+                FontSize * _gs.Context.Window.ScaleFactor.X,
+                _textureAtlas.Width,
+                new System.Drawing.RectangleF(0, 0, 1000, 1000));
+
+            if (_drawOutlines)
+            {
+                if (_shadowTextBuffer == null)
+                {
+                    _shadowTextBuffer = new TextBuffer(_gs.Context);
+                    _shadowTextAnalyzer = new TextAnalyzer(_textureAtlas);
+                }
+
+                _shadowTextBuffer.Append(
+                    _shadowTextAnalyzer,
+                    _font,
+                    _text,
+                    FontSize * _gs.Context.Window.ScaleFactor.X,
+                    _textureAtlas.Width,
+                    new System.Drawing.RectangleF(0, 0, 1000, 1000),
+                    RgbaByte.Black);
+            }
+
+            UpdateTextOffset();
+        }
+
+        private void UpdateTextOffset()
+        {
+            if (_gs != null)
+            {
+                Vector2 anchorOffset = Vector2.Zero;
+                {
+                    switch (_anchor)
+                    {
+                        case TextAnchor.Left:
+                            anchorOffset = Vector2.Zero;
+                            break;
+                        case TextAnchor.Center:
+                            anchorOffset = -_textBuffer.Size / 2f;
+                            break;
+                        case TextAnchor.Right:
+                            anchorOffset = -_textBuffer.Size;
+                            break;
+                        default:
+                            throw new InvalidOperationException("Invalid anchor type: " + _anchor);
+                    }
+                }
+
+                Vector2 relativeOffsetAmount = new Vector2(_relativeOffset.X * _gs.Context.Window.Width, _relativeOffset.Y * _gs.Context.Window.Height);
+
+                if (_textOffset != null)
+                {
+                    _textOffset.Data = new Vector4(anchorOffset + _absoluteOffset + relativeOffsetAmount, 0, 0);
+                }
+            }
+        }
+
+        private void OnWindowResized()
+        {
+            if (_relativeOffset != Vector2.Zero)
+            {
+                UpdateTextOffset();
+            }
+        }
+    }
+
+    public enum TextAnchor
+    {
+        Left,
+        Center,
+        Right,
     }
 }

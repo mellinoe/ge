@@ -22,6 +22,10 @@ namespace Engine.Graphics
         private DynamicDataProvider<Matrix4x4> _screenOrthoProjection = new DynamicDataProvider<Matrix4x4>();
         private ConstantBufferDataProvider[] _providers = new ConstantBufferDataProvider[3];
 
+        public Vector2 Size { get; private set; }
+
+        public Vector2 OuterMargins { get; set; }
+
         public TextBuffer(RenderContext rc)
         {
             _rc = rc;
@@ -68,20 +72,21 @@ namespace Engine.Graphics
                 var height = thing.Height;
                 var region = new Vector4(thing.SourceX, thing.SourceY, width, height) / atlasWidth;
                 var origin = new Vector2(thing.DestX, thing.DestY);
-                if (thing.DestX > 0 && thing.DestY > 0)
+                if (origin.X > -100000 && origin.Y > -10000)
                 {
+                    Vector2 localMax = origin + new Vector2(width, height);
                     min = Vector2.Min(min, origin);
-                    max = Vector2.Max(max, origin);
+                    max = Vector2.Max(max, localMax);
                 }
-                memBlock[index++] = new TextVertex(origin + new Vector2(0, height), new Vector2(region.X, region.Y + region.W), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(width, height), new Vector2(region.X + region.Z, region.Y + region.W), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(width, 0), new Vector2(region.X + region.Z, region.Y), color);
-                memBlock[index++] = new TextVertex(origin, new Vector2(region.X, region.Y), color);
+                var margin = OuterMargins;
+                memBlock[index++] = new TextVertex(origin + new Vector2(0 + margin.X, height - margin.Y), new Vector2(region.X, region.Y + region.W), color);
+                memBlock[index++] = new TextVertex(origin + new Vector2(width - margin.X, height - margin.Y), new Vector2(region.X + region.Z, region.Y + region.W), color);
+                memBlock[index++] = new TextVertex(origin + new Vector2(width - margin.X, 0 + margin.Y), new Vector2(region.X + region.Z, region.Y), color);
+                memBlock[index++] = new TextVertex(origin + new Vector2(margin.X, margin.Y), new Vector2(region.X, region.Y), color);
                 _characterCount++;
             }
 
-            Console.WriteLine("Width of text is " + (max.X - min.X));
-            Console.WriteLine("Height of text is " + (max.Y - min.Y));
+            Size = new Vector2(max.X - min.X, max.Y - min.Y);
 
             _vb?.Dispose();
             _vb = _rc.ResourceFactory.CreateVertexBuffer(memBlock, new VertexDescriptor(TextVertex.SizeInBytes, 3), false);

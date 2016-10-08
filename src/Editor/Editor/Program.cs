@@ -31,7 +31,6 @@ namespace Engine.Editor
             game.SystemRegistry.Register(gs);
             game.LimitFrameRate = true;
 
-
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
             {
