@@ -34,12 +34,18 @@ namespace Engine.Audio
             }
             else if (options == AudioEngineOptions.UseOpenAL || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new OpenALEngine();
+                try
+                {
+                    return new OpenALEngine();
+                }
+                catch (DllNotFoundException) { }
             }
             else
             {
                 return new XAudio2Engine();
             }
+
+            return new NullAudioEngine();
         }
 
         protected override void UpdateCore(float deltaSeconds)
