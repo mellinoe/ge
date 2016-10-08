@@ -156,6 +156,8 @@ namespace Engine.Audio.XAudio
             _audioBuffer.Stream = xa2Buffer.DataStream;
             _audioBuffer.AudioBytes = xa2Buffer.SizeInBytes;
             _audioBuffer.Flags = BufferFlags.EndOfStream;
+            _sourceVoice.Stop();
+            _sourceVoice.FlushSourceBuffers();
             _sourceVoice.SubmitSourceBuffer(_audioBuffer, null);
             _sourceVoice.Start();
         }
