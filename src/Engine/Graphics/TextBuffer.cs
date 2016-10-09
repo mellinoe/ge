@@ -24,8 +24,6 @@ namespace Engine.Graphics
 
         public Vector2 Size { get; private set; }
 
-        public Vector2 OuterMargins { get; set; }
-
         public TextBuffer(RenderContext rc)
         {
             _rc = rc;
@@ -78,11 +76,10 @@ namespace Engine.Graphics
                     min = Vector2.Min(min, origin);
                     max = Vector2.Max(max, localMax);
                 }
-                var margin = OuterMargins;
-                memBlock[index++] = new TextVertex(origin + new Vector2(0 + margin.X, height - margin.Y), new Vector2(region.X, region.Y + region.W), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(width - margin.X, height - margin.Y), new Vector2(region.X + region.Z, region.Y + region.W), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(width - margin.X, 0 + margin.Y), new Vector2(region.X + region.Z, region.Y), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(margin.X, margin.Y), new Vector2(region.X, region.Y), color);
+                memBlock[index++] = new TextVertex(origin + new Vector2(0, height), new Vector2(region.X, region.Y + region.W), color);
+                memBlock[index++] = new TextVertex(origin + new Vector2(width, height), new Vector2(region.X + region.Z, region.Y + region.W), color);
+                memBlock[index++] = new TextVertex(origin + new Vector2(width, 0), new Vector2(region.X + region.Z, region.Y), color);
+                memBlock[index++] = new TextVertex(origin, new Vector2(region.X, region.Y), color);
                 _characterCount++;
             }
 

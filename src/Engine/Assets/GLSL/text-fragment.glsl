@@ -17,5 +17,5 @@ void main()
     uint fontSample = texture(FontAtlas, texCoords).r;
     float floatSample = float(fontSample) / 255.0;
     outputColor = color;
-    outputColor.a *= floatSample + (AtlasInfo.x - AtlasInfo.y);
+    outputColor.a *= floatSample + (AtlasInfo.x - AtlasInfo.x);
 }

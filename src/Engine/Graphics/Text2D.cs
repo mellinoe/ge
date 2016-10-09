@@ -21,12 +21,6 @@ namespace Engine.Graphics
 
         private TextBuffer _textBuffer;
         private TextAnalyzer _textAnalyzer;
-
-        private TextBuffer _shadowTextBuffer;
-        private TextAnalyzer _shadowTextAnalyzer;
-        private bool _drawOutlines;
-        private Vector2 _outlineSize;
-
         private TextureAtlas _textureAtlas;
 
         private string _text;
@@ -79,18 +73,6 @@ namespace Engine.Graphics
             set { _anchor = value; UpdateTextOffset(); }
         }
 
-        public bool DrawOutlines
-        {
-            get { return _drawOutlines; }
-            set { _drawOutlines = value; _textChanged = true; }
-        }
-
-        public Vector2 OutlineSize
-        {
-            get { return _outlineSize; }
-            set { _outlineSize = value; _textChanged = true; }
-        }
-
         protected override void Attached(SystemRegistry registry)
         {
             _gs = registry.GetSystem<GraphicsSystem>();
@@ -141,7 +123,6 @@ namespace Engine.Graphics
                     RecreateTextBuffers();
                 }
 
-                _shadowTextBuffer?.Render(_textureAtlas, _textOffset);
                 _textBuffer.Render(_textureAtlas, _textOffset);
             }
         }
@@ -150,22 +131,11 @@ namespace Engine.Graphics
         {
             _textBuffer.Clear();
             _textAnalyzer.Clear();
-            _shadowTextBuffer?.Clear();
-            _shadowTextAnalyzer?.Clear();
 
             if (_fontChanged)
             {
                 _fontChanged = false;
                 _font = _as.Database.LoadAsset(_fontRef);
-            }
-
-            if (_drawOutlines)
-            {
-                _textBuffer.OuterMargins = _outlineSize;
-            }
-            else
-            {
-                _textBuffer.OuterMargins = Vector2.Zero;
             }
 
             _textBuffer.Append(
@@ -175,24 +145,6 @@ namespace Engine.Graphics
                 FontSize * _gs.Context.Window.ScaleFactor.X,
                 _textureAtlas.Width,
                 new System.Drawing.RectangleF(0, 0, 1000, 1000));
-
-            if (_drawOutlines)
-            {
-                if (_shadowTextBuffer == null)
-                {
-                    _shadowTextBuffer = new TextBuffer(_gs.Context);
-                    _shadowTextAnalyzer = new TextAnalyzer(_textureAtlas);
-                }
-
-                _shadowTextBuffer.Append(
-                    _shadowTextAnalyzer,
-                    _font,
-                    _text,
-                    FontSize * _gs.Context.Window.ScaleFactor.X,
-                    _textureAtlas.Width,
-                    new System.Drawing.RectangleF(0, 0, 1000, 1000),
-                    RgbaByte.Black);
-            }
 
             UpdateTextOffset();
         }

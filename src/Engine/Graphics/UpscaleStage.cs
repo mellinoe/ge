@@ -52,7 +52,7 @@ namespace Engine.Graphics
                     new MaterialGlobalInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _identityProvider),
                     new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, _identityProvider)),
                 MaterialInputs<MaterialPerObjectInputElement>.Empty,
-                MaterialTextureInputs.Empty);
+                new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture")));
 
             if (sourceTexture != null)
             {
