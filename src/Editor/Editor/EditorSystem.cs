@@ -23,6 +23,7 @@ using Engine.Audio;
 using Veldrid.Graphics.Direct3D;
 using SharpDX.Direct3D11;
 using SharpFont;
+using Veldrid;
 
 namespace Engine.Editor
 {
@@ -97,7 +98,7 @@ namespace Engine.Editor
         private InMemoryAsset<Component> _componentCopySource;
         private string _componentCopySourceType;
         private GameObject _newSelectedObject;
-        private List<RenderItem> _gsRCHits = new List<RenderItem>();
+        private List<RayCastHit<RenderItem>> _gsRCHits = new List<RayCastHit<RenderItem>>();
         private bool _focusNameField;
         private static readonly Type s_transformType = typeof(Transform);
 
@@ -477,7 +478,7 @@ namespace Engine.Editor
                     int hits = _gs.RayCast(ray, _gsRCHits);
                     if (hits > 0)
                     {
-                        var last = (Component)_gsRCHits.Last(ri => ri is Component);
+                        var last = (Component)_gsRCHits.OrderBy(hit => hit.Distance).First(hit => hit.Item is Component).Item;
                         GameObject go = last.GameObject;
                         GameObjectClicked(go);
                     }

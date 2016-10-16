@@ -325,7 +325,14 @@ namespace Engine.Graphics
             }
 
             ray = Ray.Transform(ray, invWorld);
-            return _mesh.RayCast(ray, out distance);
+            bool result = _mesh.RayCast(ray, out distance);
+            if (result)
+            {
+                Vector3 total = ray.Direction * distance;
+                distance = (total * Transform.Scale).Length();
+            }
+
+            return result;
         }
 
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";

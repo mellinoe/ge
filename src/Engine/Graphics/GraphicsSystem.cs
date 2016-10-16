@@ -256,16 +256,26 @@ namespace Engine.Graphics
             brie.OnTransformChanged(brie.Transform);
         }
 
-        public int RayCast(Ray ray, List<RenderItem> hits)
+        public int RayCast(Ray ray, List<RayCastHit<RenderItem>> hits)
         {
             hits.Clear();
             return _visiblityManager.Octree.RayCast(ray, hits, RayCastFilter);
         }
 
-        private bool RayCastFilter(Ray ray, RenderItem ri)
+        private bool RayCastFilter(Ray ray, RenderItem ri, out RayCastHit<RenderItem> hit)
         {
             float distance;
-            return ((BoundsRenderItem)ri).RayCast(ray, out distance);
+            bool result = ((BoundsRenderItem)ri).RayCast(ray, out distance);
+            if (result)
+            {
+                hit = new RayCastHit<RenderItem>(ri, ray.Origin + ray.Direction * distance, distance);
+            }
+            else
+            {
+                hit = new RayCastHit<RenderItem>();
+            }
+
+            return result;
         }
 
         public void ToggleOctreeVisualizer()
