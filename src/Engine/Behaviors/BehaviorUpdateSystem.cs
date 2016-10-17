@@ -9,7 +9,7 @@ namespace Engine.Behaviors
         private readonly SystemRegistry _registry;
 
         private ImmutableList<IUpdateable> _behaviors = ImmutableList.Create<IUpdateable>();
-        private List<Behavior> _newStarts = new List<Behavior>();
+        private ImmutableList<Behavior> _newStarts = ImmutableList.Create<Behavior>();
 
         public IEnumerable<IUpdateable> Updateables => _behaviors;
 
@@ -24,7 +24,7 @@ namespace Engine.Behaviors
             {
                 b.StartInternal(_registry);
             }
-            _newStarts.Clear();
+            _newStarts = _newStarts.Clear();
 
             foreach (var behavior in _behaviors)
             {
@@ -37,7 +37,7 @@ namespace Engine.Behaviors
             _behaviors = _behaviors.Add(behavior);
             if (behavior is Behavior)
             {
-                _newStarts.Add((Behavior)behavior);
+                _newStarts = _newStarts.Add((Behavior)behavior);
             }
         }
 
@@ -46,7 +46,7 @@ namespace Engine.Behaviors
             _behaviors = _behaviors.Remove(behavior);
             if (behavior is Behavior)
             {
-                _newStarts.Remove((Behavior)behavior);
+                _newStarts = _newStarts.Remove((Behavior)behavior);
             }
         }
     }
