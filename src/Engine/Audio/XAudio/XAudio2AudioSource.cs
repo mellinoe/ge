@@ -19,6 +19,7 @@ namespace Engine.Audio.XAudio
 
         private static readonly Listener s_centeredListener = CreateCenteredListener();
         private bool _sourcePositionDirty;
+        private bool _stereoState;
 
         public XAudio2AudioSource(XAudio2Engine engine)
         {
@@ -134,7 +135,7 @@ namespace Engine.Audio.XAudio
             XAudio2AudioBuffer xa2Buffer = (XAudio2AudioBuffer)buffer;
             _channelCount = GetChannelCount(xa2Buffer.Format);
             _emitter.ChannelCount = _channelCount;
-            if (_channelCount > 1)
+            if ((_channelCount > 1 && !_stereoState) || (_channelCount == 1 && _stereoState))
             {
                 float volume = _sourceVoice.Volume;
                 _sourceVoice.DestroyVoice();
@@ -145,6 +146,7 @@ namespace Engine.Audio.XAudio
                 _emitter.ChannelAzimuths = new[] { 0.0f };
                 _dspSettings = new DspSettings(_channelCount, 2);
                 UpdateSourcePosition();
+                _stereoState = _channelCount == 2;
             }
 
             if (_sourcePositionDirty)
