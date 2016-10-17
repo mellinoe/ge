@@ -9,6 +9,9 @@ namespace Engine
 
         private SceneAsset _loadedScene;
 
+        public event Action BeforeSceneLoaded;
+        public event Action AfterSceneLoaded;
+
         public SceneLoaderSystem(GameObjectQuerySystem goqs)
         {
             _goqs = goqs;
@@ -16,9 +19,11 @@ namespace Engine
 
         public void LoadScene(SceneAsset asset)
         {
+            BeforeSceneLoaded?.Invoke();
             ClearCurrentSceneGameObjects();
             asset.GenerateGameObjects();
             _loadedScene = asset;
+            AfterSceneLoaded?.Invoke();
         }
 
         protected virtual void ClearCurrentSceneGameObjects()

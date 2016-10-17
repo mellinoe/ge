@@ -22,7 +22,7 @@ namespace Engine.Graphics
         // Actual CPU-side vertex buffer data.
         private RawList<InstanceData> _instanceData;
         // Housekeeping info for particles.
-        private RawList<ParticleState> _particleStates;
+        private RawList<ParticleStateInternal> _particleStates;
 
         private Vector3 _currentMinParticleOffset;
         private Vector3 _currentMaxParticleOffset;
@@ -50,7 +50,7 @@ namespace Engine.Graphics
         {
             _providers = new ConstantBufferDataProvider[] { _worldProvider, _particleProperties };
             _instanceData = new RawList<InstanceData>();
-            _particleStates = new RawList<ParticleState>();
+            _particleStates = new RawList<ParticleStateInternal>();
         }
 
         public ParticleSimulationSpace SimulationSpace { get; set; } = ParticleSimulationSpace.Local;
@@ -257,6 +257,12 @@ namespace Engine.Graphics
                         emissionDirection.Y = Math.Abs(emissionDirection.Y);
                         break;
                     }
+                case ParticleEmissionShape.Ring:
+                    {
+                        Vector2 circlePoint = GetRandomPointOnCircle();
+                        emissionDirection = new Vector3(circlePoint.X, 0, circlePoint.Y);
+                        break;
+                    }
                 default:
                     throw new InvalidOperationException("Invalid emission shape: " + EmissionShape);
             }
@@ -275,7 +281,7 @@ namespace Engine.Graphics
             }
 
             _instanceData.Add(new InstanceData(position, 1f, StartingSize));
-            _particleStates.Add(new ParticleState() { Velocity = initialVelocity });
+            _particleStates.Add(new ParticleStateInternal() { Velocity = initialVelocity });
         }
 
         private Vector3 GetRandomPointOnSphere()
@@ -293,6 +299,12 @@ namespace Engine.Graphics
             float y = (float)(2 * x2 * Math.Sqrt(1 - (x1 * x1) - (x2 * x2)));
             float z = (float)(1 - 2 * ((x1 * x1) + (x2 * x2)));
             return new Vector3(x, y, z);
+        }
+
+        private Vector2 GetRandomPointOnCircle()
+        {
+            double angle = _random.NextDouble() * Math.PI * 2;
+            return new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
         }
 
         private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
@@ -396,7 +408,7 @@ namespace Engine.Graphics
 
         // CPU-side housekeeping state for individual particles.
         [StructLayout(LayoutKind.Sequential)]
-        private struct ParticleState
+        private struct ParticleStateInternal
         {
             public float Age;
             public Vector3 Velocity;
@@ -437,5 +449,6 @@ namespace Engine.Graphics
     {
         Sphere,
         Hemisphere,
+        Ring,
     }
 }
