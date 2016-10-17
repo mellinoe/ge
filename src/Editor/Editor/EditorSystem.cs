@@ -1227,6 +1227,7 @@ namespace Engine.Editor
             _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
 
             StopSimulation();
+            _selectedObjects.Clear();
             DestroyNonEditorGameObjects();
             ActivateCurrentScene();
 
