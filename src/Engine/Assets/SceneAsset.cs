@@ -8,6 +8,8 @@ namespace Engine.Assets
 {
     public class SceneAsset
     {
+        public string Name { get; set; }
+
         public SerializedGameObject[] GameObjects { get; set; }
 
         public void GenerateGameObjects()
