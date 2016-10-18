@@ -12,6 +12,8 @@ namespace Engine
         public event Action BeforeSceneLoaded;
         public event Action AfterSceneLoaded;
 
+        public SceneAsset LoadedScene => _loadedScene;
+
         public SceneLoaderSystem(GameObjectQuerySystem goqs)
         {
             _goqs = goqs;
