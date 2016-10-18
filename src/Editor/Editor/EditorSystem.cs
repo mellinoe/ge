@@ -60,6 +60,7 @@ namespace Engine.Editor
         private readonly GraphicsSystem _gs;
         private readonly BehaviorUpdateSystem _bus;
         private readonly AssemblyLoadSystem _als;
+        private readonly EditorSceneLoaderSystem _sls;
         private readonly CommandLineOptions _commandLineOptions;
 
         private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
@@ -112,6 +113,7 @@ namespace Engine.Editor
             _as = (EditorAssetSystem)registry.GetSystem<AssetSystem>();
             _bus = registry.GetSystem<BehaviorUpdateSystem>();
             _als = registry.GetSystem<AssemblyLoadSystem>();
+            _sls = (EditorSceneLoaderSystem)registry.GetSystem<SceneLoaderSystem>();
             _commandLineOptions = commandLineOptions;
 
             EditorDrawerCache.AddDrawer(new FuncEditorDrawer<Transform>(DrawTransform));
@@ -1215,7 +1217,7 @@ namespace Engine.Editor
             Console.WriteLine("Opening scene: " + path);
 
             SceneAsset loadedAsset;
-            if (!_as.ProjectDatabase.TryLoadAsset(path, out loadedAsset))
+            if (!_as.ProjectDatabase.TryLoadAsset(path, false, out loadedAsset))
             {
                 return false;
             }
@@ -1227,9 +1229,10 @@ namespace Engine.Editor
             _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
 
             StopSimulation();
+            _sceneCam = null;
             _selectedObjects.Clear();
-            DestroyNonEditorGameObjects();
-            ActivateCurrentScene();
+            _sls.LoadScene(loadedAsset);
+            RefreshCameras();
 
             EditorPreferences.Instance.SetLatestScene(_projectContext.ProjectRootPath, path);
             _currentScenePath = path;
@@ -1245,6 +1248,11 @@ namespace Engine.Editor
         private void ActivateScene(SceneAsset asset)
         {
             asset.GenerateGameObjects();
+            RefreshCameras();
+        }
+
+        private void RefreshCameras()
+        {
             _sceneCam = _gs.MainCamera;
             if (_sceneCam == _editorCamera)
             {
