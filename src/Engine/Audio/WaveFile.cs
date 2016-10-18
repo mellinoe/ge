@@ -33,7 +33,7 @@ namespace Engine.Audio
                 string fmtChunkID = Encoding.ASCII.GetString(fmtSubChunk.Subchunk1ID, 4);
                 if (fmtChunkID != "fmt ")
                 {
-                    throw new InvalidOperationException("Not a supported fmc sub-chunk ID: " + fmtChunkID);
+                    throw new InvalidOperationException("Not a supported fmt sub-chunk ID: " + fmtChunkID);
                 }
 
                 Format = MapFormat(fmtSubChunk.NumChannels, fmtSubChunk.BitsPerSample);
