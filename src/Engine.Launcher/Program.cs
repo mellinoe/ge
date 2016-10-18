@@ -84,6 +84,7 @@ namespace Engine
 
             SceneLoaderSystem sls = new SceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register(sls);
+            sls.AfterSceneLoaded += () => game.ResetDeltaTime();
 
             EngineLaunchOptions.AudioEnginePreference? audioPreference = launchOptions.AudioPreference;
             AudioEngineOptions audioEngineOptions =

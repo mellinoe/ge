@@ -11,6 +11,8 @@ namespace Engine
         public bool LimitFrameRate { get; set; } = true;
         private readonly List<GameObject> _gameObjects = new List<GameObject>();
         private readonly List<GameObject> _destroyList = new List<GameObject>();
+        private Stopwatch _sw;
+        private long _previousFrameTicks;
 
         public SystemRegistry SystemRegistry { get; } = new SystemRegistry();
 
@@ -44,22 +46,21 @@ namespace Engine
         {
             _running = true;
 
-            long previousFrameTicks = 0;
-            Stopwatch sw = Stopwatch.StartNew();
+            _sw = Stopwatch.StartNew();
             while (_running)
             {
                 double desiredFrameTime = 1000.0 / DesiredFramerate;
-                long currentFrameTicks = sw.ElapsedTicks;
-                double deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+                long currentFrameTicks = _sw.ElapsedTicks;
+                double deltaMilliseconds = (currentFrameTicks - _previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
 
                 while (LimitFrameRate && deltaMilliseconds < desiredFrameTime)
                 {
                     Thread.Sleep(0);
-                    currentFrameTicks = sw.ElapsedTicks;
-                    deltaMilliseconds = (currentFrameTicks - previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
+                    currentFrameTicks = _sw.ElapsedTicks;
+                    deltaMilliseconds = (currentFrameTicks - _previousFrameTicks) * (1000.0 / Stopwatch.Frequency);
                 }
 
-                previousFrameTicks = currentFrameTicks;
+                _previousFrameTicks = currentFrameTicks;
 
                 foreach (var kvp in SystemRegistry.GetSystems())
                 {
@@ -78,6 +79,12 @@ namespace Engine
         public void Exit()
         {
             _running = false;
+        }
+
+        public void ResetDeltaTime()
+        {
+            _sw?.Restart();
+            _previousFrameTicks = 0L;
         }
     }
 }

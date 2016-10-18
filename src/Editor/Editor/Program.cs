@@ -53,6 +53,7 @@ namespace Engine.Editor
 
             EditorSceneLoaderSystem esls = new EditorSceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register<SceneLoaderSystem>(esls);
+            esls.AfterSceneLoaded += () => game.ResetDeltaTime();
 
             CommandLineOptions.AudioEnginePreference? audioPreference = commandLineOptions.AudioPreference;
             AudioEngineOptions audioEngineOptions =
