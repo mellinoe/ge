@@ -112,6 +112,8 @@ namespace Engine
             game.SystemRegistry.Register(ccs);
 #endif
 
+            game.SystemRegistry.Register(new SynchronizationHelperSystem());
+
             SceneAsset scene;
             AssetID mainSceneID = projectManifest.OpeningScene.ID;
             if (mainSceneID.IsEmpty)

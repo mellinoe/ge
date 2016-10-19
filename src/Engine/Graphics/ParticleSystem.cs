@@ -46,6 +46,23 @@ namespace Engine.Graphics
         private CameraDistanceComparer _cameraDistanceComparer;
         private DepthStencilState _depthStencilState;
 
+        private static readonly MaterialVertexInput s_vertexInputs =
+            new MaterialVertexInput(InstanceData.SizeInBytes,
+                new MaterialVertexInputElement("in_offset", VertexSemanticType.Position, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
+                new MaterialVertexInputElement("in_alpha", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1),
+                new MaterialVertexInputElement("in_size", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1));
+        private static readonly MaterialInputs<MaterialGlobalInputElement> s_globalInputs =
+            new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
+                    new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo"));
+        private static readonly MaterialInputs<MaterialPerObjectInputElement> s_perObjectInputs =
+            new MaterialInputs<MaterialPerObjectInputElement>(
+                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 64),
+                    new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, ParticleProperties.SizeInBytes));
+        private static readonly MaterialTextureInputs s_textureInputs =
+            new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture"));
+
         public ParticleSystem()
         {
             _providers = new ConstantBufferDataProvider[] { _worldProvider, _particleProperties };
@@ -321,27 +338,12 @@ namespace Engine.Graphics
             _deviceTexture = _texture.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(_deviceTexture);
 
-            Shader vs = factory.CreateShader(ShaderType.Vertex, "passthrough-vertex");
-            Shader gs = factory.CreateShader(ShaderType.Geometry, "billboard-geometry");
-            Shader fs = factory.CreateShader(ShaderType.Fragment, "particle-fragment");
-            VertexInputLayout inputLayout = factory.CreateInputLayout(vs,
-                new MaterialVertexInput(InstanceData.SizeInBytes,
-                    new MaterialVertexInputElement("in_offset", VertexSemanticType.Position, VertexElementFormat.Float3, VertexElementInputClass.PerInstance, 1),
-                    new MaterialVertexInputElement("in_alpha", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1),
-                    new MaterialVertexInputElement("in_size", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1)));
-            ShaderSet shaderSet = factory.CreateShaderSet(inputLayout, vs, gs, fs);
-            ShaderConstantBindings constantBindings = factory.CreateShaderConstantBindings(rc, shaderSet,
-                new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
-                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
-                    new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo")
-                    ),
-                new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, _worldProvider.DataSizeInBytes),
-                    new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, _particleProperties.DataSizeInBytes)));
-            ShaderTextureBindingSlots textureSlots = factory.CreateShaderTextureBindingSlots(shaderSet,
-                new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture")));
-            _material = new Material(rc, shaderSet, constantBindings, textureSlots);
+            _material = materialCache.GetMaterial(rc,
+                "passthrough-vertex", "billboard-geometry", "particle-fragment",
+                s_vertexInputs,
+                s_globalInputs,
+                s_perObjectInputs,
+                s_textureInputs);
             _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true);
 
 #if DEBUG_PARTICLE_BOUNDS
@@ -369,7 +371,6 @@ namespace Engine.Graphics
         {
             _instanceDataVB.Dispose();
             _ib.Dispose();
-            _material.Dispose();
             _textureBinding.Dispose();
         }
 
@@ -399,6 +400,8 @@ namespace Engine.Graphics
             public RgbaFloat ColorTint;
             public float Softness;
             private readonly Vector3 __unused;
+
+            public const byte SizeInBytes = 32;
 
             public bool Equals(ParticleProperties other)
             {

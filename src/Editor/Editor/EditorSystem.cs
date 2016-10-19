@@ -103,7 +103,7 @@ namespace Engine.Editor
         private bool _focusNameField;
         private static readonly Type s_transformType = typeof(Transform);
 
-        public EditorSystem(SystemRegistry registry, CommandLineOptions commandLineOptions)
+        public EditorSystem(SystemRegistry registry, CommandLineOptions commandLineOptions, ImGuiRenderer imGuiRenderer)
         {
             _registry = registry;
             _physics = registry.GetSystem<PhysicsSystem>();
@@ -149,7 +149,6 @@ namespace Engine.Editor
             _physics.Enabled = false;
             _bus.Enabled = false;
 
-            var imGuiRenderer = _bus.Updateables.Single(u => u is ImGuiRenderer);
             _bus.Remove(imGuiRenderer);
             RegisterBehavior(imGuiRenderer);
 
@@ -480,9 +479,12 @@ namespace Engine.Editor
                     int hits = _gs.RayCast(ray, _gsRCHits);
                     if (hits > 0)
                     {
-                        var last = (Component)_gsRCHits.OrderBy(hit => hit.Distance).First(hit => hit.Item is Component).Item;
-                        GameObject go = last.GameObject;
-                        GameObjectClicked(go);
+                        var last = (Component)_gsRCHits.OrderBy(hit => hit.Distance).FirstOrDefault(hit => hit.Item is Component).Item;
+                        if (last != null)
+                        {
+                            GameObject go = last.GameObject;
+                            GameObjectClicked(go);
+                        }
                     }
                     else
                     {

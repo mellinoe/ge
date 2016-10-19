@@ -2,12 +2,18 @@ using System;
 using BEPUphysics;
 using BEPUutilities.Threading;
 using System.Numerics;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Collections.Concurrent;
 
 namespace Engine.Physics
 {
     public class PhysicsSystem : GameSystem
     {
         private readonly ParallelLooper _looper;
+
+        private BlockingCollection<ISpaceObject> _additions = new BlockingCollection<ISpaceObject>();
+        private BlockingCollection<ISpaceObject> _removals = new BlockingCollection<ISpaceObject>();
 
         public Space Space { get; }
 
@@ -25,17 +31,33 @@ namespace Engine.Physics
 
         protected override void UpdateCore(float deltaSeconds)
         {
+            FlushAdditionsAndRemovals();
             Space.Update(deltaSeconds);
+        }
+
+        private void FlushAdditionsAndRemovals()
+        {
+            ISpaceObject addition;
+            while (_additions.TryTake(out addition))
+            {
+                Space.Add(addition);
+            }
+
+            ISpaceObject removal;
+            while (_removals.TryTake(out removal))
+            {
+                Space.Remove(removal);
+            }
         }
 
         public void AddObject(ISpaceObject spaceObject)
         {
-            Space.Add(spaceObject);
+            _additions.Add(spaceObject);
         }
 
-        public void RemoveObject(ISpaceObject spaceObect)
+        public void RemoveObject(ISpaceObject spaceObject)
         {
-            Space.Remove(spaceObect);
+            _removals.Add(spaceObject);
         }
     }
 }

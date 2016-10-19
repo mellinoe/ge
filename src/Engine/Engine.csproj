@@ -106,6 +106,7 @@
     <Compile Include="Prefabs.cs" />
     <Compile Include="SceneHelpers.cs" />
     <Compile Include="ScoreSystem.cs" />
+    <Compile Include="SynchronizationHelperSystem.cs" />
     <Compile Include="SystemRegistry.cs" />
     <Compile Include="Transform.cs" />
     <Compile Include="TypeCache.cs" />

@@ -73,9 +73,11 @@ namespace Engine.Editor
             ConsoleCommandSystem ccs = new ConsoleCommandSystem(game.SystemRegistry);
             game.SystemRegistry.Register(ccs);
 
+            game.SystemRegistry.Register(new SynchronizationHelperSystem());
+
             window.Closed += game.Exit;
 
-            var editorSystem = new EditorSystem(game.SystemRegistry, commandLineOptions);
+            var editorSystem = new EditorSystem(game.SystemRegistry, commandLineOptions, imGuiRenderer);
             editorSystem.DiscoverComponentsFromAssembly(typeof(Program).GetTypeInfo().Assembly);
             // Editor system registers itself.
 

@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace Engine.Behaviors
 {
     public class BehaviorUpdateSystem : GameSystem
     {
         private readonly SystemRegistry _registry;
+        private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
 
-        private ImmutableList<IUpdateable> _behaviors = ImmutableList.Create<IUpdateable>();
-        private ImmutableList<Behavior> _newStarts = ImmutableList.Create<Behavior>();
+        private readonly BlockingCollection<IUpdateable> _newUpdateables = new BlockingCollection<IUpdateable>();
+        private readonly BlockingCollection<IUpdateable> _removedUpdateables = new BlockingCollection<IUpdateable>();
+        private readonly List<Behavior> _newStarts = new List<Behavior>();
 
-        public IEnumerable<IUpdateable> Updateables => _behaviors;
+        public IEnumerable<IUpdateable> Updateables => _updateables;
 
         public BehaviorUpdateSystem(SystemRegistry sr)
         {
@@ -20,34 +22,53 @@ namespace Engine.Behaviors
 
         protected override void UpdateCore(float deltaSeconds)
         {
-            foreach (var b in _newStarts)
-            {
-                b.StartInternal(_registry);
-            }
-            _newStarts = _newStarts.Clear();
+            FlushNewUpdateables();
 
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in _updateables)
             {
                 behavior.Update(deltaSeconds);
             }
         }
 
-        public void Register(IUpdateable behavior)
+        private void FlushNewUpdateables()
         {
-            _behaviors = _behaviors.Add(behavior);
-            if (behavior is Behavior)
+            _newStarts.Clear();
+
+            IUpdateable updateable;
+            while (_newUpdateables.TryTake(out updateable))
             {
-                _newStarts = _newStarts.Add((Behavior)behavior);
+                _updateables.Add(updateable);
+                Behavior behavior = updateable as Behavior;
+                if (behavior != null)
+                {
+                    _newStarts.Add(behavior);
+                }
             }
+
+            while (_removedUpdateables.TryTake(out updateable))
+            {
+                _updateables.Remove(updateable);
+                Behavior behavior = updateable as Behavior;
+                if (behavior != null)
+                {
+                    _newStarts.Remove(behavior);
+                }
+            }
+
+            foreach (Behavior behavior in _newStarts)
+            {
+                behavior.StartInternal(_registry);
+            }
+        }
+
+        public void Register(IUpdateable updateable)
+        {
+            _newUpdateables.Add(updateable);
         }
 
         public void Remove(IUpdateable behavior)
         {
-            _behaviors = _behaviors.Remove(behavior);
-            if (behavior is Behavior)
-            {
-                _newStarts = _newStarts.Remove((Behavior)behavior);
-            }
+            _removedUpdateables.Add(behavior);
         }
     }
 }
