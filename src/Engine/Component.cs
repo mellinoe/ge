@@ -86,5 +86,10 @@ namespace Engine
 
         protected abstract void Attached(SystemRegistry registry);
         protected abstract void Removed(SystemRegistry registry);
+
+        public override string ToString()
+        {
+            return $"{GetType().Name}, {GameObject.Name}";
+        }
     }
 }
