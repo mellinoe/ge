@@ -1,4 +1,5 @@
-﻿using Veldrid;
+﻿using System.Collections.Generic;
+using Veldrid;
 using Veldrid.Graphics;
 
 namespace Engine.Graphics
@@ -7,5 +8,6 @@ namespace Engine.Graphics
     {
         BoundingBox Bounds { get; }
         bool RayCast(Ray ray, out float distance);
+        int RayCast(Ray ray, List<float> distances);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -26,7 +27,9 @@ namespace Engine.Graphics
         public float NearPlaneDistance { get { return _nearPlaneDistance; } set { _nearPlaneDistance = value; SetProjectionMatrix(); } }
         public float FarPlaneDistance { get { return _farPlaneDistance; } set { _farPlaneDistance = value; SetProjectionMatrix(); } }
         public float OrthographicWidth { get { return _orthographicWidth; } set { _orthographicWidth = value; SetProjectionMatrix(); } }
-        public Vector3 UpDirection { get { return _upDirection; } set { _upDirection = value; if (Transform != null) { SetViewMatrix(Transform); } } }
+
+        [JsonIgnore]
+        public Vector3 GlobalUpDirection { get { return _upDirection; } set { _upDirection = value; if (Transform != null) { SetViewMatrix(Transform); } } }
 
         public ConstantBufferDataProvider ViewProvider => _viewProvider;
         public ConstantBufferDataProvider ProjectionProvider => _projectionProvider;
@@ -93,7 +96,7 @@ namespace Engine.Graphics
             _viewProvider.Data = Matrix4x4.CreateLookAt(
                 GameObject.Transform.Position,
                 GameObject.Transform.Position + GameObject.Transform.Forward,
-                _upDirection);
+                Transform.Up);
             _cameraInfoProvider.Data = new CameraInfo(Transform.Position, Transform.Forward, NearPlaneDistance, FarPlaneDistance);
             UpdateViewFrustum();
         }

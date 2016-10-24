@@ -1,10 +1,8 @@
 ﻿using Engine.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Veldrid;
-using Veldrid.Assets;
 using Veldrid.Graphics;
 
 namespace Engine.Editor.Graphics
@@ -306,6 +304,18 @@ namespace Engine.Editor.Graphics
                 distance = 0;
                 return false;
             }
+        }
+
+        public int RayCast(Ray ray, List<float> distances)
+        {
+            if (ray.Intersects(Bounds))
+            {
+                float distance = Vector3.Distance(Bounds.GetCenter(), ray.Origin);
+                distances.Add(distance);
+                return 1;
+            }
+
+            return 0;
         }
     }
 }

@@ -28,6 +28,8 @@ namespace Engine.Graphics
         private DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private ConstantBufferDataProvider[] _perObjectProviders;
 
+        public PrimitiveTopology Topology { get; set; } = PrimitiveTopology.TriangleList;
+
         public WireframeShapeRenderer(RenderContext rc, RgbaFloat color)
         {
             _textureData = new RawTextureDataArray<RgbaFloat>(new RgbaFloat[] { color }, 1, 1, RgbaFloat.SizeInBytes, PixelFormat.R32_G32_B32_A32_Float);
@@ -49,7 +51,7 @@ namespace Engine.Graphics
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(1024, true);
-            _ib = factory.CreateIndexBuffer(1024, true);
+            _ib = factory.CreateIndexBuffer(1024, true, IndexFormat.UInt32);
             _material = CreateWireframeMaterial(rc);
             _texture = _textureData.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(_texture);
@@ -106,7 +108,7 @@ namespace Engine.Graphics
             _material.ApplyPerObjectInputs(_perObjectProviders);
             _material.UseTexture(0, _textureBinding);
             rc.RasterizerState = _wireframeState;
-            rc.DrawIndexedPrimitives(_indices.Count, 0);
+            rc.DrawIndexedPrimitives(_indices.Count, 0, Topology);
             rc.RasterizerState = rasterState;
         }
 
@@ -117,19 +119,22 @@ namespace Engine.Graphics
             _indices.Clear();
             AddVerticesAndIndices();
 
-            _vb.Dispose();
-            _ib.Dispose();
+            if (_vertices.Count > 0)
+            {
+                _vb.Dispose();
+                _ib.Dispose();
 
-            _vb = factory.CreateVertexBuffer(_vertices.Count * VertexPositionNormalTexture.SizeInBytes, false);
-            _vb.SetVertexData(
-                _vertices.ToArray(),
-                new VertexDescriptor(
-                    VertexPositionNormalTexture.SizeInBytes,
-                    VertexPositionNormalTexture.ElementCount,
-                    0,
-                    IntPtr.Zero));
-            _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Count, false);
-            _ib.SetIndices(_indices.ToArray());
+                _vb = factory.CreateVertexBuffer(_vertices.Count * VertexPositionNormalTexture.SizeInBytes, false);
+                _vb.SetVertexData(
+                    _vertices.ToArray(),
+                    new VertexDescriptor(
+                        VertexPositionNormalTexture.SizeInBytes,
+                        VertexPositionNormalTexture.ElementCount,
+                        0,
+                        IntPtr.Zero));
+                _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Count, false);
+                _ib.SetIndices(_indices.ToArray());
+            }
         }
 
         protected abstract void AddVerticesAndIndices();
@@ -389,7 +394,7 @@ namespace Engine.Graphics
         private BoundsRenderItem _bri;
 
         public BoundsRenderItemWireframeRenderer(BoundsRenderItem bri, RenderContext rc)
-            : base(bri.Bounds,  rc)
+            : base(bri.Bounds, rc)
         {
             _bri = bri;
         }
@@ -416,10 +421,50 @@ namespace Engine.Graphics
             }
         }
 
+        public int RayCast(Ray ray, List<float> distances)
+        {
+            if (ray.Intersects(Bounds))
+            {
+                float distance = Vector3.Distance(_bri.Bounds.GetCenter(), ray.Origin);
+                distances.Add(distance);
+                return 1;
+            }
+
+            return 0;
+        }
+
         protected override void AddVerticesAndIndices()
         {
             Box = _bri.Bounds;
             base.AddVerticesAndIndices();
+        }
+    }
+
+    public class ManualWireframeRenderer : WireframeShapeRenderer
+    {
+        public ManualWireframeRenderer(RenderContext rc, RgbaFloat color) : base(rc, color)
+        {
+        }
+
+        public List<VertexPositionNormalTexture> Vertices { get; private set; } = new List<VertexPositionNormalTexture>();
+        public List<int> Indices { get; private set; } = new List<int>();
+
+        public void Clear()
+        {
+            Vertices.Clear();
+            Indices.Clear();
+        }
+
+        public override bool Cull(ref BoundingFrustum visibleFrustum)
+        {
+            var box = BoundingBox.CreateFromVertices(Vertices.ToArray());
+            return visibleFrustum.Contains(box) == ContainmentType.Disjoint;
+        }
+
+        protected override void AddVerticesAndIndices()
+        {
+            _vertices.AddRange(Vertices);
+            _indices.AddRange(Indices);
         }
     }
 }

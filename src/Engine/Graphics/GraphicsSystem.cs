@@ -29,6 +29,7 @@ namespace Engine.Graphics
         private readonly Dictionary<BoundsRenderItem, BoundsRenderItemEntry> _boundsRenderItemEntries = new Dictionary<BoundsRenderItem, BoundsRenderItemEntry>();
         private readonly DynamicDataProvider<PointLightsBuffer> _pointLightsProvider = new DynamicDataProvider<PointLightsBuffer>();
         private readonly List<PointLight> _pointLights = new List<PointLight>();
+        private readonly List<float> _rayCastDistances = new List<float>();
 
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
@@ -42,6 +43,8 @@ namespace Engine.Graphics
         private readonly StandardPipelineStage _alphaBlendStage;
         private ShaderTextureBinding _upscaleDepthView;
         private bool _needsPreupscaleChange;
+        private ManualWireframeRenderer _freeShapeRenderer;
+        private bool _freezeLineDrawing;
 
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
@@ -106,6 +109,10 @@ namespace Engine.Graphics
             Context.RegisterGlobalDataProvider("PointLights", _pointLightsProvider);
 
             window.Resized += OnWindowResized;
+
+            _freeShapeRenderer = new ManualWireframeRenderer(Context, RgbaFloat.Pink);
+            _freeShapeRenderer.Topology = PrimitiveTopology.LineList;
+            AddFreeRenderItem(_freeShapeRenderer);
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
@@ -262,20 +269,38 @@ namespace Engine.Graphics
             return _visiblityManager.Octree.RayCast(ray, hits, RayCastFilter);
         }
 
-        private bool RayCastFilter(Ray ray, RenderItem ri, out RayCastHit<RenderItem> hit)
+        public void DrawLine(Vector3 start, Vector3 end)
         {
-            float distance;
-            bool result = ((BoundsRenderItem)ri).RayCast(ray, out distance);
-            if (result)
+            if (!_freezeLineDrawing)
             {
-                hit = new RayCastHit<RenderItem>(ri, ray.Origin + ray.Direction * distance, distance);
+                _freeShapeRenderer.Vertices.Add(new VertexPositionNormalTexture(start, Vector3.Zero, Vector2.Zero));
+                int index0 = _freeShapeRenderer.Vertices.Count - 1;
+                _freeShapeRenderer.Vertices.Add(new VertexPositionNormalTexture(end, Vector3.Zero, Vector2.Zero));
+                int index1 = _freeShapeRenderer.Vertices.Count - 1;
+
+                _freeShapeRenderer.Indices.Add(index0);
+                _freeShapeRenderer.Indices.Add(index1);
             }
-            else
+        }
+
+        public void ToggleFreezeLines()
+        {
+            _freezeLineDrawing = !_freezeLineDrawing;
+        }
+
+        private int RayCastFilter(Ray ray, RenderItem ri, List<RayCastHit<RenderItem>> hits)
+        {
+            _rayCastDistances.Clear();
+            int numHits = ((BoundsRenderItem)ri).RayCast(ray, _rayCastDistances);
+            if (numHits > 0)
             {
-                hit = new RayCastHit<RenderItem>();
+                foreach (float distance in _rayCastDistances)
+                {
+                    hits.Add(new RayCastHit<RenderItem>(ri, ray.Origin + ray.Direction * distance, distance));
+                }
             }
 
-            return result;
+            return numHits;
         }
 
         public void ToggleOctreeVisualizer()
@@ -310,6 +335,11 @@ namespace Engine.Graphics
                 Context.ClearBuffer();
             }
             _renderer.RenderFrame(_visiblityManager, _mainCamera.Transform.Position);
+
+            if (!_freezeLineDrawing)
+            {
+                _freeShapeRenderer.Clear();
+            }
         }
 
         private static RenderContext CreatePlatformDefaultContext(OpenTKWindow window, bool preferOpenGL = false)

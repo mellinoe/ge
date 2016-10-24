@@ -168,6 +168,12 @@ namespace Engine.Graphics
             return false;
         }
 
+        public int RayCast(Ray ray, List<float> distances)
+        {
+            return 0;
+        }
+
+
         public void Render(RenderContext rc, string pipelineStage)
         {
             _cameraDistanceComparer.UpdateCameraPosition();

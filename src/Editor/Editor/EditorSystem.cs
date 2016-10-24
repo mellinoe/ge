@@ -830,6 +830,10 @@ namespace Engine.Editor
                     {
                         _gs.ToggleOctreeVisualizer();
                     }
+                    if (ImGui.MenuItem("Freeze Debug Line Rendering"))
+                    {
+                        _gs.ToggleFreezeLines();
+                    }
                     float renderQuality = _gs.RenderQuality;
                     if (ImGui.DragFloat("Render Quality", ref renderQuality, 0.1f, 1f, 0.01f))
                     {

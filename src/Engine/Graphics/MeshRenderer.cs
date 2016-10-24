@@ -335,6 +335,25 @@ namespace Engine.Graphics
             return result;
         }
 
+        public int RayCast(Ray ray, List<float> distances)
+        {
+            Matrix4x4 invWorld;
+            if (!Matrix4x4.Invert(_worldProvider.Data, out invWorld))
+            {
+                return 0;
+            }
+
+            ray = Ray.Transform(ray, invWorld);
+            int numHits = _mesh.RayCast(ray, distances);
+            for (int i = distances.Count - numHits; i < distances.Count; i++)
+            {
+                float distance = distances[i];
+                Vector3 total = ray.Direction * distance;
+                distances[i] = (total * Transform.Scale).Length();
+            }
+            return numHits;
+        }
+
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";
         private static readonly string RegularPassFragmentShaderSource = "shadow-frag";
 
