@@ -94,23 +94,28 @@ namespace Engine
 
         public T GetComponent<T>() where T : Component
         {
+            return (T)GetComponent(typeof(T));
+        }
+
+        public Component GetComponent(Type type)
+        {
             IReadOnlyCollection<Component> components;
-            if (!_components.TryGetValue(typeof(T), out components))
+            if (!_components.TryGetValue(type, out components))
             {
                 foreach (var kvp in _components)
                 {
-                    if (typeof(T).GetTypeInfo().IsAssignableFrom(kvp.Key))
+                    if (type.GetTypeInfo().IsAssignableFrom(kvp.Key))
                     {
                         if (kvp.Value.Any())
                         {
-                            return (T)kvp.Value.First();
+                            return kvp.Value.First();
                         }
                     }
                 }
             }
             else
             {
-                return (T)components.First();
+                return components.First();
             }
 
             return null;
