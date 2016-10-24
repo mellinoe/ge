@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid;
@@ -87,13 +88,13 @@ namespace Engine.Graphics
 
         private void SetViewMatrix(Transform t)
         {
+            Debug.Assert(t != null);
+
             _viewProvider.Data = Matrix4x4.CreateLookAt(
                 GameObject.Transform.Position,
                 GameObject.Transform.Position + GameObject.Transform.Forward,
                 _upDirection);
-
             _cameraInfoProvider.Data = new CameraInfo(Transform.Position, Transform.Forward, NearPlaneDistance, FarPlaneDistance);
-
             UpdateViewFrustum();
         }
 
