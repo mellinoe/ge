@@ -17,6 +17,9 @@
     <Compile Include="Assets\CompoundAssetDatabase.cs" />
     <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
     <Compile Include="Assets\EngineEmbeddedAssets.cs" />
+    <Compile Include="Assets\Wire\WireAssetDatabase.cs" />
+    <Compile Include="Assets\Wire\WireComponentSerializerFactory.cs" />
+    <Compile Include="Assets\Wire\WireDatabaseIndex.cs" />
     <Compile Include="Graphics\FontFaceLoader.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Assets\SerializedPrefab.cs" />
@@ -180,6 +183,7 @@
       <Project>{34853DEA-43A6-4F2F-A379-D1EE04D256D2}</Project>
       <Name>BEPUutilities</Name>
     </ProjectReference>
+    <Reference Include="E:\projects\Wire\Wire\bin\Debug\netstandard1.6\Wire.dll" />
   </ItemGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
 </Project>

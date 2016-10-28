@@ -39,6 +39,7 @@
       <Project>{9bfba3a1-21d4-4cbd-b0e1-a4f3ab80fd30}</Project>
       <Name>Engine</Name>
     </ProjectReference>
+    <Reference Include="E:\projects\Wire\Wire\bin\Debug\netstandard1.6\Wire.dll" />
     <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\win-x64\cimgui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

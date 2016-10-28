@@ -1,4 +1,5 @@
-﻿using Engine.Audio;
+﻿using Engine.Assets.Wire;
+using Engine.Audio;
 using Engine.Graphics;
 using Newtonsoft.Json;
 using SharpFont;
@@ -22,16 +23,33 @@ namespace Engine.Assets
 
         protected virtual AssetDatabase CreateAssetDatabase(SerializationBinder binder)
         {
-            var fileAssets = new LooseFileDatabase(_assetRootPath);
-            fileAssets.DefaultSerializer.Binder = binder;
-            fileAssets.RegisterTypeLoader(typeof(WaveFile), new WaveFileLoader());
-            LooseFileDatabase.AddExtensionTypeMapping(".wav", typeof(WaveFile));
-            fileAssets.RegisterTypeLoader(typeof(FontFace), new FontFaceLoader());
-            LooseFileDatabase.AddExtensionTypeMapping(".ttf", typeof(FontFace));
-            var embeddedAssets = new EngineEmbeddedAssets();
             var compoundDB = new CompoundAssetDatabase();
-            compoundDB.AddDatabase(fileAssets);
+
+            var embeddedAssets = new EngineEmbeddedAssets();
             compoundDB.AddDatabase(embeddedAssets);
+
+            StreamLoaderSet streamLoaders = LooseFileDatabase.GetDefaultLoaderSet();
+            streamLoaders.Add(typeof(WaveFile), new WaveFileLoader());
+            streamLoaders.Add(typeof(FontFace), new FontFaceLoader());
+
+            string wireIndexPath = Path.Combine(
+                new DirectoryInfo(_assetRootPath).Parent.FullName, 
+                "WireAssets", 
+                "wiredb.index");
+            if (File.Exists(wireIndexPath))
+            {
+                var wireAssets = new WireAssetDatabase(wireIndexPath, streamLoaders);
+                compoundDB.AddDatabase(wireAssets);
+            }
+            else
+            {
+                var fileAssets = new LooseFileDatabase(_assetRootPath, streamLoaders);
+                fileAssets.DefaultSerializer.Binder = binder;
+                LooseFileDatabase.AddExtensionTypeMapping(".wav", typeof(WaveFile));
+                LooseFileDatabase.AddExtensionTypeMapping(".ttf", typeof(FontFace));
+                compoundDB.AddDatabase(fileAssets);
+            }
+
             return compoundDB;
         }
 

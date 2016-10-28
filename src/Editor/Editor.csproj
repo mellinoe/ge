@@ -44,6 +44,7 @@
     <Compile Include="Editor\UndoRedoStack.cs" />
     <Compile Include="Editor\Preferences.cs" />
     <Compile Include="Editor\Program.cs" />
+    <Compile Include="Editor\WireAssetDatabaseBuilder.cs" />
     <Compile Include="ListDrawer.cs" />
     <Compile Include="PrefabAssetHandler.cs" />
     <Compile Include="ProjectContext.cs" />
@@ -93,6 +94,7 @@
       <Name>Engine.Launcher</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <Reference Include="E:\projects\Wire\Wire\bin\Debug\netstandard1.6\Wire.dll" />
     <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\win-x64\cimgui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

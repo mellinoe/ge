@@ -11,6 +11,14 @@ namespace Engine.ProjectSystem
         private readonly Dictionary<string, Assembly> _projectLoadedAssemblies = new Dictionary<string, Assembly>();
         private readonly DefaultSerializationBinder _defaultBinder = new DefaultSerializationBinder();
 
+        public static EngineSerializationBinder Instance { get; set; }
+
+        public EngineSerializationBinder()
+        {
+            System.Diagnostics.Debug.Assert(Instance == null); Instance = this;
+            Wire.Extensions.TypeEx.TypeDiscoveryFunc = BindToType;
+        }
+
         public void ClearAssemblies() => _projectLoadedAssemblies.Clear();
 
         public void AddProjectAssembly(Assembly assembly)

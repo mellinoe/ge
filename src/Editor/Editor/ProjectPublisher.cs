@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Veldrid.Assets;
 
 namespace Engine.Editor
 {
@@ -18,7 +19,7 @@ namespace Engine.Editor
                 .Select(d => new DirectoryInfo(d).Name).ToArray();
         }
 
-        public void PublishProject(ProjectContext projectContext, string target, string outputDir)
+        public void PublishProject(ProjectContext projectContext, LooseFileDatabase projectDatabase, string target, string outputDir)
         {
             if (!PublishTargets.Contains(target))
             {
@@ -42,6 +43,10 @@ namespace Engine.Editor
             }
             File.Copy(manifestFile, manifestFile.Replace(projectContext.ProjectRootPath, outputDir), overwrite: true);
 
+            CreateWireDatabase(
+                projectDatabase,
+                Path.Combine(outputDir, "WireAssets"));
+
             string launcherExePath = Path.Combine(outputDir, LauncherName + ".exe");
             string launcherDllPath = Path.Combine(outputDir, LauncherName + ".dll");
 
@@ -50,6 +55,11 @@ namespace Engine.Editor
             EditorUtility.ForceMoveFile(launcherDllPath, launcherDllPath.Replace(LauncherName, projectContext.ProjectManifest.Name));
 
             EditorUtility.ShowFileInExplorer(projectNamedLauncher);
+        }
+
+        private void CreateWireDatabase(LooseFileDatabase projectDatabase, string outputDir)
+        {
+            WireAssetDatabaseBuilder.CreateWireAssetDatabase(projectDatabase, outputDir);
         }
     }
 }

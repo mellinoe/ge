@@ -805,6 +805,7 @@ namespace Engine.Editor
                             {
                                 _projectPublisher.PublishProject(
                                     _projectContext,
+                                    _as.ProjectDatabase,
                                     option,
                                     Path.Combine(_projectContext.ProjectRootPath, $"Published/{option}"));
                             }

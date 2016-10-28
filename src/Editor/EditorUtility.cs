@@ -29,6 +29,14 @@ namespace Engine
             }
         }
 
+        public static void EnsureDirectoryExists(string copyDestination)
+        {
+            if (!Directory.Exists(copyDestination))
+            {
+                Directory.CreateDirectory(copyDestination);
+            }
+        }
+
         public static void ForceMoveFile(string source, string destination)
         {
             if (File.Exists(destination))

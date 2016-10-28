@@ -5,8 +5,8 @@ namespace Engine.Graphics
 {
     public struct TintInfo : IEquatable<TintInfo>
     {
-        public readonly Vector3 Color;
-        public readonly float TintFactor;
+        public Vector3 Color;
+        public float TintFactor;
 
         public TintInfo(Vector3 color, float tintFactor)
         {
