@@ -45,6 +45,7 @@ namespace Engine.Graphics
         private float _accumulator;
         private CameraDistanceComparer _cameraDistanceComparer;
         private DepthStencilState _depthStencilState;
+        private bool _initialized;
 
         private static readonly MaterialVertexInput s_vertexInputs =
             new MaterialVertexInput(InstanceData.SizeInBytes,
@@ -154,7 +155,7 @@ namespace Engine.Graphics
 
         public RenderOrderKey GetRenderOrderKey(Vector3 viewPosition)
         {
-            return RenderOrderKey.Create(Vector3.Distance(viewPosition, Transform.Position), _material.GetHashCode());
+            return _initialized ? RenderOrderKey.Create(Vector3.Distance(viewPosition, Transform.Position), _material.GetHashCode()) : new RenderOrderKey();
         }
 
         public IEnumerable<string> GetStagesParticipated()
@@ -176,6 +177,11 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             _cameraDistanceComparer.UpdateCameraPosition();
             Array.Sort(_instanceData.Elements, _particleStates.Elements, 0, _instanceData.Count, _cameraDistanceComparer);
 
@@ -215,6 +221,11 @@ namespace Engine.Graphics
 
         public override void Update(float deltaSeconds)
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             _accumulator += deltaSeconds;
             while (_accumulator >= SpawnPeriodSeconds)
             {
@@ -330,32 +341,34 @@ namespace Engine.Graphics
             return new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
         }
 
-        private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
+        private async void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
         {
             ResourceFactory factory = rc.ResourceFactory;
-            _instanceDataVB = factory.CreateVertexBuffer(InstanceData.SizeInBytes * 10, true);
-            _ib = factory.CreateIndexBuffer(new[] { 0 }, false);
+            _instanceDataVB = await _gs.ExecuteOnMainThread(() => factory.CreateVertexBuffer(InstanceData.SizeInBytes * 10, true));
+            _ib = await _gs.ExecuteOnMainThread(() => factory.CreateIndexBuffer(new[] { 0 }, false));
 
             if (_texture == null)
             {
                 _texture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Pink);
             }
 
-            _deviceTexture = _texture.CreateDeviceTexture(factory);
-            _textureBinding = factory.CreateShaderTextureBinding(_deviceTexture);
+            _deviceTexture = await _gs.ExecuteOnMainThread(() => _texture.CreateDeviceTexture(factory));
+            _textureBinding = await _gs.ExecuteOnMainThread(() => factory.CreateShaderTextureBinding(_deviceTexture));
 
-            _material = materialCache.GetMaterial(rc,
+            _material = await materialCache.GetMaterialAsync(rc,
                 "passthrough-vertex", "billboard-geometry", "particle-fragment",
                 s_vertexInputs,
                 s_globalInputs,
                 s_perObjectInputs,
                 s_textureInputs);
-            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true);
+            _depthStencilState = await _gs.ExecuteOnMainThread(() => factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true));
 
 #if DEBUG_PARTICLE_BOUNDS
             var briwr = new BoundsRenderItemWireframeRenderer(this, rc);
             _gs.AddRenderItem(briwr, Transform);
 #endif
+
+            _initialized = true;
         }
 
         protected override void PostRemoved(SystemRegistry registry)
@@ -375,9 +388,9 @@ namespace Engine.Graphics
 
         private void ClearDeviceResources()
         {
-            _instanceDataVB.Dispose();
-            _ib.Dispose();
-            _textureBinding.Dispose();
+            _instanceDataVB?.Dispose();
+            _ib?.Dispose();
+            _textureBinding?.Dispose();
         }
 
         // Vertex buffer per-instance data.

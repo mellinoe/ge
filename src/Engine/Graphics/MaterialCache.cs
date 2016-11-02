@@ -1,18 +1,22 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Veldrid.Graphics;
 
 namespace Engine.Graphics
 {
     public class MaterialCache
     {
+        private readonly GraphicsSystem _gs;
         private readonly ResourceFactory _factory;
 
-        private Dictionary<MaterialKey, Material> _materials = new Dictionary<MaterialKey, Material>();
+        private ConcurrentDictionary<MaterialKey, Material> _materials = new ConcurrentDictionary<MaterialKey, Material>();
 
-        public MaterialCache(ResourceFactory factory)
+        public MaterialCache(GraphicsSystem gs)
         {
-            _factory = factory;
+            _gs = gs;
+            _factory = gs.Context.ResourceFactory;
         }
 
         public Material GetMaterial(
@@ -26,6 +30,20 @@ namespace Engine.Graphics
         {
             return GetMaterial(rc, vertexShaderName, null, pixelShaderName, vertexInputs, globalInputs, perObjectInputs, textureInputs);
         }
+
+        public Task<Material> GetMaterialAsync(
+            RenderContext rc,
+            string vertexShaderName,
+            string pixelShaderName,
+            MaterialVertexInput vertexInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs)
+        {
+            return _gs.ExecuteOnMainThread(
+                () => GetMaterial(rc, vertexShaderName, pixelShaderName, vertexInputs, globalInputs, perObjectInputs, textureInputs));
+        }
+
 
         public Material GetMaterial(
             RenderContext rc,
@@ -68,11 +86,29 @@ namespace Engine.Graphics
                 ShaderTextureBindingSlots textureSlots = _factory.CreateShaderTextureBindingSlots(shaderSet, textureInputs);
                 m = new Material(rc, shaderSet, constantBindings, textureSlots, _factory.CreateDefaultTextureBindingInfos(rc, textureInputs));
 
-                _materials.Add(key, m);
+                if (!_materials.TryAdd(key, m))
+                {
+                    return _materials[key];
+                }
             }
 
             return m;
         }
+
+        public Task<Material> GetMaterialAsync(
+            RenderContext rc,
+            string vertexShaderName,
+            string geometryShaderName,
+            string pixelShaderName,
+            MaterialVertexInput vertexInputs,
+            MaterialInputs<MaterialGlobalInputElement> globalInputs,
+            MaterialInputs<MaterialPerObjectInputElement> perObjectInputs,
+            MaterialTextureInputs textureInputs)
+        {
+            return _gs.ExecuteOnMainThread(
+                () => GetMaterial(rc, vertexShaderName, geometryShaderName, pixelShaderName, vertexInputs, globalInputs, perObjectInputs, textureInputs));
+        }
+
 
         private struct MaterialKey
         {

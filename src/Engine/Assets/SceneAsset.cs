@@ -1,8 +1,10 @@
 ﻿using Engine;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace Engine.Assets
 {
@@ -14,10 +16,11 @@ namespace Engine.Assets
 
         public void GenerateGameObjects()
         {
-            Dictionary<ulong, GameObject> idToGO = new Dictionary<ulong, GameObject>();
+            ConcurrentDictionary<ulong, GameObject> idToGO = new ConcurrentDictionary<ulong, GameObject>();
 
-            foreach (var sgo in GameObjects)
+            Task.WaitAll(GameObjects.Select((sgo) => Task.Run(() =>
             {
+                Console.WriteLine("Adding GO " + sgo.Name);
                 GameObject go = new GameObject(sgo.Name);
                 go.Transform.LocalPosition = sgo.Transform.LocalPosition;
                 go.Transform.LocalRotation = sgo.Transform.LocalRotation;
@@ -28,12 +31,15 @@ namespace Engine.Assets
                     go.AddComponent(component);
                 }
 
-                idToGO.Add(sgo.ID, go);
-            }
+                if (!idToGO.TryAdd(sgo.ID, go))
+                {
+                    throw new InvalidOperationException("Multiple objects with the same ID were detected. ID = " + sgo.ID);
+                }
+            })).ToArray());
 
             foreach (var sgo in GameObjects)
             {
-                ulong parentID= sgo.Transform.ParentID;
+                ulong parentID = sgo.Transform.ParentID;
                 if (parentID != 0)
                 {
                     var parent = idToGO[parentID];

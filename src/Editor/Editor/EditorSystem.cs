@@ -319,7 +319,6 @@ namespace Engine.Editor
                 if (DrawAssetRef("Model", ref assetRef, _as.Database))
                 {
                     c = SetValueActionCommand.New<AssetRef<MeshData>>(val => mr.Mesh = val, mr.Mesh.GetRef(), assetRef);
-                    mr.Mesh = assetRef;
                 }
             }
 
@@ -329,7 +328,6 @@ namespace Engine.Editor
                 if (DrawAssetRef("Texture", ref assetRef, _as.Database))
                 {
                     c = SetValueActionCommand.New<AssetRef<TextureData>>(val => mr.Texture = val, mr.Texture.GetRef(), assetRef);
-                    mr.Texture = assetRef;
                 }
             }
 

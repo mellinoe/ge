@@ -30,7 +30,10 @@ namespace Engine
         private void OnGameObjectConstructed(GameObject go)
         {
             go.SetRegistry(SystemRegistry);
-            _gameObjects.Add(go);
+            lock (_gameObjects)
+            {
+                _gameObjects.Add(go);
+            }
         }
 
         private void OnGameObjectDestroyRequested(GameObject go)
@@ -40,7 +43,10 @@ namespace Engine
 
         private void OnGameObjectDestroyCommitted(GameObject go)
         {
-            _gameObjects.Remove(go);
+            lock (_gameObjects)
+            {
+                _gameObjects.Remove(go);
+            }
         }
 
         public void RunMainLoop()

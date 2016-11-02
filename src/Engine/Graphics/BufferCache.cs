@@ -1,18 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Veldrid.Graphics;
 
 namespace Engine.Graphics
 {
     public class BufferCache
     {
+        private readonly GraphicsSystem _gs;
         private readonly ResourceFactory _factory;
 
-        private Dictionary<BufferKey, VertexBuffer> _vbs = new Dictionary<BufferKey, VertexBuffer>();
-        private Dictionary<BufferKey, IndexBufferAndCount> _ibs = new Dictionary<BufferKey, IndexBufferAndCount>();
+        private ConcurrentDictionary<BufferKey, VertexBuffer> _vbs = new ConcurrentDictionary<BufferKey, VertexBuffer>();
+        private ConcurrentDictionary<BufferKey, IndexBufferAndCount> _ibs = new ConcurrentDictionary<BufferKey, IndexBufferAndCount>();
 
-        public BufferCache(ResourceFactory resourceFactory)
+        public BufferCache(GraphicsSystem gs)
         {
-            this._factory = resourceFactory;
+            _gs = gs;
+            _factory = gs.Context.ResourceFactory;
         }
 
         public VertexBuffer GetVertexBuffer(MeshData mesh)
@@ -22,28 +26,55 @@ namespace Engine.Graphics
             if (!_vbs.TryGetValue(key, out vb))
             {
                 vb = mesh.CreateVertexBuffer(_factory);
-                _vbs.Add(key, vb);
+                if (!_vbs.TryAdd(key, vb))
+                {
+                    vb.Dispose();
+                    return _vbs[key];
+                }
             }
 
             return vb;
         }
 
+        public async Task<VertexBuffer> GetVertexBufferAsync(MeshData mesh)
+        {
+            return await _gs.ExecuteOnMainThread(() => GetVertexBuffer(mesh));
+        }
+
         public IndexBuffer GetIndexBuffer(MeshData mesh, out int indexCount)
         {
+            IndexBufferAndCount bufferAndCount = GetIndexBufferAndCount(mesh);
+            indexCount = bufferAndCount.IndexCount;
+            return bufferAndCount.Buffer;
+        }
+
+        public IndexBufferAndCount GetIndexBufferAndCount(MeshData mesh)
+        {
+            int indexCount;
             IndexBufferAndCount bufferAndCount;
             BufferKey key = new BufferKey(mesh);
             if (!_ibs.TryGetValue(key, out bufferAndCount))
             {
                 var indexBuffer = mesh.CreateIndexBuffer(_factory, out indexCount);
                 bufferAndCount = new IndexBufferAndCount(indexBuffer, indexCount);
-                _ibs.Add(key, bufferAndCount);
+                if (!_ibs.TryAdd(key, bufferAndCount))
+                {
+                    indexBuffer.Dispose();
+                    return _ibs[key];
+                }
             }
             else
             {
                 indexCount = bufferAndCount.IndexCount;
             }
 
-            return bufferAndCount.Buffer;
+            return bufferAndCount;
+        }
+
+
+        public async Task<IndexBufferAndCount> GetIndexBufferAndCountAsync(MeshData mesh)
+        {
+            return await _gs.ExecuteOnMainThread(() => GetIndexBufferAndCount(mesh));
         }
 
         private struct BufferKey
@@ -56,7 +87,7 @@ namespace Engine.Graphics
             }
         }
 
-        private struct IndexBufferAndCount
+        public struct IndexBufferAndCount
         {
             public readonly IndexBuffer Buffer;
             public readonly int IndexCount;

@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Graphics.Direct3D;
@@ -30,6 +33,9 @@ namespace Engine.Graphics
         private readonly DynamicDataProvider<PointLightsBuffer> _pointLightsProvider = new DynamicDataProvider<PointLightsBuffer>();
         private readonly List<PointLight> _pointLights = new List<PointLight>();
         private readonly List<float> _rayCastDistances = new List<float>();
+        private readonly GraphicsSystemTaskScheduler _taskScheduler;
+        private readonly BlockingCollection<BoundsRenderItem> _renderItemsToRemove = new BlockingCollection<BoundsRenderItem>();
+        private readonly BlockingCollection<BriTransformPair> _renderItemsToAdd = new BlockingCollection<BriTransformPair>();
 
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
@@ -82,8 +88,8 @@ namespace Engine.Graphics
             _window = window;
             Context = CreatePlatformDefaultContext(window, preferOpenGL);
             Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));
-            MaterialCache = new MaterialCache(Context.ResourceFactory);
-            BufferCache = new BufferCache(Context.ResourceFactory);
+            MaterialCache = new MaterialCache(this);
+            BufferCache = new BufferCache(this);
 
             ShadowMapStage = new ShadowMapStage(Context);
             _upscaleStage = new UpscaleStage(Context, "Upscale", null, null);
@@ -113,6 +119,8 @@ namespace Engine.Graphics
             _freeShapeRenderer = new ManualWireframeRenderer(Context, RgbaFloat.Pink);
             _freeShapeRenderer.Topology = PrimitiveTopology.LineList;
             AddFreeRenderItem(_freeShapeRenderer);
+
+            _taskScheduler = new GraphicsSystemTaskScheduler(Environment.CurrentManagedThreadId);
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
@@ -227,6 +235,11 @@ namespace Engine.Graphics
                 throw new ArgumentNullException(nameof(transform));
             }
 
+            _renderItemsToAdd.Add(new BriTransformPair() { BoundsRenderItem = bri, Transform = transform });
+        }
+
+        private void CoreAddRenderItem(BoundsRenderItem bri, Transform transform)
+        {
             var octreeItem = _visiblityManager.AddRenderItem(bri.Bounds, bri);
             BoundsRenderItemEntry brie = new BoundsRenderItemEntry(bri, transform, octreeItem);
             _boundsRenderItemEntries.Add(bri, brie);
@@ -240,6 +253,11 @@ namespace Engine.Graphics
                 throw new ArgumentNullException(nameof(bri));
             }
 
+            _renderItemsToRemove.Add(bri);
+        }
+
+        private void CoreRemoveRenderItem(BoundsRenderItem bri)
+        {
             BoundsRenderItemEntry brie;
             if (!_boundsRenderItemEntries.TryGetValue(bri, out brie))
             {
@@ -250,6 +268,11 @@ namespace Engine.Graphics
             brie.Transform.TransformChanged -= brie.OnTransformChanged;
 
             _boundsRenderItemEntries.Remove(bri);
+        }
+
+        public Task<T> ExecuteOnMainThread<T>(Func<T> func)
+        {
+            return Task.Factory.StartNew(func, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
         }
 
         public void NotifyBoundsChanged(BoundsRenderItem bri)
@@ -325,6 +348,9 @@ namespace Engine.Graphics
                 SetPreupscaleQuality(_preUpscaleQuality);
                 _needsPreupscaleChange = false;
             }
+            _taskScheduler.FlushQueuedTasks();
+            FlushNewAndRemovedItems();
+
             UpdatePointLightBuffer();
 
             _visiblityManager.Octree.ApplyPendingMoves();
@@ -339,6 +365,21 @@ namespace Engine.Graphics
             if (!_freezeLineDrawing)
             {
                 _freeShapeRenderer.Clear();
+            }
+        }
+
+        public void FlushNewAndRemovedItems()
+        {
+            BriTransformPair pair;
+            while (_renderItemsToAdd.TryTake(out pair))
+            {
+                CoreAddRenderItem(pair.BoundsRenderItem, pair.Transform);
+            }
+
+            BoundsRenderItem bri;
+            while (_renderItemsToRemove.TryTake(out bri))
+            {
+                CoreRemoveRenderItem(bri);
             }
         }
 
@@ -402,6 +443,12 @@ namespace Engine.Graphics
             _needsPreupscaleChange = true;
         }
 
+        private struct BriTransformPair
+        {
+            public BoundsRenderItem BoundsRenderItem;
+            public Transform Transform;
+        }
+
         private class BoundsRenderItemEntry
         {
             public BoundsRenderItem BoundsRenderItem { get; private set; }
@@ -423,6 +470,46 @@ namespace Engine.Graphics
             {
                 Debug.Assert(t != null);
                 OctreeItem.Container.MarkItemAsMoved(OctreeItem, BoundsRenderItem.Bounds);
+            }
+        }
+
+        private class GraphicsSystemTaskScheduler : TaskScheduler
+        {
+            private readonly BlockingCollection<Task> _tasks = new BlockingCollection<Task>();
+            private readonly int _mainThreadID;
+
+            public GraphicsSystemTaskScheduler(int mainThreadID)
+            {
+                _mainThreadID = mainThreadID;
+            }
+
+            public void FlushQueuedTasks()
+            {
+                Task t;
+                while (_tasks.TryTake(out t))
+                {
+                    TryExecuteTask(t);
+                }
+            }
+
+            protected override IEnumerable<Task> GetScheduledTasks()
+            {
+                return _tasks.ToArray();
+            }
+
+            protected override void QueueTask(Task task)
+            {
+                _tasks.Add(task);
+            }
+
+            protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
+            {
+                return Environment.CurrentManagedThreadId == _mainThreadID && TryExecuteTask(task);
+            }
+
+            public void Shutdown()
+            {
+                _tasks.CompleteAdding();
             }
         }
     }

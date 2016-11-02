@@ -10,7 +10,7 @@ using System;
 
 namespace Engine.Graphics
 {
-    public unsafe class MeshRenderer : Component, BoundsRenderItem
+    public class MeshRenderer : Component, BoundsRenderItem
     {
         private static readonly string[] s_stages = { "ShadowMap", "Standard" };
 
@@ -122,7 +122,7 @@ namespace Engine.Graphics
 
         public RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)
         {
-            return RenderOrderKey.Create(Vector3.Distance(Transform.Position, cameraPosition), _regularPassMaterial.GetHashCode());
+            return _initialized ? RenderOrderKey.Create(Vector3.Distance(Transform.Position, cameraPosition), _regularPassMaterial.GetHashCode()) : new RenderOrderKey();
         }
 
         public IEnumerable<string> GetStagesParticipated()
@@ -132,6 +132,11 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             _worldProvider.Data = RenderOffset * GameObject.Transform.GetWorldMatrix();
 
             rc.SetVertexBuffer(_vb);
@@ -174,6 +179,8 @@ namespace Engine.Graphics
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
             _mesh = Mesh.Get(_ad);
+            _centeredBoundingSphere = _mesh.GetBoundingSphere();
+            _centeredBoundingBox = _mesh.GetBoundingBox();
             InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
         }
 
@@ -192,7 +199,7 @@ namespace Engine.Graphics
             _gs.RemoveRenderItem(this);
         }
 
-        private unsafe void InitializeContextObjects(RenderContext context, MaterialCache materialCache, BufferCache bufferCache)
+        private async void InitializeContextObjects(RenderContext context, MaterialCache materialCache, BufferCache bufferCache)
         {
             ResourceFactory factory = context.ResourceFactory;
 
@@ -201,10 +208,10 @@ namespace Engine.Graphics
             Debug.Assert(_deviceTexture == null);
             Debug.Assert(_textureBinding == null);
 
-            _vb = bufferCache.GetVertexBuffer(_mesh);
-            _ib = bufferCache.GetIndexBuffer(_mesh, out _indexCount);
-            _centeredBoundingSphere = _mesh.GetBoundingSphere();
-            _centeredBoundingBox = _mesh.GetBoundingBox();
+            _vb = await bufferCache.GetVertexBufferAsync(_mesh);
+            var ibAndCount = await bufferCache.GetIndexBufferAndCountAsync(_mesh);
+            _ib = ibAndCount.Buffer;
+            _indexCount = ibAndCount.IndexCount;
 
             if (s_regularGlobalInputs == null)
             {
@@ -221,7 +228,7 @@ namespace Engine.Graphics
                     });
             }
 
-            _regularPassMaterial = materialCache.GetMaterial(
+            _regularPassMaterial = await materialCache.GetMaterialAsync(
                 context,
                 RegularPassVertexShaderSource,
                 RegularPassFragmentShaderSource,
@@ -235,8 +242,8 @@ namespace Engine.Graphics
                 _texture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Pink);
             }
 
-            _deviceTexture = _texture.CreateDeviceTexture(factory);
-            _textureBinding = factory.CreateShaderTextureBinding(_deviceTexture);
+            _deviceTexture = await _gs.ExecuteOnMainThread(() => _texture.CreateDeviceTexture(factory));
+            _textureBinding = await _gs.ExecuteOnMainThread(() => factory.CreateShaderTextureBinding(_deviceTexture));
 
             if (s_shadowmapGlobalInputs == null)
             {
@@ -248,7 +255,7 @@ namespace Engine.Graphics
                     });
             }
 
-            _shadowPassMaterial = materialCache.GetMaterial(
+            _shadowPassMaterial = await materialCache.GetMaterialAsync(
                 context,
                 ShadowMapPassVertexShaderSource,
                 ShadowMapPassFragmentShaderSource,
@@ -259,12 +266,14 @@ namespace Engine.Graphics
 
             if (s_wireframeRS == null)
             {
-                s_wireframeRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
+                s_wireframeRS = await _gs.ExecuteOnMainThread(() => factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true));
             }
             if (s_noCullRS == null)
             {
-                s_noCullRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
+                s_noCullRS = await _gs.ExecuteOnMainThread(() => factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true));
             }
+
+            _initialized = true;
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -276,8 +285,8 @@ namespace Engine.Graphics
 
         public void ClearDeviceResources()
         {
-            _deviceTexture.Dispose();
-            _textureBinding.Dispose();
+            _deviceTexture?.Dispose();
+            _textureBinding?.Dispose();
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
@@ -369,7 +378,7 @@ namespace Engine.Graphics
                 new MaterialVertexInputElement("in_texCoord", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float2)
             });
         private static MaterialInputs<MaterialGlobalInputElement> s_regularGlobalInputs;
-        private static MaterialInputs<MaterialPerObjectInputElement> s_perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+        private static unsafe MaterialInputs<MaterialPerObjectInputElement> s_perObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
             new MaterialPerObjectInputElement[]
             {
                 new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4)),
@@ -383,10 +392,11 @@ namespace Engine.Graphics
                 new ContextTextureInputElement("ShadowMap")
             });
         private static MaterialInputs<MaterialGlobalInputElement> s_shadowmapGlobalInputs;
-        private static MaterialInputs<MaterialPerObjectInputElement> s_shadowmapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+        private static unsafe MaterialInputs<MaterialPerObjectInputElement> s_shadowmapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
             new MaterialPerObjectInputElement[]
             {
                 new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
+        private bool _initialized;
     }
 }
