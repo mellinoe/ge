@@ -216,7 +216,7 @@ namespace Engine.Graphics
             _ad = registry.GetSystem<AssetSystem>().Database;
             _texture = Texture.Get(_ad);
             _cameraDistanceComparer = new CameraDistanceComparer(_gs);
-            InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
+            _gs.ExecuteOnMainThread(() => InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache));
         }
 
         public override void Update(float deltaSeconds)
@@ -341,27 +341,27 @@ namespace Engine.Graphics
             return new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
         }
 
-        private async void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
+        private void InitializeContextObjects(RenderContext rc, MaterialCache materialCache, BufferCache bufferCache)
         {
             ResourceFactory factory = rc.ResourceFactory;
-            _instanceDataVB = await _gs.ExecuteOnMainThread(() => factory.CreateVertexBuffer(InstanceData.SizeInBytes * 10, true));
-            _ib = await _gs.ExecuteOnMainThread(() => factory.CreateIndexBuffer(new[] { 0 }, false));
+            _instanceDataVB = factory.CreateVertexBuffer(InstanceData.SizeInBytes * 10, true);
+            _ib = factory.CreateIndexBuffer(new[] { 0 }, false);
 
             if (_texture == null)
             {
                 _texture = RawTextureDataArray<RgbaFloat>.FromSingleColor(RgbaFloat.Pink);
             }
 
-            _deviceTexture = await _gs.ExecuteOnMainThread(() => _texture.CreateDeviceTexture(factory));
-            _textureBinding = await _gs.ExecuteOnMainThread(() => factory.CreateShaderTextureBinding(_deviceTexture));
+            _deviceTexture = _texture.CreateDeviceTexture(factory);
+            _textureBinding = factory.CreateShaderTextureBinding(_deviceTexture);
 
-            _material = await materialCache.GetMaterialAsync(rc,
+            _material = materialCache.GetMaterial(rc,
                 "passthrough-vertex", "billboard-geometry", "particle-fragment",
                 s_vertexInputs,
                 s_globalInputs,
                 s_perObjectInputs,
                 s_textureInputs);
-            _depthStencilState = await _gs.ExecuteOnMainThread(() => factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true));
+            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, true);
 
 #if DEBUG_PARTICLE_BOUNDS
             var briwr = new BoundsRenderItemWireframeRenderer(this, rc);

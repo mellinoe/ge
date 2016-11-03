@@ -24,13 +24,16 @@ namespace Engine.Graphics
 
         public Vector2 Size { get; private set; }
 
-        public TextBuffer(RenderContext rc)
+        public TextBuffer(GraphicsSystem gs)
         {
-            _rc = rc;
-            _ib = rc.ResourceFactory.CreateIndexBuffer(600, false);
-            _material = CreateMaterial(rc);
-            _dss = rc.ResourceFactory.CreateDepthStencilState(false, DepthComparison.LessEqual);
+            _rc = gs.Context;
             _providers[0] = _screenOrthoProjection;
+            gs.ExecuteOnMainThread(() =>
+            {
+                _ib = _rc.ResourceFactory.CreateIndexBuffer(600, false);
+                _material = CreateMaterial(_rc);
+                _dss = _rc.ResourceFactory.CreateDepthStencilState(false, DepthComparison.LessEqual);
+            });
         }
 
         public unsafe void Append(TextAnalyzer analyzer, FontFace font, string text, float fontSize, int atlasWidth, RectangleF drawRect)
@@ -40,7 +43,7 @@ namespace Engine.Graphics
 
         public uint GetMaterialID()
         {
-            return (uint)_material.GetHashCode();
+            return _material != null ? (uint)_material.GetHashCode() : 0;
         }
 
         public unsafe void Append(TextAnalyzer analyzer, FontFace font, string text, float fontSize, int atlasWidth, RectangleF drawRect, RgbaByte color)

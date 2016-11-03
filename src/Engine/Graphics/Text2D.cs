@@ -77,7 +77,7 @@ namespace Engine.Graphics
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _as = registry.GetSystem<AssetSystem>();
-            _textBuffer = new TextBuffer(_gs.Context);
+            _textBuffer = new TextBuffer(_gs);
             _textureAtlas = new TextureAtlas(_gs.Context, 2048);
             _textAnalyzer = new TextAnalyzer(_textureAtlas);
             _gs.Context.WindowResized += OnWindowResized;

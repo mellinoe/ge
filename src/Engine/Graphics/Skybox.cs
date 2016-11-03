@@ -23,8 +23,6 @@ namespace Engine.Graphics
         private RefOrImmediate<ImageProcessorTexture> _top;
         private RefOrImmediate<ImageProcessorTexture> _bottom;
 
-        private bool _initialized;
-
         private static ImageProcessorTexture CreateBlankTexture()
         {
             return new ImageProcessorTexture(new Image(1, 1));
@@ -60,17 +58,17 @@ namespace Engine.Graphics
             _as = registry.GetSystem<AssetSystem>();
             var ad = _as.Database;
             RecreateCubemapTexture();
-            InitializeContextObjects(ad, _gs.Context);
+            _gs.ExecuteOnMainThread(() => InitializeContextObjects(ad, _gs.Context));
         }
 
         protected override void Removed(SystemRegistry registry)
         {
-            _vb?.Dispose();
-            _ib?.Dispose();
-            _material?.Dispose();
-            _rasterizerState?.Dispose();
-            _cubemapBinding?.Dispose();
-            _cubemapBinding?.BoundTexture?.Dispose();
+            _vb.Dispose();
+            _ib.Dispose();
+            _material.Dispose();
+            _rasterizerState.Dispose();
+            _cubemapBinding.Dispose();
+            _cubemapBinding.BoundTexture.Dispose();
         }
 
         protected override void OnEnabled()
@@ -83,32 +81,31 @@ namespace Engine.Graphics
             _gs.RemoveFreeRenderItem(this);
         }
 
-        public async void InitializeContextObjects(AssetDatabase ad, RenderContext rc)
+        public void InitializeContextObjects(AssetDatabase ad, RenderContext rc)
         {
             var factory = rc.ResourceFactory;
 
-            _vb = await _gs.ExecuteOnMainThread(
-                () => factory.CreateVertexBuffer(s_vertices, new VertexDescriptor(VertexPosition.SizeInBytes, 1, 0, IntPtr.Zero), false));
+            _vb = factory.CreateVertexBuffer(s_vertices.Length * VertexPosition.SizeInBytes, false);
+            _vb.SetVertexData(s_vertices, new VertexDescriptor(VertexPosition.SizeInBytes, 1, 0, IntPtr.Zero));
 
-            _ib = await _gs.ExecuteOnMainThread(() => factory.CreateIndexBuffer(s_indices, false));
+            _ib = factory.CreateIndexBuffer(s_indices.Length * sizeof(int), false);
+            _ib.SetIndices(s_indices);
 
-            _material = await _gs.ExecuteOnMainThread(
-                () => rc.ResourceFactory.CreateMaterial(rc, "skybox-vertex", "skybox-frag",
-                    new MaterialVertexInput(12,
-                        new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)),
-                    new MaterialInputs<MaterialGlobalInputElement>(
-                        new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix")),
-                    new MaterialInputs<MaterialPerObjectInputElement>(
-                        new MaterialPerObjectInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, 16)),
-                    new MaterialTextureInputs(new ManualTextureInput("Skybox"))));
+            _material = rc.ResourceFactory.CreateMaterial(rc, "skybox-vertex", "skybox-frag",
+                new MaterialVertexInput(12,
+                    new MaterialVertexInputElement("in_position", VertexSemanticType.Position, VertexElementFormat.Float3)),
+                new MaterialInputs<MaterialGlobalInputElement>(
+                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix")),
+                new MaterialInputs<MaterialPerObjectInputElement>(
+                    new MaterialPerObjectInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, 16)),
+                new MaterialTextureInputs(new ManualTextureInput("Skybox")));
 
             _perObjectInput = rc.GetNamedGlobalBufferProviderPair("ViewMatrix").DataProvider;
 
             RecreateCubemapTexture();
 
-            _rasterizerState = await _gs.ExecuteOnMainThread(() => factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false));
-            _depthStencilState = await _gs.ExecuteOnMainThread(() => factory.CreateDepthStencilState(true, DepthComparison.LessEqual, false));
-
+            _rasterizerState = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, false, false);
+            _depthStencilState = factory.CreateDepthStencilState(true, DepthComparison.LessEqual, false);
             _initialized = true;
         }
 
@@ -165,7 +162,6 @@ namespace Engine.Graphics
             {
                 return;
             }
-
             rc.SetVertexBuffer(_vb);
             rc.SetIndexBuffer(_ib);
             rc.SetMaterial(_material);
@@ -307,5 +303,6 @@ namespace Engine.Graphics
             20,21,22, 20,22,23,
         };
         private DepthStencilState _depthStencilState;
+        private bool _initialized;
     }
 }

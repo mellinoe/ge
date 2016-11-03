@@ -275,6 +275,11 @@ namespace Engine.Graphics
             return Task.Factory.StartNew(func, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
         }
 
+        public Task ExecuteOnMainThread(Action action)
+        {
+            return Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
+        }
+
         public void NotifyBoundsChanged(BoundsRenderItem bri)
         {
             BoundsRenderItemEntry brie;
