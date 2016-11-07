@@ -82,7 +82,7 @@ namespace Engine
             });
             game.SystemRegistry.Register(inputSystem);
 
-            SceneLoaderSystem sls = new SceneLoaderSystem(game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
+            SceneLoaderSystem sls = new SceneLoaderSystem(game, game.SystemRegistry.GetSystem<GameObjectQuerySystem>());
             game.SystemRegistry.Register(sls);
             sls.AfterSceneLoaded += () => game.ResetDeltaTime();
 

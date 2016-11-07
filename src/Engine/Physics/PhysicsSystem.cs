@@ -10,6 +10,7 @@ namespace Engine.Physics
 {
     public class PhysicsSystem : GameSystem
     {
+        private static readonly Vector3 s_defaultGravity = new Vector3(0, -9.81f, 0);
         private readonly ParallelLooper _looper;
 
         private BlockingCollection<ISpaceObject> _additions = new BlockingCollection<ISpaceObject>();
@@ -26,7 +27,7 @@ namespace Engine.Physics
             }
 
             Space = new Space(_looper);
-            Space.ForceUpdater.Gravity = new Vector3(0f, -9.81f, 0f);
+            Space.ForceUpdater.Gravity = s_defaultGravity;
         }
 
         protected override void UpdateCore(float deltaSeconds)
@@ -58,6 +59,11 @@ namespace Engine.Physics
         public void RemoveObject(ISpaceObject spaceObject)
         {
             _removals.Add(spaceObject);
+        }
+
+        protected override void OnNewSceneLoadedCore()
+        {
+            Space.ForceUpdater.Gravity = s_defaultGravity;
         }
     }
 }

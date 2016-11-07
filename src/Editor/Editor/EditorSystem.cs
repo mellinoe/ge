@@ -629,6 +629,7 @@ namespace Engine.Editor
         private DirectoryNode _projectRootDirectoryNode;
         private TimeSpan _rootNodeRefreshPeriod = TimeSpan.FromSeconds(1);
         private DateTime _lastRootNodeRefreshTime = DateTime.MinValue;
+        private string _currentSceneName;
 
         private void DrawProjectAssets()
         {
@@ -1225,6 +1226,7 @@ namespace Engine.Editor
             {
                 return false;
             }
+            _currentSceneName = loadedAsset.Name;
 
             if (_currentScene == null)
             {
@@ -1280,17 +1282,8 @@ namespace Engine.Editor
                 throw new InvalidOperationException("Invalid path.");
             }
 
-            path = path.Trim(s_pathTrimChar);
-            if (!Path.IsPathRooted(path))
-            {
-                path = _projectContext.GetPath(path);
-            }
             Console.WriteLine("Saving scene: " + path);
-            using (var fs = File.CreateText(path))
-            {
-                var jtw = new JsonTextWriter(fs);
-                _as.ProjectDatabase.DefaultSerializer.Serialize(jtw, scene);
-            }
+            _as.ProjectDatabase.SaveDefinition(scene, path);
 
             StatusBarText($"[{DateTime.Now.ToString()}] Saved scene to {path}.", RgbaFloat.Cyan);
         }
@@ -1318,7 +1311,7 @@ namespace Engine.Editor
         {
             SerializedGameObject[] sGos = _goQuery.GetAllGameObjects().Where(go => !EditorUtility.IsEditorObject(go))
                 .Select(go => new SerializedGameObject(go)).ToArray();
-            asset.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, new SceneAsset() { GameObjects = sGos });
+            asset.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, new SceneAsset() { GameObjects = sGos, Name = _currentSceneName });
         }
 
         private void DestroyNonEditorGameObjects()

@@ -8,14 +8,16 @@ namespace Engine
         protected readonly GameObjectQuerySystem _goqs;
 
         private SceneAsset _loadedScene;
+        private readonly Game _game;
 
         public event Action BeforeSceneLoaded;
         public event Action AfterSceneLoaded;
 
         public SceneAsset LoadedScene => _loadedScene;
 
-        public SceneLoaderSystem(GameObjectQuerySystem goqs)
+        public SceneLoaderSystem(Game game, GameObjectQuerySystem goqs)
         {
+            _game = game;
             _goqs = goqs;
         }
 
@@ -23,9 +25,11 @@ namespace Engine
         {
             BeforeSceneLoaded?.Invoke();
             ClearCurrentSceneGameObjects();
+            _game.FlushDeletedObjects();
             asset.GenerateGameObjects();
             _loadedScene = asset;
             AfterSceneLoaded?.Invoke();
+            _game.NewSceneLoaded();
         }
 
         protected virtual void ClearCurrentSceneGameObjects()

@@ -6,15 +6,18 @@ namespace Engine.Audio.OpenAL
     public class OpenALAudioBuffer : AudioBuffer, IDisposable
     {
         public int ID { get; }
+        public int ByteCount { get; private set; }
 
         public OpenALAudioBuffer()
         {
             ID = AL.GenBuffer();
+            ByteCount = 0;
         }
 
         public override void BufferData<T>(T[] buffer, BufferAudioFormat format, int sizeInBytes, int frequency)
         {
             AL.BufferData(ID, MapAudioFormat(format), buffer, sizeInBytes, frequency);
+            ByteCount = sizeInBytes;
         }
 
         private ALFormat MapAudioFormat(BufferAudioFormat format)

@@ -4,7 +4,7 @@ namespace Engine.Editor
 {
     public class EditorSceneLoaderSystem : SceneLoaderSystem
     {
-        public EditorSceneLoaderSystem(GameObjectQuerySystem goqs) : base(goqs)
+        public EditorSceneLoaderSystem(Game game, GameObjectQuerySystem goqs) : base(game, goqs)
         {
         }
 

@@ -104,7 +104,7 @@
     <Compile Include="Physics\PhysicsSystem.cs" />
     <Compile Include="Physics\SphereCollider.cs" />
     <Compile Include="Prefabs.cs" />
-    <Compile Include="SceneHelpers.cs" />
+    <Compile Include="SceneLoaderSystem.cs" />
     <Compile Include="ScoreSystem.cs" />
     <Compile Include="SynchronizationHelperSystem.cs" />
     <Compile Include="SystemRegistry.cs" />

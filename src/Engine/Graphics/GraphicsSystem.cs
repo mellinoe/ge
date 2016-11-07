@@ -36,6 +36,7 @@ namespace Engine.Graphics
         private readonly GraphicsSystemTaskScheduler _taskScheduler;
         private readonly BlockingCollection<BoundsRenderItem> _renderItemsToRemove = new BlockingCollection<BoundsRenderItem>();
         private readonly BlockingCollection<BriTransformPair> _renderItemsToAdd = new BlockingCollection<BriTransformPair>();
+        private readonly BlockingCollection<PointLight> _pointLightsToRemove = new BlockingCollection<PointLight>();
 
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
@@ -198,6 +199,11 @@ namespace Engine.Graphics
                 throw new ArgumentNullException(nameof(pointLight));
             }
 
+            _pointLightsToRemove.Add(pointLight);
+        }
+
+        private void CoreRemovePointLight(PointLight pointLight)
+        {
             if (!_pointLights.Remove(pointLight))
             {
                 throw new InvalidOperationException($"Couldn't remove point light {pointLight}, it wasn't added.");
@@ -385,6 +391,12 @@ namespace Engine.Graphics
             while (_renderItemsToRemove.TryTake(out bri))
             {
                 CoreRemoveRenderItem(bri);
+            }
+
+            PointLight pl;
+            while (_pointLightsToRemove.TryTake(out pl))
+            {
+                CoreRemovePointLight(pl);
             }
         }
 

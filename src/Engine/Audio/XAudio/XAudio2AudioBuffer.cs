@@ -1,5 +1,6 @@
 ﻿using SharpDX.XAudio2;
 using SharpDX;
+using System;
 
 namespace Engine.Audio.XAudio
 {
@@ -9,6 +10,31 @@ namespace Engine.Audio.XAudio
         public BufferAudioFormat Format { get; private set; }
         public int Frequency { get; private set; }
         public int SizeInBytes { get; private set; }
+        public int TotalSamples
+        {
+            get
+            {
+                int bytesPerSample = GetBytesPerSample(Format);
+                return SizeInBytes / bytesPerSample;
+            }
+        }
+
+        private int GetBytesPerSample(BufferAudioFormat format)
+        {
+            switch (format)
+            {
+                case BufferAudioFormat.Mono8:
+                    return 1;
+                case BufferAudioFormat.Mono16:
+                    return 2;
+                case BufferAudioFormat.Stereo8:
+                    return 2;
+                case BufferAudioFormat.Stereo16:
+                    return 4;
+                default:
+                    throw new InvalidOperationException("Invalid BufferAudioFormat: " + format);
+            }
+        }
 
         public XAudio2AudioBuffer()
         {

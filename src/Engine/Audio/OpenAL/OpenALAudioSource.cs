@@ -1,10 +1,20 @@
 ﻿using OpenTK.Audio.OpenAL;
 using System.Numerics;
+using System;
 
 namespace Engine.Audio.OpenAL
 {
     public class OpenALAudioSource : AudioSource
     {
+        public OpenALAudioSource()
+        {
+            ID = AL.GenSource();
+            if (ID == 0)
+            {
+                throw new InvalidOperationException("Too many OpenALAudioSources.");
+            }
+        }
+
         public int ID { get; }
 
         public override float Gain
@@ -18,6 +28,25 @@ namespace Engine.Audio.OpenAL
             set
             {
                 AL.Source(ID, ALSourcef.Gain, value);
+            }
+        }
+
+        public override float Pitch
+        {
+            get
+            {
+                float pitch;
+                AL.GetSource(ID, ALSourcef.Pitch, out pitch);
+                return pitch;
+            }
+            set
+            {
+                if (value < 0.5 || value > 2.0f)
+                {
+                    throw new ArgumentOutOfRangeException("Pitch must be between 0.5 and 2.0.");
+                }
+
+                AL.Source(ID, ALSourcef.Pitch, value);
             }
         }
 
@@ -79,9 +108,38 @@ namespace Engine.Audio.OpenAL
             }
         }
 
-        public OpenALAudioSource()
+        /// <summary>
+        /// Gets or sets the playback position, as a value between 0.0f (beginning of clip), and 1.0f (end of clip).
+        /// </summary>
+        public override float PlaybackPosition
         {
-            ID = AL.GenSource();
+            get
+            {
+                int playbackBytes;
+                AL.GetSource(ID, ALGetSourcei.ByteOffset, out playbackBytes);
+                int bufferID;
+                AL.GetSource(ID, ALGetSourcei.Buffer, out bufferID);
+                int totalBufferBytes;
+                AL.GetBuffer(bufferID, ALGetBufferi.Size, out totalBufferBytes);
+                return (float)playbackBytes / totalBufferBytes;
+            }
+            set
+            {
+                int bufferID;
+                AL.GetSource(ID, ALGetSourcei.Buffer, out bufferID);
+                int totalBufferBytes;
+                AL.GetBuffer(bufferID, ALGetBufferi.Size, out totalBufferBytes);
+                int newByteOffset = (int)(totalBufferBytes * value);
+                AL.Source(ID, ALSourcei.ByteOffset, newByteOffset);
+            }
+        }
+
+        public override bool IsPlaying
+        {
+            get
+            {
+                return AL.GetSourceState(ID) == ALSourceState.Playing;
+            }
         }
 
         public override void Play(AudioBuffer buffer)

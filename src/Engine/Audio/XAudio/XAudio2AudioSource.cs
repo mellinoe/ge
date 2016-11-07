@@ -3,6 +3,7 @@ using SharpDX.XAudio2;
 using SharpDX.Multimedia;
 using SharpDX.X3DAudio;
 using SharpDX.Mathematics.Interop;
+using System;
 
 namespace Engine.Audio.XAudio
 {
@@ -20,12 +21,14 @@ namespace Engine.Audio.XAudio
         private static readonly Listener s_centeredListener = CreateCenteredListener();
         private bool _sourcePositionDirty;
         private bool _stereoState;
+        private XAudio2AudioBuffer _xa2Buffer;
+        private float _pitch = 1f;
 
         public XAudio2AudioSource(XAudio2Engine engine)
         {
             _engine = engine;
             WaveFormat waveFormat = new WaveFormat(44000, 16, 1);
-            _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat);
+            _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio: 2.0f, enableCallbackEvents: true);
             _audioBuffer = new SharpDX.XAudio2.AudioBuffer();
             _emitter = new Emitter()
             {
@@ -64,6 +67,24 @@ namespace Engine.Audio.XAudio
             set
             {
                 _sourceVoice.SetVolume(value);
+            }
+        }
+
+        public override float Pitch
+        {
+            get
+            {
+                return _pitch;
+            }
+            set
+            {
+                if (value < 0.5 || value > 2.0f)
+                {
+                    throw new ArgumentOutOfRangeException("Pitch must be between 0.5 and 2.0.");
+                }
+
+                _pitch = value;
+                SourcePositionShouldChange(); // pitch affects frequency ratio, which is also controlled by doppler effect.
             }
         }
 
@@ -113,15 +134,24 @@ namespace Engine.Audio.XAudio
             }
         }
 
-        private void SourcePositionShouldChange()
+        public override float PlaybackPosition
         {
-            if (_sourceVoice.State.BuffersQueued != 0)
+            get
             {
-                UpdateSourcePosition();
+                float position = (float)((double)_sourceVoice.State.SamplesPlayed / _xa2Buffer.TotalSamples);
+                return position;
             }
-            else
+            set
             {
-                _sourcePositionDirty = true; // Defer position calculations until audio is actually going to be playing.
+                throw new NotImplementedException();
+            }
+        }
+
+        public override bool IsPlaying
+        {
+            get
+            {
+                return _sourceVoice.State.BuffersQueued > 0;
             }
         }
 
@@ -132,16 +162,17 @@ namespace Engine.Audio.XAudio
 
         public override void Play(AudioBuffer buffer)
         {
-            XAudio2AudioBuffer xa2Buffer = (XAudio2AudioBuffer)buffer;
-            _channelCount = GetChannelCount(xa2Buffer.Format);
+            _xa2Buffer = (XAudio2AudioBuffer)buffer;
+            _channelCount = GetChannelCount(_xa2Buffer.Format);
             _emitter.ChannelCount = _channelCount;
             if ((_channelCount > 1 && !_stereoState) || (_channelCount == 1 && _stereoState))
             {
                 float volume = _sourceVoice.Volume;
                 _sourceVoice.DestroyVoice();
                 _sourceVoice.Dispose();
-                WaveFormat waveFormat = new WaveFormat(xa2Buffer.Frequency, GetChannelCount(xa2Buffer.Format));
-                _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat);
+                WaveFormat waveFormat = new WaveFormat(_xa2Buffer.Frequency, GetChannelCount(_xa2Buffer.Format));
+                _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio:2.0f, enableCallbackEvents: true);
+                _sourceVoice.BufferEnd += (ptr) => Console.WriteLine("finished processing.");
                 _sourceVoice.SetVolume(volume);
                 _emitter.ChannelAzimuths = new[] { 0.0f };
                 _dspSettings = new DspSettings(_channelCount, 2);
@@ -155,8 +186,8 @@ namespace Engine.Audio.XAudio
                 _sourcePositionDirty = false;
             }
 
-            _audioBuffer.Stream = xa2Buffer.DataStream;
-            _audioBuffer.AudioBytes = xa2Buffer.SizeInBytes;
+            _audioBuffer.Stream = _xa2Buffer.DataStream;
+            _audioBuffer.AudioBytes = _xa2Buffer.SizeInBytes;
             _audioBuffer.Flags = BufferFlags.EndOfStream;
             _sourceVoice.Stop();
             _sourceVoice.FlushSourceBuffers();
@@ -169,11 +200,23 @@ namespace Engine.Audio.XAudio
             _sourceVoice.Stop();
         }
 
+        private void SourcePositionShouldChange()
+        {
+            if (_sourceVoice.State.BuffersQueued != 0)
+            {
+                UpdateSourcePosition();
+            }
+            else
+            {
+                _sourcePositionDirty = true; // Defer position calculations until audio is actually going to be playing.
+            }
+        }
+
         private void OnListenerChanged()
         {
             if (PositionKind == AudioPositionKind.AbsoluteWorld)
             {
-                UpdateSourcePosition();
+                SourcePositionShouldChange();
             }
         }
 
@@ -186,7 +229,7 @@ namespace Engine.Audio.XAudio
                 CalculateFlags.Matrix | CalculateFlags.Doppler,
                 _dspSettings);
             _sourceVoice.SetOutputMatrix(_channelCount, 2, _dspSettings.MatrixCoefficients);
-            _sourceVoice.SetFrequencyRatio(_dspSettings.DopplerFactor);
+            _sourceVoice.SetFrequencyRatio(_pitch * _dspSettings.DopplerFactor);
         }
 
         private int GetChannelCount(BufferAudioFormat format)

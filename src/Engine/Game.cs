@@ -14,6 +14,7 @@ namespace Engine
         private readonly List<GameObject> _destroyList = new List<GameObject>();
         private Stopwatch _sw;
         private long _previousFrameTicks;
+        private readonly TimeControlSystem _timeSystem;
 
         public SystemRegistry SystemRegistry { get; } = new SystemRegistry();
 
@@ -21,10 +22,21 @@ namespace Engine
 
         public Game()
         {
+            _timeSystem = new TimeControlSystem();
+            SystemRegistry.Register(_timeSystem);
             SystemRegistry.Register(new GameObjectQuerySystem(_gameObjects));
             GameObject.InternalConstructed += OnGameObjectConstructed;
             GameObject.InternalDestroyRequested += OnGameObjectDestroyRequested;
             GameObject.InternalDestroyCommitted += OnGameObjectDestroyCommitted;
+        }
+
+        internal void FlushDeletedObjects()
+        {
+            foreach (GameObject go in _destroyList)
+            {
+                go.CommitDestroy();
+            }
+            _destroyList.Clear();
         }
 
         private void OnGameObjectConstructed(GameObject go)
@@ -69,17 +81,22 @@ namespace Engine
 
                 _previousFrameTicks = currentFrameTicks;
 
+                FlushDeletedObjects();
+
                 foreach (var kvp in SystemRegistry.GetSystems())
                 {
                     GameSystem system = kvp.Value;
-                    system.Update((float)deltaMilliseconds / 1000.0f);
+                    float deltaSeconds = (float)deltaMilliseconds / 1000.0f;
+                    system.Update(deltaSeconds * _timeSystem.TimeScale);
                 }
+            }
+        }
 
-                foreach (GameObject go in _destroyList)
-                {
-                    go.CommitDestroy();
-                }
-                _destroyList.Clear();
+        public void NewSceneLoaded()
+        {
+            foreach (var typeAndSystem in SystemRegistry.GetSystems())
+            {
+                typeAndSystem.Value.OnNewSceneLoaded();
             }
         }
 
@@ -92,6 +109,28 @@ namespace Engine
         {
             _sw?.Restart();
             _previousFrameTicks = 0L;
+        }
+    }
+
+    public class TimeControlSystem : GameSystem
+    {
+        public float DefaultTimescale { get; set; }
+
+        public float TimeScale { get; set; }
+
+        public TimeControlSystem()
+        {
+            DefaultTimescale = 1f;
+            TimeScale = 1f;
+        }
+
+        protected override void UpdateCore(float deltaSeconds)
+        {
+        }
+
+        protected override void OnNewSceneLoadedCore()
+        {
+            TimeScale = DefaultTimescale;
         }
     }
 }

@@ -39,8 +39,8 @@ namespace Engine.Graphics
         private ShaderTextureBinding _textureBinding;
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider = new DynamicDataProvider<Matrix4x4>();
-        private readonly DynamicDataProvider<ParticleProperties> _particleProperties
-            = new DynamicDataProvider<ParticleProperties>(new ParticleProperties() { Softness = 0.4f, ColorTint = RgbaFloat.White });
+        private readonly DynamicDataProvider<ParticleSystemGlobalProperties> _particleProperties
+            = new DynamicDataProvider<ParticleSystemGlobalProperties>(new ParticleSystemGlobalProperties() { Softness = 0.4f, ColorTint = RgbaFloat.White });
         private readonly ConstantBufferDataProvider[] _providers;
         private float _accumulator;
         private CameraDistanceComparer _cameraDistanceComparer;
@@ -60,7 +60,7 @@ namespace Engine.Graphics
         private static readonly MaterialInputs<MaterialPerObjectInputElement> s_perObjectInputs =
             new MaterialInputs<MaterialPerObjectInputElement>(
                     new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 64),
-                    new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, ParticleProperties.SizeInBytes));
+                    new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, ParticleSystemGlobalProperties.SizeInBytes));
         private static readonly MaterialTextureInputs s_textureInputs =
             new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture"));
 
@@ -174,7 +174,6 @@ namespace Engine.Graphics
             return 0;
         }
 
-
         public void Render(RenderContext rc, string pipelineStage)
         {
             if (!_initialized)
@@ -272,7 +271,7 @@ namespace Engine.Graphics
             _gs.NotifyBoundsChanged(this);
         }
 
-        private void SpawnParticle()
+        public void SpawnParticle()
         {
             Vector3 position = Vector3.Zero;
             Vector3 initialVelocity = Vector3.Zero;
@@ -316,6 +315,46 @@ namespace Engine.Graphics
 
             _instanceData.Add(new InstanceData(position, 1f, StartingSize));
             _particleStates.Add(new ParticleStateInternal() { Velocity = initialVelocity });
+        }
+
+        public int GetParticleCount() => _instanceData.Count;
+
+        public ParticleState GetParticle(int index)
+        {
+            if (index >= GetParticleCount())
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            InstanceData instanceData = _instanceData[index];
+            ParticleStateInternal internalState = _particleStates[index];
+
+            return new ParticleState(instanceData.Offset, internalState.Velocity, instanceData.Alpha, instanceData.Size, internalState.Age);
+        }
+
+        public void SetParticle(int index, ParticleState state)
+        {
+            if (index >= GetParticleCount())
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _instanceData.Elements[index].Offset = state.Offset;
+            _instanceData.Elements[index].Alpha = state.Alpha;
+            _instanceData.Elements[index].Size = state.Size;
+
+            _particleStates.Elements[index].Velocity = state.Velocity;
+            _particleStates.Elements[index].Age = state.Age;
+        }
+
+        public void ModifyAllParticles(ParticleModifier modifier)
+        {
+            for (int i = 0; i < GetParticleCount(); i++)
+            {
+                var particleState = GetParticle(i);
+                modifier(ref particleState);
+                SetParticle(i, particleState);
+            }
         }
 
         private Vector3 GetRandomPointOnSphere()
@@ -413,8 +452,9 @@ namespace Engine.Graphics
             public static VertexDescriptor VertexDescriptor => new VertexDescriptor(SizeInBytes, ElementCount);
         }
 
+        // GPU storage of global per-system information.
         [StructLayout(LayoutKind.Sequential)]
-        private struct ParticleProperties : IEquatable<ParticleProperties>
+        private struct ParticleSystemGlobalProperties : IEquatable<ParticleSystemGlobalProperties>
         {
             public RgbaFloat ColorTint;
             public float Softness;
@@ -422,7 +462,7 @@ namespace Engine.Graphics
 
             public const byte SizeInBytes = 32;
 
-            public bool Equals(ParticleProperties other)
+            public bool Equals(ParticleSystemGlobalProperties other)
             {
                 return other.ColorTint.Equals(ColorTint) && other.Softness.Equals(Softness);
             }
@@ -472,5 +512,29 @@ namespace Engine.Graphics
         Sphere,
         Hemisphere,
         Ring,
+    }
+
+    public delegate void ParticleModifier(ref ParticleState state);
+
+    public struct ParticleState
+    {
+        /// <summary>
+        /// The local offset of the particle. Controls the world-space position of the particle
+        /// based on the value of <see cref="ParticleSystem.SimulationSpace"/>.
+        /// </summary>
+        public Vector3 Offset;
+        public Vector3 Velocity;
+        public float Alpha;
+        public float Size;
+        public float Age;
+
+        public ParticleState(Vector3 offset, Vector3 velocity, float alpha, float size, float age)
+        {
+            Offset = offset;
+            Velocity = velocity;
+            Alpha = alpha;
+            Size = size;
+            Age = age;
+        }
     }
 }
