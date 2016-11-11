@@ -398,7 +398,7 @@ namespace Engine.Editor
             Command c = null;
 
             Vector3 pos = t.LocalPosition;
-            if (ImGui.DragVector3("Position", ref pos, -50f, 50f, 0.05f))
+            if (ImGui.DragVector3("Position", ref pos, -10000f, 10000f, 0.05f))
             {
                 c = SetValueActionCommand.New<Vector3>((val) => t.LocalPosition = val, t.LocalPosition, pos);
             }
@@ -882,7 +882,7 @@ namespace Engine.Editor
                     }
                     if (ImGui.MenuItem("Create Prefab From Selected", _selectedObjects.Count == 1))
                     {
-                        _selectedAsset = CreateGameObjectPrefab(_selectedObjects.Single());
+                        _selectedAsset = CreateGameObjectPrefab(_selectedObjects.Single(), out _loadedAssetPath);
                         _focusNameField = true;
                     }
                     ImGui.Separator();
@@ -1079,12 +1079,12 @@ namespace Engine.Editor
             }
         }
 
-        private SerializedPrefab CreateGameObjectPrefab(GameObject go)
+        private SerializedPrefab CreateGameObjectPrefab(GameObject go, out string assetPath)
         {
             List<GameObject> allChildren = new List<GameObject>();
             CollectChildren(go.Transform, allChildren);
             SerializedPrefab sp = new SerializedPrefab(allChildren);
-            _as.ProjectDatabase.SaveDefinition(sp, "NewPrefab.prefab");
+            assetPath =_as.ProjectDatabase.SaveDefinition(sp, $"{go.Name}.prefab");
             return sp;
         }
 
@@ -1234,9 +1234,9 @@ namespace Engine.Editor
             }
             _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
 
+            ClearSelection();
             StopSimulation();
             _sceneCam = null;
-            _selectedObjects.Clear();
             _sls.LoadScene(loadedAsset);
             RefreshCameras();
 
