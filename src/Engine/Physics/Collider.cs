@@ -10,6 +10,7 @@ using BEPUphysics.Constraints.SolverGroups;
 using System;
 using BEPUphysics.PositionUpdating;
 using Newtonsoft.Json;
+using BEPUphysics.Constraints.SingleEntity;
 
 namespace Engine.Physics
 {
@@ -138,6 +139,30 @@ namespace Engine.Physics
             }
         }
 
+        private bool _restrictLinearMotion;
+        private MaximumLinearSpeedConstraint _linearSpeedConstraint;
+        public bool RestrictLinearMotion
+        {
+            get { return _restrictLinearMotion; }
+            set
+            {
+                _restrictLinearMotion = value;
+                if (Entity != null)
+                {
+                    if (_restrictLinearMotion && _linearSpeedConstraint == null)
+                    {
+                        _linearSpeedConstraint = new MaximumLinearSpeedConstraint(Entity, 0f);
+                        _physicsSystem.AddObject(_linearSpeedConstraint);
+                    }
+                    else if (!_restrictLinearMotion && _linearSpeedConstraint != null)
+                    {
+                        _physicsSystem.RemoveObject(_linearSpeedConstraint);
+                        _linearSpeedConstraint = null;
+                    }
+                }
+            }
+        }
+
         [JsonIgnore]
         public Entity Entity { get; private set; }
 
@@ -257,6 +282,11 @@ namespace Engine.Physics
         {
             if (Entity != null)
             {
+                if (_linearSpeedConstraint != null)
+                {
+                    _physicsSystem.RemoveObject(_linearSpeedConstraint);
+                }
+
                 _physicsSystem.RemoveObject(Entity);
                 Transform.RemovePhysicsEntity();
             }
