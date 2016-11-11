@@ -8,7 +8,7 @@ namespace Engine.Assets
 {
     public class EmbeddedAssetDatabase : AssetDatabase
     {
-        private static readonly Type _lazyGenericType = typeof(Lazy<>);
+        private static readonly Type s_lazyGenericType = typeof(Lazy<>);
 
         private readonly Dictionary<AssetID, object> _assets = new Dictionary<AssetID, object>();
 
@@ -67,10 +67,21 @@ namespace Engine.Assets
             }
         }
 
+        public override Boolean TryOpenAssetStream(AssetID assetID, out Stream stream)
+        {
+            stream = null;
+            return false;
+        }
+
+        public override Stream OpenAssetStream(AssetID assetID)
+        {
+            throw new NotSupportedException("EmbeddedAssetDatabase does not support opening an asset Stream.");
+        }
+
         private T MaterializeAsset<T>(object asset)
         {
             var valueType = asset.GetType();
-            if (valueType.IsConstructedGenericType && valueType.GetGenericTypeDefinition() == _lazyGenericType)
+            if (valueType.IsConstructedGenericType && valueType.GetGenericTypeDefinition() == s_lazyGenericType)
             {
                 var itemType = valueType.GenericTypeArguments[0];
                 if (itemType == typeof(T))
@@ -96,7 +107,7 @@ namespace Engine.Assets
         private Type MaterializeAssetType(object value)
         {
             var valueType = value.GetType();
-            if (valueType.IsConstructedGenericType && valueType.GetGenericTypeDefinition() == _lazyGenericType)
+            if (valueType.IsConstructedGenericType && valueType.GetGenericTypeDefinition() == s_lazyGenericType)
             {
                 return valueType.GenericTypeArguments[0];
             }

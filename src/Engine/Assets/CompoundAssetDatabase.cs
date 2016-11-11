@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Veldrid.Assets;
 
 namespace Engine.Assets
@@ -70,6 +71,34 @@ namespace Engine.Assets
             }
 
             asset = default(T);
+            return false;
+        }
+
+        public override Stream OpenAssetStream(AssetID assetID)
+        {
+            foreach (var db in _databases)
+            {
+                Stream stream;
+                if (db.TryOpenAssetStream(assetID, out stream))
+                {
+                    return stream;
+                }
+            }
+
+            throw new InvalidOperationException("No asset with ID " + assetID + " was found in any asset database.");
+        }
+
+        public override Boolean TryOpenAssetStream(AssetID assetID, out Stream stream)
+        {
+            foreach (var db in _databases)
+            {
+                if (db.TryOpenAssetStream(assetID, out stream))
+                {
+                    return true;
+                }
+            }
+
+            stream = null;
             return false;
         }
     }
