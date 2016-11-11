@@ -198,6 +198,25 @@ namespace Engine
             return component;
         }
 
+        public T GetComponentInChildren<T>() where T: Component
+        {
+            return (T)GetComponentInChildren(typeof(T));
+        }
+
+        public Component GetComponentInChildren(Type componentType)
+        {
+            foreach (var child in Transform.Children)
+            {
+                Component ret = child.GameObject.GetComponent(componentType) ?? child.GameObject.GetComponentInChildren(componentType);
+                if (ret != null)
+                {
+                    return ret;
+                }
+            }
+
+            return null;
+        }
+
         public void Destroy()
         {
             InternalDestroyRequested.Invoke(this);
