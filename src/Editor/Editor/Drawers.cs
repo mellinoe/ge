@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Veldrid.Assets;
 using Veldrid.Graphics;
+using Engine.Physics;
 
 namespace Engine.Editor
 {
@@ -183,6 +184,11 @@ namespace Engine.Editor
 
             return new ComplexItemDrawer(type);
         }
+
+        internal static void AddDrawer(FuncEditorDrawer<PhysicsLayersDescription> funcEditorDrawer)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public abstract class Drawer<T> : Drawer
@@ -268,7 +274,7 @@ namespace Engine.Editor
             IntPtr ansiStringPtr = Marshal.StringToHGlobalAnsi(s);
             SharpDX.Utilities.CopyMemory(stringStorage, ansiStringPtr, s.Length);
             float stringWidth = ImGui.GetTextSize(label).X;
-            ImGui.PushItemWidth(ImGui.GetContentRegionAvailableWidth() - stringWidth - 10);
+            ImGui.PushItemWidth(stringWidth + 10);
             result |= ImGui.InputText(label, stringStorage, 200, InputTextFlags.Default, null);
             ImGui.PopItemWidth();
             if (result)

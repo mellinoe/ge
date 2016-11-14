@@ -125,6 +125,7 @@ namespace Engine.Editor
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<SceneAsset>>(DrawSceneRef));
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<WaveFile>>(DrawWaveRef));
             DrawerCache.AddDrawer(new FuncDrawer<AssetRef<FontFace>>(DrawFontRef));
+            DrawerCache.AddDrawer(new FuncDrawer<PhysicsLayersDescription>(PhysicsLayersDrawer));
 
             var genericHandler = new GenericAssetMenuHandler(); _assetMenuHandlers.AddItem(genericHandler.TypeHandled, genericHandler);
             var sceneHandler = new ExplicitMenuHandler<SceneAsset>(() => { }, (path) => LoadScene(path));
@@ -170,6 +171,48 @@ namespace Engine.Editor
                     }
                 }
             }
+        }
+
+        private TextInputBuffer _physicsLayerInput = new TextInputBuffer(128);
+        private bool PhysicsLayersDrawer(string label, ref PhysicsLayersDescription pld, RenderContext rc)
+        {
+            for (int i = 0; i < pld.GetLayerCount(); i++)
+            {
+                _physicsLayerInput.StringValue = pld.GetLayerName(i);
+                if (ImGui.InputText($"[{i}]", _physicsLayerInput.Buffer, _physicsLayerInput.Length, InputTextFlags.Default, null))
+                {
+                    pld.SetLayerName(i, _physicsLayerInput.StringValue);
+                }
+
+                for (int g = 0; g < pld.GetLayerCount(); g++)
+                {
+                    bool colliding = pld.GetDoLayersCollide(i, g);
+                    ImGui.SameLine();
+                    if (ImGui.Checkbox($"##C{i}{g}", ref colliding))
+                    {
+                        pld.SetLayersCollide(i, g, colliding);
+                    }
+                    if (ImGui.IsLastItemHovered())
+                    {
+                        ImGui.SetTooltip($"{pld.GetLayerName(i)} <-> {pld.GetLayerName(g)}");
+                    }
+                }
+            }
+
+            if (ImGui.Button("New Layer"))
+            {
+                pld.AddLayer("New Layer");
+            }
+            if (pld.GetLayerCount() > 1)
+            {
+                ImGui.SameLine();
+                if (ImGui.Button("Remove Last"))
+                {
+                    pld.RemoveLastLayer();
+                }
+            }
+
+            return false;
         }
 
         private bool DrawSceneRef(string label, ref AssetRef<SceneAsset> sceneRef, RenderContext rc)
@@ -329,6 +372,18 @@ namespace Engine.Editor
                 {
                     c = SetValueActionCommand.New<AssetRef<TextureData>>(val => mr.Texture = val, mr.Texture.GetRef(), assetRef);
                 }
+            }
+
+            Vector3 color = mr.Tint.Color;
+            if (ImGui.ColorEdit3("Tint Color", ref color, false))
+            {
+                c = SetValueActionCommand.New<TintInfo>(val => mr.Tint = val, mr.Tint, new TintInfo(color, mr.Tint.TintFactor));
+            }
+
+            float tintFactor = mr.Tint.TintFactor;
+            if (ImGui.DragFloat("Tint Factor", ref tintFactor, 0f, 1f, 0.05f))
+            {
+                c = SetValueActionCommand.New<TintInfo>(val => mr.Tint = val, mr.Tint, new TintInfo(mr.Tint.Color, tintFactor));
             }
 
             if (ImGui.Button("Toggle Bounds Renderer"))
@@ -1084,7 +1139,7 @@ namespace Engine.Editor
             List<GameObject> allChildren = new List<GameObject>();
             CollectChildren(go.Transform, allChildren);
             SerializedPrefab sp = new SerializedPrefab(allChildren);
-            assetPath =_as.ProjectDatabase.SaveDefinition(sp, $"{go.Name}.prefab");
+            assetPath = _as.ProjectDatabase.SaveDefinition(sp, $"{go.Name}.prefab");
             return sp;
         }
 
@@ -1153,6 +1208,7 @@ namespace Engine.Editor
                 _as.ProjectAssetRootPath = Path.Combine(loadedProjectRoot, loadedProjectManifest.AssetRoot);
                 _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest, rootPathOrManifest);
                 DiscoverProjectComponents();
+                _physics.SetPhysicsLayerRules(loadedProjectManifest.PhysicsLayers);
                 return true;
             }
             else if (Directory.Exists(rootPathOrManifest))
@@ -1186,7 +1242,8 @@ namespace Engine.Editor
         {
             var manifest = new ProjectManifest()
             {
-                Name = "NewProject"
+                Name = "NewProject",
+                PhysicsLayers = PhysicsLayersDescription.Default
             };
             using (var sw = File.CreateText(manifestPath))
             using (var jtw = new JsonTextWriter(sw))

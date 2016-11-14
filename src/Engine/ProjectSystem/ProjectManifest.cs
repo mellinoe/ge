@@ -1,4 +1,5 @@
 ﻿using Engine.Assets;
+using Engine.Physics;
 using System.Collections.Generic;
 using Veldrid.Assets;
 
@@ -10,6 +11,7 @@ namespace Engine.ProjectSystem
         public string AssetRoot { get; set; } = "Assets";
         public List<string> ManagedAssemblies { get; set; } = new List<string>();
         public AssetRef<SceneAsset> OpeningScene { get; set; }
+        public PhysicsLayersDescription PhysicsLayers { get; set; }
 
         public ProjectManifest()
         {

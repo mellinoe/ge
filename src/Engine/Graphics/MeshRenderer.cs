@@ -57,8 +57,8 @@ namespace Engine.Graphics
 
         private void RecreateModel()
         {
-            _vb.Dispose();
-            _ib.Dispose();
+            //_vb.Dispose();
+            //_ib.Dispose();
 
             _mesh = _meshRef.Get(_ad);
             _vb = _mesh.CreateVertexBuffer(_gs.Context.ResourceFactory);

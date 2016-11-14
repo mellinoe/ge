@@ -29,6 +29,11 @@ namespace Engine
             return (from * (1 - t)) + (to * t);
         }
 
+        public static bool ContainsNaN(Vector3 v)
+        {
+            return float.IsNaN(v.X) || float.IsNaN(v.Y) || float.IsNaN(v.Z);
+        }
+
         public static float RadiansToDegrees(float radians)
         {
             return (float)(radians * 180 / Math.PI);

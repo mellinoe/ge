@@ -11,6 +11,7 @@ using System;
 using BEPUphysics.PositionUpdating;
 using Newtonsoft.Json;
 using BEPUphysics.Constraints.SingleEntity;
+using BEPUphysics.EntityStateManagement;
 
 namespace Engine.Physics
 {
@@ -159,6 +160,25 @@ namespace Engine.Physics
                         _physicsSystem.RemoveObject(_linearSpeedConstraint);
                         _linearSpeedConstraint = null;
                     }
+                }
+            }
+        }
+
+        private int _layer;
+        public int Layer
+        {
+            get { return _layer; }
+            set
+            {
+                if (_layer < 0 || (_physicsSystem != null && _layer >= _physicsSystem.LayerCount))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(Layer));
+                }
+
+                _layer = value;
+                if (Entity != null)
+                {
+                    Entity.CollisionInformation.CollisionRules.Group = _physicsSystem.GetCollisionGroup(_layer);
                 }
             }
         }
@@ -325,6 +345,7 @@ namespace Engine.Physics
 
             Entity.Tag = this;
             Entity.CollisionInformation.Tag = this;
+            Entity.CollisionInformation.CollisionRules.Group = _physicsSystem.GetCollisionGroup(_layer);
 
             if (EnabledInHierarchy)
             {
@@ -350,7 +371,6 @@ namespace Engine.Physics
                 _parentJoint.NoRotationJoint.SpringSettings.Damping = float.MaxValue;
                 _parentJoint.NoRotationJoint.SpringSettings.Stiffness = float.MaxValue;
                 _parentJoint.NoRotationJoint.IsActive = true;
-
                 _parentJoint.IsActive = true;
                 _physicsSystem.AddObject(_parentJoint);
                 _parentCollider.Transform.PositionManuallyChanged += OnAttachedParentManuallyMoved;

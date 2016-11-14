@@ -104,7 +104,7 @@ namespace Engine
             game.SystemRegistry.Register(bus);
             bus.Register(imGuiRenderer);
 
-            PhysicsSystem ps = new PhysicsSystem();
+            PhysicsSystem ps = new PhysicsSystem(projectManifest.PhysicsLayers);
             game.SystemRegistry.Register(ps);
 
 #if DEBUG

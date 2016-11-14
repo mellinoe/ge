@@ -21,8 +21,8 @@ namespace Engine.Editor
             // Force-load prefs.
             var prefs = EditorPreferences.Instance;
 
-            OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-                ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.Maximized) 
+            OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.Maximized)
                 : new SameThreadWindow(960, 540, WindowState.Maximized);
             window.Title = "ge.Editor";
             Game game = new Game();
@@ -67,7 +67,7 @@ namespace Engine.Editor
             game.SystemRegistry.Register(bus);
             bus.Register(imGuiRenderer);
 
-            PhysicsSystem ps = new PhysicsSystem();
+            PhysicsSystem ps = new PhysicsSystem(PhysicsLayersDescription.Default);
             game.SystemRegistry.Register(ps);
 
             ConsoleCommandSystem ccs = new ConsoleCommandSystem(game.SystemRegistry);
