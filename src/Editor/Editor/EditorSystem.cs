@@ -374,16 +374,16 @@ namespace Engine.Editor
                 }
             }
 
-            Vector3 color = mr.Tint.Color;
+            Vector3 color = mr.BaseTint.Color;
             if (ImGui.ColorEdit3("Tint Color", ref color, false))
             {
-                c = SetValueActionCommand.New<TintInfo>(val => mr.Tint = val, mr.Tint, new TintInfo(color, mr.Tint.TintFactor));
+                c = SetValueActionCommand.New<TintInfo>(val => mr.BaseTint = val, mr.BaseTint, new TintInfo(color, mr.BaseTint.TintFactor));
             }
 
-            float tintFactor = mr.Tint.TintFactor;
+            float tintFactor = mr.BaseTint.TintFactor;
             if (ImGui.DragFloat("Tint Factor", ref tintFactor, 0f, 1f, 0.05f))
             {
-                c = SetValueActionCommand.New<TintInfo>(val => mr.Tint = val, mr.Tint, new TintInfo(mr.Tint.Color, tintFactor));
+                c = SetValueActionCommand.New<TintInfo>(val => mr.BaseTint = val, mr.BaseTint, new TintInfo(mr.BaseTint.Color, tintFactor));
             }
 
             if (ImGui.Button("Toggle Bounds Renderer"))
@@ -685,6 +685,7 @@ namespace Engine.Editor
         private TimeSpan _rootNodeRefreshPeriod = TimeSpan.FromSeconds(1);
         private DateTime _lastRootNodeRefreshTime = DateTime.MinValue;
         private string _currentSceneName;
+        private readonly Dictionary<GameObject, ColliderShapeRenderer> _colliderRenderers = new Dictionary<GameObject, ColliderShapeRenderer>();
 
         private void DrawProjectAssets()
         {
@@ -1553,9 +1554,12 @@ namespace Engine.Editor
             var mrs = go.GetComponents<MeshRenderer>();
             foreach (var mr in mrs)
             {
-                mr.Tint = new TintInfo(new Vector3(1.0f), 0.6f);
+                mr.OverrideTint = new TintInfo(new Vector3(1.0f), 0.6f);
             }
-
+            Debug.Assert(!_colliderRenderers.ContainsKey(go));
+            ColliderShapeRenderer renderer = new ColliderShapeRenderer(go, _as, _gs.Context, RgbaFloat.Cyan);
+            _gs.AddFreeRenderItem(renderer);
+            _colliderRenderers.Add(go, renderer);
             _newSelectedObject = go;
         }
 
@@ -1587,8 +1591,12 @@ namespace Engine.Editor
             var mrs = go.GetComponents<MeshRenderer>();
             foreach (var mr in mrs)
             {
-                mr.Tint = new TintInfo();
+                mr.OverrideTint = new TintInfo();
             }
+            ColliderShapeRenderer renderer = _colliderRenderers[go];
+            _gs.RemoveFreeRenderItem(renderer);
+            renderer.Dispose();
+            _colliderRenderers.Remove(go);
         }
 
         void OnSelectedDestroyed(GameObject go)

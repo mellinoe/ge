@@ -25,6 +25,9 @@ namespace Engine.Graphics
         private MeshData _mesh;
         private BoundingSphere _centeredBoundingSphere;
         private BoundingBox _centeredBoundingBox;
+        private TintInfo _baseTint;
+        private TintInfo _overrideTint;
+        private bool _initialized;
 
         private GraphicsSystem _gs;
         private AssetDatabase _ad;
@@ -94,7 +97,10 @@ namespace Engine.Graphics
 
         public bool DontCullBackFace { get; set; } = false;
 
-        public TintInfo Tint { get { return _tintInfoProvider.Data; } set { _tintInfoProvider.Data = value; } }
+        public TintInfo BaseTint { get { return _baseTint; } set { _baseTint = value; UpdateTintProvider(); } }
+
+        [JsonIgnore]
+        public TintInfo OverrideTint { get { return _overrideTint; } set { _overrideTint = value; UpdateTintProvider(); } }
 
         public Matrix4x4 RenderOffset { get; set; } = Matrix4x4.Identity;
 
@@ -363,6 +369,13 @@ namespace Engine.Graphics
             return numHits;
         }
 
+        private void UpdateTintProvider()
+        {
+            float factor = _baseTint.TintFactor + ((1 - _baseTint.TintFactor) * _overrideTint.TintFactor);
+            Vector3 color = Vector3.Lerp(_baseTint.Color, _overrideTint.Color, 1 - _baseTint.TintFactor);
+            _tintInfoProvider.Data = new TintInfo(color, factor);
+        }
+
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";
         private static readonly string RegularPassFragmentShaderSource = "shadow-frag";
 
@@ -397,6 +410,5 @@ namespace Engine.Graphics
             {
                 new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
-        private bool _initialized;
     }
 }

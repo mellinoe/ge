@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Numerics;
 
 namespace Engine.Graphics
@@ -8,6 +9,7 @@ namespace Engine.Graphics
         public readonly Vector3 Color;
         public readonly float TintFactor;
 
+        [JsonConstructor]
         public TintInfo(Vector3 color, float tintFactor)
         {
             Color = color;
