@@ -8,12 +8,13 @@ namespace Engine.Graphics
 {
     public class ColliderShapeRenderer : WireframeShapeRenderer
     {
-        private readonly GameObject _gameObject;
+        private GameObject _gameObject;
         private readonly AssetSystem _assetSystem;
 
-        public ColliderShapeRenderer(GameObject gameObject, AssetSystem assetSystem, RenderContext rc, RgbaFloat color) : base(rc, color)
+        public GameObject GameObject { get { return _gameObject; } set { _gameObject = value; } }
+
+        public ColliderShapeRenderer(AssetSystem assetSystem, RenderContext rc, RgbaFloat color) : base(rc, color)
         {
-            _gameObject = gameObject;
             _assetSystem = assetSystem;
         }
 
@@ -24,7 +25,7 @@ namespace Engine.Graphics
 
         protected override void AddVerticesAndIndices()
         {
-            foreach (var collider in _gameObject.GetComponents<Collider>())
+            foreach (var collider in GameObject.GetComponents<Collider>())
             {
                 if (collider.Enabled)
                 {
@@ -54,8 +55,8 @@ namespace Engine.Graphics
             foreach (VertexPositionNormalTexture vertex in CubeModel.Vertices)
             {
                 VertexPositionNormalTexture scaled = new VertexPositionNormalTexture(
-                    Vector3.Transform(vertex.Position * scale, _gameObject.Transform.GetWorldMatrix()),
-                    Vector3.TransformNormal(vertex.Normal, _gameObject.Transform.GetWorldMatrix()),
+                    Vector3.Transform(vertex.Position * scale, GameObject.Transform.GetWorldMatrix()),
+                    Vector3.TransformNormal(vertex.Normal, GameObject.Transform.GetWorldMatrix()),
                     vertex.TextureCoordinates);
                 _vertices.Add(scaled);
             }
@@ -70,8 +71,8 @@ namespace Engine.Graphics
             foreach (VertexPositionNormalTexture vertex in SphereModel.Vertices)
             {
                 VertexPositionNormalTexture scaled = new VertexPositionNormalTexture(
-                    Vector3.Transform(vertex.Position * radius, _gameObject.Transform.GetWorldMatrix()),
-                    Vector3.TransformNormal(vertex.Normal, _gameObject.Transform.GetWorldMatrix()),
+                    Vector3.Transform(vertex.Position * radius, GameObject.Transform.GetWorldMatrix()),
+                    Vector3.TransformNormal(vertex.Normal, GameObject.Transform.GetWorldMatrix()),
                     vertex.TextureCoordinates);
                 _vertices.Add(scaled);
             }
@@ -90,7 +91,7 @@ namespace Engine.Graphics
                 foreach (Vector3 position in positions)
                 {
                     _vertices.Add(new VertexPositionNormalTexture(
-                        Vector3.Transform(position, _gameObject.Transform.GetWorldMatrix()),
+                        Vector3.Transform(position, GameObject.Transform.GetWorldMatrix()),
                         Vector3.Zero,
                         Vector2.Zero));
                 }

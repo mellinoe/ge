@@ -685,6 +685,7 @@ namespace Engine.Editor
         private TimeSpan _rootNodeRefreshPeriod = TimeSpan.FromSeconds(1);
         private DateTime _lastRootNodeRefreshTime = DateTime.MinValue;
         private string _currentSceneName;
+        private readonly List<ColliderShapeRenderer> _cachedColliderRenderers = new List<ColliderShapeRenderer>();
         private readonly Dictionary<GameObject, ColliderShapeRenderer> _colliderRenderers = new Dictionary<GameObject, ColliderShapeRenderer>();
 
         private void DrawProjectAssets()
@@ -1557,10 +1558,26 @@ namespace Engine.Editor
                 mr.OverrideTint = new TintInfo(new Vector3(1.0f), 0.6f);
             }
             Debug.Assert(!_colliderRenderers.ContainsKey(go));
-            ColliderShapeRenderer renderer = new ColliderShapeRenderer(go, _as, _gs.Context, RgbaFloat.Cyan);
+            ColliderShapeRenderer renderer = GetColliderShapeRenderer();
+            renderer.GameObject = go;
             _gs.AddFreeRenderItem(renderer);
             _colliderRenderers.Add(go, renderer);
             _newSelectedObject = go;
+        }
+
+        /// <summary>Returns a new or cached ColliderShapeRenderer.</summary>
+        private ColliderShapeRenderer GetColliderShapeRenderer()
+        {
+            if (_cachedColliderRenderers.Count == 0)
+            {
+                return new ColliderShapeRenderer(_as, _gs.Context, RgbaFloat.Cyan);
+            }
+            else
+            {
+                ColliderShapeRenderer ret = _cachedColliderRenderers[_cachedColliderRenderers.Count - 1];
+                _cachedColliderRenderers.RemoveAt(_cachedColliderRenderers.Count - 1);
+                return ret;
+            }
         }
 
         private void Deselect(GameObject go)
@@ -1595,8 +1612,8 @@ namespace Engine.Editor
             }
             ColliderShapeRenderer renderer = _colliderRenderers[go];
             _gs.RemoveFreeRenderItem(renderer);
-            renderer.Dispose();
             _colliderRenderers.Remove(go);
+            _cachedColliderRenderers.Add(renderer);
         }
 
         void OnSelectedDestroyed(GameObject go)
