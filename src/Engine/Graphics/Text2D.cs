@@ -29,6 +29,7 @@ namespace Engine.Graphics
         private AssetRef<FontFace> _fontRef;
         private float _fontSize = 10;
         private FontFace _font;
+        private bool _initialized;
 
         public string Text
         {
@@ -77,10 +78,16 @@ namespace Engine.Graphics
         {
             _gs = registry.GetSystem<GraphicsSystem>();
             _as = registry.GetSystem<AssetSystem>();
+            _gs.ExecuteOnMainThread(InitializeContextObjects);
+        }
+
+        private void InitializeContextObjects()
+        {
             _textBuffer = new TextBuffer(_gs);
             _textureAtlas = new TextureAtlas(_gs.Context, 2048);
             _textAnalyzer = new TextAnalyzer(_textureAtlas);
             _gs.Context.WindowResized += OnWindowResized;
+            _initialized = true;
         }
 
         protected override void Removed(SystemRegistry registry)
@@ -115,6 +122,11 @@ namespace Engine.Graphics
 
         public void Render(RenderContext rc, string pipelineStage)
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             if (_fontRef != null && !_fontRef.ID.IsEmpty)
             {
                 if (_textChanged || _fontChanged)

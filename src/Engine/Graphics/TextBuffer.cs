@@ -1,5 +1,6 @@
 ﻿using SharpFont;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using Veldrid.Graphics;
@@ -28,12 +29,9 @@ namespace Engine.Graphics
         {
             _rc = gs.Context;
             _providers[0] = _screenOrthoProjection;
-            gs.ExecuteOnMainThread(() =>
-            {
-                _ib = _rc.ResourceFactory.CreateIndexBuffer(600, false);
-                _material = CreateMaterial(_rc);
-                _dss = _rc.ResourceFactory.CreateDepthStencilState(false, DepthComparison.LessEqual);
-            });
+            _ib = _rc.ResourceFactory.CreateIndexBuffer(600, false);
+            _material = CreateMaterial(_rc);
+            _dss = _rc.ResourceFactory.CreateDepthStencilState(false, DepthComparison.LessEqual);
         }
 
         public unsafe void Append(TextAnalyzer analyzer, FontFace font, string text, float fontSize, int atlasWidth, RectangleF drawRect)
