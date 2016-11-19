@@ -198,6 +198,10 @@ namespace Engine.Graphics
             {
                 throw new ArgumentNullException(nameof(pointLight));
             }
+            if (!_pointLights.Contains(pointLight))
+            {
+                throw new InvalidOperationException($"Couldn't remove point light {pointLight}, it wasn't added.");
+            }
 
             _pointLightsToRemove.Add(pointLight);
         }
