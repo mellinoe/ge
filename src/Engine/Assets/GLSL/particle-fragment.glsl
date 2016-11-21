@@ -22,8 +22,6 @@ in float fs_alpha;
 in vec2 fs_texCoord;
 in vec4 fs_fragPosition;
 
-//layout(origin_upper_left, pixel_center_integer) in vec4 gl_FragCoord;
-
 out vec4 outputColor;
 
 float GetLinearDepth(float depth)

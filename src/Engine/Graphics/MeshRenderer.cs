@@ -12,12 +12,14 @@ namespace Engine.Graphics
 {
     public class MeshRenderer : Component, BoundsRenderItem
     {
-        private static readonly string[] s_stages = { "ShadowMap", "Standard" };
+        private static readonly string[] s_opaqueStages = { "ShadowMap", "Standard" };
+        private static readonly string[] s_transparentStages = { "AlphaBlend" };
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private readonly DynamicDataProvider<TintInfo> _tintInfoProvider;
         private readonly ConstantBufferDataProvider[] _perObjectProviders;
+        private readonly ConstantBufferDataProvider[] _transparentPerObjectProviders;
         private int _indexCount;
         private RefOrImmediate<TextureData> _textureRef;
         private RefOrImmediate<MeshData> _meshRef;
@@ -27,6 +29,9 @@ namespace Engine.Graphics
         private BoundingBox _centeredBoundingBox;
         private TintInfo _baseTint;
         private TintInfo _overrideTint;
+        private DynamicDataProvider<MaterialInfo> _materialInfo;
+        private readonly TriangleComparer _triangleComparer = new TriangleComparer();
+        private bool _isTransparent;
         private bool _initialized;
 
         private GraphicsSystem _gs;
@@ -88,6 +93,7 @@ namespace Engine.Graphics
 
         // Shared device resources
         private Material _regularPassMaterial;
+        private Material _regularPassTransparentMaterial;
         private Material _shadowPassMaterial;
 
         private static RasterizerState s_wireframeRS;
@@ -101,6 +107,41 @@ namespace Engine.Graphics
 
         [JsonIgnore]
         public TintInfo OverrideTint { get { return _overrideTint; } set { _overrideTint = value; UpdateTintProvider(); } }
+
+        public float Opacity
+        {
+            get { return _materialInfo.Data.Opacity; }
+            set
+            {
+                float newVal = MathUtil.Clamp(value, 0f, 1f);
+                float oldVal = _materialInfo.Data.Opacity;
+                if (newVal != oldVal)
+                {
+
+                    bool isTransparent = oldVal == 1f;
+                    if (newVal < 1f && oldVal == 1f)
+                    {
+                        MakeTransparent();
+                    }
+                    else if (newVal == 1f)
+                    {
+                        MakeOpaque();
+                    }
+
+                    _materialInfo.Data = new MaterialInfo(newVal);
+                }
+            }
+        }
+
+        private void MakeTransparent()
+        {
+            _isTransparent = true;
+        }
+
+        private void MakeOpaque()
+        {
+            _isTransparent = false;
+        }
 
         public Matrix4x4 RenderOffset { get; set; } = Matrix4x4.Identity;
 
@@ -121,7 +162,9 @@ namespace Engine.Graphics
             _worldProvider = new DynamicDataProvider<Matrix4x4>();
             _inverseTransposeWorldProvider = new DependantDataProvider<Matrix4x4>(_worldProvider, CalculateInverseTranspose);
             _tintInfoProvider = new DynamicDataProvider<TintInfo>();
+            _materialInfo = new DynamicDataProvider<MaterialInfo>(new MaterialInfo(1.0f));
             _perObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _tintInfoProvider };
+            _transparentPerObjectProviders = new ConstantBufferDataProvider[] { _worldProvider, _inverseTransposeWorldProvider, _tintInfoProvider, _materialInfo };
             Mesh = meshData;
             Texture = texture;
         }
@@ -133,7 +176,7 @@ namespace Engine.Graphics
 
         public IEnumerable<string> GetStagesParticipated()
         {
-            return s_stages;
+            return _isTransparent ? s_transparentStages : s_opaqueStages;
         }
 
         public void Render(RenderContext rc, string pipelineStage)
@@ -146,6 +189,10 @@ namespace Engine.Graphics
             _worldProvider.Data = RenderOffset * GameObject.Transform.GetWorldMatrix();
 
             rc.SetVertexBuffer(_vb);
+            if (Opacity < 1f)
+            {
+                SortTransparentTriangles();
+            }
             rc.SetIndexBuffer(_ib);
 
             if (pipelineStage == "ShadowMap")
@@ -153,12 +200,19 @@ namespace Engine.Graphics
                 rc.SetMaterial(_shadowPassMaterial);
                 _shadowPassMaterial.ApplyPerObjectInput(_worldProvider);
             }
+            else if (pipelineStage == "AlphaBlend")
+            {
+                rc.SetMaterial(_regularPassTransparentMaterial);
+                _regularPassTransparentMaterial.ApplyPerObjectInputs(_transparentPerObjectProviders);
+                _regularPassTransparentMaterial.UseTexture(0, _textureBinding);
+                _regularPassMaterial.UseTexture(1, _gs.StandardStageDepthView);
+                rc.SetBlendState(rc.AlphaBlend);
+            }
             else
             {
                 Debug.Assert(pipelineStage == "Standard");
 
                 rc.SetMaterial(_regularPassMaterial);
-
                 _regularPassMaterial.ApplyPerObjectInputs(_perObjectProviders);
                 _regularPassMaterial.UseTexture(0, _textureBinding);
             }
@@ -177,6 +231,53 @@ namespace Engine.Graphics
             }
 
             rc.DrawIndexedPrimitives(_indexCount, 0);
+            if (pipelineStage == "AlphaBlend")
+            {
+                rc.SetBlendState(rc.OverrideBlend);
+            }
+        }
+
+        private unsafe void SortTransparentTriangles()
+        {
+            int[] indices = _mesh.GetIndices();
+
+            if (_triIndices == null || _triIndices.Length < indices.Length / 3)
+            {
+                _triIndices = new TriangleIndices[indices.Length / 3];
+                for (int i = 0; i < _triIndices.Length; i++)
+                {
+                    _triIndices[i] = new TriangleIndices(indices[i * 3], indices[i * 3 + 1], indices[i * 3 + 2]);
+                }
+            }
+
+            _triangleComparer.WorldMatrix = Transform.GetWorldMatrix();
+            _triangleComparer.CameraPosition = _gs.MainCamera.Transform.Position;
+            _triangleComparer.Positions = _mesh.GetVertexPositions();
+
+            Array.Sort(_triIndices, _triangleComparer);
+
+            fixed (TriangleIndices* indicesPtr = _triIndices)
+            {
+                _ib.SetIndices(new IntPtr(indicesPtr), IndexFormat.UInt32, sizeof(uint), indices.Length);
+            }
+        }
+
+        private class TriangleComparer : IComparer<TriangleIndices>
+        {
+            public Matrix4x4 WorldMatrix { get; set; }
+            public Vector3 CameraPosition { get; set; }
+            public Vector3[] Positions { get; set; }
+
+            public int Compare(TriangleIndices x, TriangleIndices y)
+            {
+                Vector3 xPosition = Vector3.Transform((Positions[x.I0] + Positions[x.I1] + Positions[x.I2]) / 3, WorldMatrix);
+                Vector3 yPosition = Vector3.Transform((Positions[y.I0] + Positions[y.I1] + Positions[y.I2]) / 3, WorldMatrix);
+
+                float xDistance = Vector3.DistanceSquared(xPosition, CameraPosition);
+                float yDistance = Vector3.DistanceSquared(yPosition, CameraPosition);
+
+                return -xDistance.CompareTo(yDistance);
+            }
         }
 
         protected override void Attached(SystemRegistry registry)
@@ -242,6 +343,15 @@ namespace Engine.Graphics
                 s_regularGlobalInputs,
                 s_perObjectInputs,
                 s_textureInputs);
+
+            _regularPassTransparentMaterial = await materialCache.GetMaterialAsync(
+                context,
+                RegularPassTransparentVertexShaderSource,
+                RegularPassTransparentFragmentShaderSource,
+                s_vertexInputs,
+                s_regularGlobalInputs,
+                s_transparentPerObjectInputs,
+                s_transparentTextureInputs);
 
             if (_texture == null)
             {
@@ -376,8 +486,10 @@ namespace Engine.Graphics
             _tintInfoProvider.Data = new TintInfo(color, factor);
         }
 
+        private static readonly string RegularPassTransparentVertexShaderSource = "shadow-transparent-vertex";
         private static readonly string RegularPassVertexShaderSource = "shadow-vertex";
         private static readonly string RegularPassFragmentShaderSource = "shadow-frag";
+        private static readonly string RegularPassTransparentFragmentShaderSource = "shadow-transparent-frag";
 
         private static readonly string ShadowMapPassVertexShaderSource = "shadowmap-vertex";
         private static readonly string ShadowMapPassFragmentShaderSource = "shadowmap-frag";
@@ -398,11 +510,26 @@ namespace Engine.Graphics
                 new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4)),
                 new MaterialPerObjectInputElement("TintInfoBuffer", MaterialInputType.Float4, sizeof(TintInfo))
             });
+        private static unsafe MaterialInputs<MaterialPerObjectInputElement> s_transparentPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
+            new MaterialPerObjectInputElement[]
+            {
+                new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4)),
+                new MaterialPerObjectInputElement("InverseTransposeWorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4)),
+                new MaterialPerObjectInputElement("TintInfoBuffer", MaterialInputType.Float4, sizeof(TintInfo)),
+                new MaterialPerObjectInputElement("MaterialInfoBuffer", MaterialInputType.Float4, sizeof(MaterialInfo)),
+            });
+
         private static MaterialTextureInputs s_textureInputs = new MaterialTextureInputs(
             new MaterialTextureInputElement[]
             {
                 new ManualTextureInput("surfaceTexture"),
                 new ContextTextureInputElement("ShadowMap")
+            });
+        private static MaterialTextureInputs s_transparentTextureInputs = new MaterialTextureInputs(
+            new MaterialTextureInputElement[]
+            {
+                new ManualTextureInput("surfaceTexture"),
+                new ManualTextureInput("DepthTexture"),
             });
         private static MaterialInputs<MaterialGlobalInputElement> s_shadowmapGlobalInputs;
         private static unsafe MaterialInputs<MaterialPerObjectInputElement> s_shadowmapPerObjectInputs = new MaterialInputs<MaterialPerObjectInputElement>(
@@ -410,5 +537,6 @@ namespace Engine.Graphics
             {
                 new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
+        private TriangleIndices[] _triIndices;
     }
 }

@@ -37,6 +37,7 @@ namespace Engine.Graphics
         private readonly BlockingCollection<BoundsRenderItem> _renderItemsToRemove = new BlockingCollection<BoundsRenderItem>();
         private readonly BlockingCollection<BriTransformPair> _renderItemsToAdd = new BlockingCollection<BriTransformPair>();
         private readonly BlockingCollection<PointLight> _pointLightsToRemove = new BlockingCollection<PointLight>();
+        private readonly BlockingCollection<PointLight> _pointLightsToAdd = new BlockingCollection<PointLight>();
 
         private BoundingFrustum _frustum;
         private Camera _mainCamera;
@@ -52,6 +53,7 @@ namespace Engine.Graphics
         private bool _needsPreupscaleChange;
         private ManualWireframeRenderer _freeShapeRenderer;
         private bool _freezeLineDrawing;
+        private readonly int _mainThreadID;
 
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
@@ -96,6 +98,7 @@ namespace Engine.Graphics
             _upscaleStage = new UpscaleStage(Context, "Upscale", null, null);
             _standardStage = new StandardPipelineStage(Context, "Standard");
             _alphaBlendStage = new StandardPipelineStage(Context, "AlphaBlend");
+            _alphaBlendStage.Comparer = new FarToNearIndexComparer();
             _overlayStage = new StandardPipelineStage(Context, "Overlay");
             _pipelineStages = new PipelineStage[]
             {
@@ -121,7 +124,8 @@ namespace Engine.Graphics
             _freeShapeRenderer.Topology = PrimitiveTopology.LineList;
             AddFreeRenderItem(_freeShapeRenderer);
 
-            _taskScheduler = new GraphicsSystemTaskScheduler(Environment.CurrentManagedThreadId);
+            _mainThreadID = Environment.CurrentManagedThreadId;
+            _taskScheduler = new GraphicsSystemTaskScheduler(_mainThreadID);
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
@@ -185,11 +189,7 @@ namespace Engine.Graphics
                 throw new ArgumentNullException(nameof(pointLight));
             }
 
-            _pointLights.Add(pointLight);
-            if (_pointLights.Count > PointLightsBuffer.MaxLights)
-            {
-                Console.WriteLine($"Only {PointLightsBuffer.MaxLights} point lights are supported. PointLight {pointLight} will not be active.");
-            }
+            _pointLightsToAdd.Add(pointLight);
         }
 
         public void RemovePointLight(PointLight pointLight)
@@ -204,6 +204,15 @@ namespace Engine.Graphics
             }
 
             _pointLightsToRemove.Add(pointLight);
+        }
+
+        private void CoreAddPointLight(PointLight pointLight)
+        {
+            _pointLights.Add(pointLight);
+            if (_pointLights.Count > PointLightsBuffer.MaxLights)
+            {
+                Console.WriteLine($"Only {PointLightsBuffer.MaxLights} point lights are supported. PointLight {pointLight} will not be active.");
+            }
         }
 
         private void CoreRemovePointLight(PointLight pointLight)
@@ -282,11 +291,22 @@ namespace Engine.Graphics
 
         public Task<T> ExecuteOnMainThread<T>(Func<T> func)
         {
+            if (Environment.CurrentManagedThreadId == _mainThreadID)
+            {
+                return Task.FromResult(func());
+            }
+
             return Task.Factory.StartNew(func, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
         }
 
         public Task ExecuteOnMainThread(Action action)
         {
+            if (Environment.CurrentManagedThreadId == _mainThreadID)
+            {
+                action();
+                return Task.CompletedTask;
+            }
+
             return Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
         }
 
@@ -398,6 +418,10 @@ namespace Engine.Graphics
             }
 
             PointLight pl;
+            while (_pointLightsToAdd.TryTake(out pl))
+            {
+                CoreAddPointLight(pl);
+            }
             while (_pointLightsToRemove.TryTake(out pl))
             {
                 CoreRemovePointLight(pl);

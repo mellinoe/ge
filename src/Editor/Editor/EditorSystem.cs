@@ -386,6 +386,12 @@ namespace Engine.Editor
                 c = SetValueActionCommand.New<TintInfo>(val => mr.BaseTint = val, mr.BaseTint, new TintInfo(mr.BaseTint.Color, tintFactor));
             }
 
+            float opacity = mr.Opacity;
+            if (ImGui.DragFloat("Opacity", ref opacity, 0f, 1f, 0.05f))
+            {
+                c = SetValueActionCommand.New<float>(val => mr.Opacity = val, mr.Opacity, opacity);
+            }
+
             if (ImGui.Button("Toggle Bounds Renderer"))
             {
                 mr.ToggleBoundsRenderer();
@@ -448,7 +454,7 @@ namespace Engine.Editor
             }
         }
 
-        private static Command DrawTransform(string label, Transform t, RenderContext rc)
+        private Command DrawTransform(string label, Transform t, RenderContext rc)
         {
             Command c = null;
 
@@ -465,10 +471,31 @@ namespace Engine.Editor
                 c = SetValueActionCommand.New<Quaternion>((val) => t.LocalRotation = val, t.LocalRotation, rotation);
             }
 
-            float scale = t.LocalScale.X;
-            if (ImGui.DragFloat("Scale", ref scale, .01f, 50f, 0.05f))
+            if (_uniformScaleTool)
             {
-                c = SetValueActionCommand.New<Vector3>((val) => t.LocalScale = val, t.LocalScale, new Vector3(scale));
+                float scale = t.LocalScale.X;
+                if (ImGui.DragFloat("##ScaleDrag", ref scale, .01f, 10000f, 0.05f))
+                {
+                    c = SetValueActionCommand.New<Vector3>((val) => t.LocalScale = val, t.LocalScale, new Vector3(scale));
+                }
+                ImGui.SameLine();
+                if (ImGui.Button("Scale"))
+                {
+                    _uniformScaleTool = !_uniformScaleTool;
+                }
+            }
+            else
+            {
+                Vector3 scale = t.LocalScale;
+                if (ImGui.DragVector3("##ScaleDrag", ref scale, .01f, 10000f, 0.05f))
+                {
+                    c = SetValueActionCommand.New<Vector3>((val) => t.LocalScale = val, t.LocalScale, scale);
+                }
+                ImGui.SameLine();
+                if (ImGui.Button("Scale"))
+                {
+                    _uniformScaleTool = !_uniformScaleTool;
+                }
             }
 
             return c;
@@ -687,6 +714,7 @@ namespace Engine.Editor
         private string _currentSceneName;
         private readonly List<ColliderShapeRenderer> _cachedColliderRenderers = new List<ColliderShapeRenderer>();
         private readonly Dictionary<GameObject, ColliderShapeRenderer> _colliderRenderers = new Dictionary<GameObject, ColliderShapeRenderer>();
+        private bool _uniformScaleTool = true;
 
         private void DrawProjectAssets()
         {

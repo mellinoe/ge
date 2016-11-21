@@ -67,6 +67,7 @@ namespace Engine
             AssemblyLoadSystem als = new AssemblyLoadSystem();
             als.LoadFromProjectManifest(projectManifest, AppContext.BaseDirectory);
             game.SystemRegistry.Register(als);
+            game.LimitFrameRate = true;
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>

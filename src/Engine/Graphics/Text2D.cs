@@ -92,7 +92,7 @@ namespace Engine.Graphics
 
         protected override void Removed(SystemRegistry registry)
         {
-            _textBuffer.Dispose();
+            _textBuffer?.Dispose();
         }
 
         protected override void OnEnabled()

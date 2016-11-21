@@ -18,6 +18,7 @@
     <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
     <Compile Include="Assets\EngineEmbeddedAssets.cs" />
     <Compile Include="Graphics\ColliderShapeRenderer.cs" />
+    <Compile Include="Graphics\FarToNearIndexComparer.cs" />
     <Compile Include="Graphics\FontFaceLoader.cs" />
     <Compile Include="Assets\SceneAsset.cs" />
     <Compile Include="Assets\SerializedPrefab.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="Graphics\CommonStages.cs" />
     <Compile Include="Graphics\DirectionalLight.cs" />
     <Compile Include="Graphics\GraphicsSystem.cs" />
+    <Compile Include="Graphics\MaterialInfo.cs" />
     <Compile Include="Graphics\MeshRenderer.cs" />
     <Compile Include="Graphics\ImGuiImageHelper.cs" />
     <Compile Include="Graphics\ImGuiRenderer.cs" />
@@ -82,6 +84,7 @@
     <Compile Include="Graphics\Text2D.cs" />
     <Compile Include="Graphics\TextBuffer.cs" />
     <Compile Include="Graphics\TextureAtlas.cs" />
+    <Compile Include="Graphics\TriangleIndices.cs" />
     <Compile Include="Graphics\UpscaleStage.cs" />
     <Compile Include="GUI\FilePicker.cs" />
     <Compile Include="Physics\Conversions.cs" />
@@ -158,6 +161,10 @@
     <EmbeddedResource Include="Assets\GLSL\text-vertex.glsl" />
     <EmbeddedResource Include="Assets\HLSL\text-fragment.hlsl" />
     <EmbeddedResource Include="Assets\HLSL\text-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\HLSL\shadow-transparent-frag.hlsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadow-transparent-frag.glsl" />
+    <EmbeddedResource Include="Assets\HLSL\shadow-transparent-vertex.hlsl" />
+    <EmbeddedResource Include="Assets\GLSL\shadow-transparent-vertex.glsl" />
     <None Include="project.json" />
     <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{2665014F-0FEC-4268-8F77-7B029921AB09}</Project>
