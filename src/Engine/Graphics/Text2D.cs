@@ -17,7 +17,7 @@ namespace Engine.Graphics
         private DynamicDataProvider<Vector4> _textOffset = new DynamicDataProvider<Vector4>();
         private Vector2 _absoluteOffset;
         private Vector2 _relativeOffset;
-        private TextAnchor _anchor = TextAnchor.Left;
+        private TextAnchor _anchor = TextAnchor.CenterLeft;
 
         private TextBuffer _textBuffer;
         private TextAnalyzer _textAnalyzer;
@@ -169,14 +169,32 @@ namespace Engine.Graphics
                 {
                     switch (_anchor)
                     {
-                        case TextAnchor.Left:
-                            anchorOffset = Vector2.Zero;
+                        case TextAnchor.TopLeft:
+                            anchorOffset = _textBuffer.Size * new Vector2(0f, 0f);
+                            break;
+                        case TextAnchor.TopCenter:
+                            anchorOffset = _textBuffer.Size * new Vector2(-.5f, 0f);
+                            break;
+                        case TextAnchor.TopRight:
+                            anchorOffset = _textBuffer.Size * new Vector2(-1f, 0f);
+                            break;
+                        case TextAnchor.CenterLeft:
+                            anchorOffset = _textBuffer.Size * new Vector2(0f, 0.5f);
                             break;
                         case TextAnchor.Center:
-                            anchorOffset = -_textBuffer.Size / 2f;
+                            anchorOffset = _textBuffer.Size * new Vector2(-0.5f, 0.5f);
                             break;
-                        case TextAnchor.Right:
-                            anchorOffset = -_textBuffer.Size;
+                        case TextAnchor.CenterRight:
+                            anchorOffset = _textBuffer.Size * new Vector2(-1f, 0.5f);
+                            break;
+                        case TextAnchor.BottomLeft:
+                            anchorOffset = _textBuffer.Size * new Vector2(0f, 1f);
+                            break;
+                        case TextAnchor.BottomCenter:
+                            anchorOffset = _textBuffer.Size * new Vector2(-0.5f, 1f);
+                            break;
+                        case TextAnchor.BottomRight:
+                            anchorOffset = _textBuffer.Size * new Vector2(-1f, 1f);
                             break;
                         default:
                             throw new InvalidOperationException("Invalid anchor type: " + _anchor);
@@ -203,8 +221,14 @@ namespace Engine.Graphics
 
     public enum TextAnchor
     {
-        Left,
+        TopLeft,
+        TopCenter,
+        TopRight,
+        CenterLeft,
         Center,
-        Right,
+        CenterRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight,
     }
 }
