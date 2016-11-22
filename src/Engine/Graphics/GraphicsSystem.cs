@@ -180,15 +180,18 @@ namespace Engine.Graphics
 
         public void AddPointLight(PointLight pointLight)
         {
-            if (pointLight == null)
+            lock (_pointLights)
             {
-                throw new ArgumentNullException(nameof(pointLight));
-            }
+                if (pointLight == null)
+                {
+                    throw new ArgumentNullException(nameof(pointLight));
+                }
 
-            _pointLights.Add(pointLight);
-            if (_pointLights.Count > PointLightsBuffer.MaxLights)
-            {
-                Console.WriteLine($"Only {PointLightsBuffer.MaxLights} point lights are supported. PointLight {pointLight} will not be active.");
+                _pointLights.Add(pointLight);
+                if (_pointLights.Count > PointLightsBuffer.MaxLights)
+                {
+                    Console.WriteLine($"Only {PointLightsBuffer.MaxLights} point lights are supported. PointLight {pointLight} will not be active.");
+                }
             }
         }
 
