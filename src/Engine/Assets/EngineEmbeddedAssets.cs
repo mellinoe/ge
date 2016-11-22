@@ -1,5 +1,5 @@
 ﻿using Engine.Graphics;
-using ImageProcessorCore;
+using ImageSharp;
 using System;
 using System.Reflection;
 using Veldrid.Assets;
@@ -45,17 +45,17 @@ namespace Engine.Assets
 
         private void RegisterSkyboxTextures()
         {
-            Lazy<ImageProcessorTexture> skyboxBack = new Lazy<ImageProcessorTexture>(
+            Lazy<ImageSharpTexture> skyboxBack = new Lazy<ImageSharpTexture>(
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_bk.png"));
-            Lazy<ImageProcessorTexture> skyboxBottom = new Lazy<ImageProcessorTexture>(
+            Lazy<ImageSharpTexture> skyboxBottom = new Lazy<ImageSharpTexture>(
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_dn.png"));
-            Lazy<ImageProcessorTexture> skyboxFront = new Lazy<ImageProcessorTexture>(
+            Lazy<ImageSharpTexture> skyboxFront = new Lazy<ImageSharpTexture>(
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_ft.png"));
-            Lazy<ImageProcessorTexture> skyboxLeft = new Lazy<ImageProcessorTexture>(
+            Lazy<ImageSharpTexture> skyboxLeft = new Lazy<ImageSharpTexture>(
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_lf.png"));
-            Lazy<ImageProcessorTexture> skyboxRight = new Lazy<ImageProcessorTexture>(
+            Lazy<ImageSharpTexture> skyboxRight = new Lazy<ImageSharpTexture>(
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_rt.png"));
-            Lazy<ImageProcessorTexture> skyboxTop = new Lazy<ImageProcessorTexture>(
+            Lazy<ImageSharpTexture> skyboxTop = new Lazy<ImageSharpTexture>(
                 () => LoadEmbeddedTexture("Engine.Assets.Textures.cloudtop.cloudtop_up.png"));
 
             RegisterAsset(SkyboxBackID, skyboxBack);
@@ -66,11 +66,11 @@ namespace Engine.Assets
             RegisterAsset(SkyboxTopID, skyboxTop);
         }
 
-        private static ImageProcessorTexture LoadEmbeddedTexture(string embeddedName)
+        private static ImageSharpTexture LoadEmbeddedTexture(string embeddedName)
         {
             using (var stream = s_engineAssembly.GetManifestResourceStream(embeddedName))
             {
-                return new ImageProcessorTexture(new Image(stream));
+                return new ImageSharpTexture(new Image(stream));
             }
         }
     }

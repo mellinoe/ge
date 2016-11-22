@@ -7,11 +7,11 @@ using Veldrid.Graphics;
 
 namespace Engine.Editor
 {
-    public class TextureDrawer : Drawer<ImageProcessorTexture>
+    public class TextureDrawer : Drawer<ImageSharpTexture>
     {
-        private static ConditionalWeakTable<ImageProcessorTexture, DeviceTexture> _deviceTextures = new ConditionalWeakTable<ImageProcessorTexture, DeviceTexture>();
+        private static ConditionalWeakTable<ImageSharpTexture, DeviceTexture> _deviceTextures = new ConditionalWeakTable<ImageSharpTexture, DeviceTexture>();
 
-        public override bool Draw(string label, ref ImageProcessorTexture obj, RenderContext rc)
+        public override bool Draw(string label, ref ImageSharpTexture obj, RenderContext rc)
         {
             ImGui.Text(label);
 

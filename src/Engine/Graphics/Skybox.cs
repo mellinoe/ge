@@ -1,5 +1,5 @@
 using Engine.Assets;
-using ImageProcessorCore;
+using ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -11,21 +11,21 @@ namespace Engine.Graphics
 {
     public class Skybox : Component, RenderItem
     {
-        private static ImageProcessorTexture s_blankTexture = CreateBlankTexture();
+        private static ImageSharpTexture s_blankTexture = CreateBlankTexture();
 
         private GraphicsSystem _gs;
         private AssetSystem _as;
 
-        private RefOrImmediate<ImageProcessorTexture> _front;
-        private RefOrImmediate<ImageProcessorTexture> _back;
-        private RefOrImmediate<ImageProcessorTexture> _left;
-        private RefOrImmediate<ImageProcessorTexture> _right;
-        private RefOrImmediate<ImageProcessorTexture> _top;
-        private RefOrImmediate<ImageProcessorTexture> _bottom;
+        private RefOrImmediate<ImageSharpTexture> _front;
+        private RefOrImmediate<ImageSharpTexture> _back;
+        private RefOrImmediate<ImageSharpTexture> _left;
+        private RefOrImmediate<ImageSharpTexture> _right;
+        private RefOrImmediate<ImageSharpTexture> _top;
+        private RefOrImmediate<ImageSharpTexture> _bottom;
 
-        private static ImageProcessorTexture CreateBlankTexture()
+        private static ImageSharpTexture CreateBlankTexture()
         {
-            return new ImageProcessorTexture(new Image(1, 1));
+            return new ImageSharpTexture(new Image(1, 1));
         }
 
         private ConstantBufferDataProvider _perObjectInput;
@@ -41,8 +41,8 @@ namespace Engine.Graphics
         { }
 
         public Skybox(
-            AssetRef<ImageProcessorTexture> front, AssetRef<ImageProcessorTexture> back, AssetRef<ImageProcessorTexture> left,
-            AssetRef<ImageProcessorTexture> right, AssetRef<ImageProcessorTexture> top, AssetRef<ImageProcessorTexture> bottom)
+            AssetRef<ImageSharpTexture> front, AssetRef<ImageSharpTexture> back, AssetRef<ImageSharpTexture> left,
+            AssetRef<ImageSharpTexture> right, AssetRef<ImageSharpTexture> top, AssetRef<ImageSharpTexture> bottom)
         {
             _front = front;
             _back = back;
@@ -116,12 +116,12 @@ namespace Engine.Graphics
             _cubemapBinding?.BoundTexture.Dispose();
             _cubemapBinding?.Dispose();
 
-            var front = !_front.HasValue ? _front.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxFrontID);
-            var back = !_back.HasValue ? _back.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxBackID);
-            var left = !_left.HasValue ? _left.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxLeftID);
-            var right = !_right.HasValue ? _right.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxRightID);
-            var top = !_top.HasValue ? _top.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxTopID);
-            var bottom = !_bottom.HasValue ? _bottom.Get(ad) : ad.LoadAsset<ImageProcessorTexture>(EngineEmbeddedAssets.SkyboxBottomID);
+            var front = !_front.HasValue ? _front.Get(ad) : ad.LoadAsset<ImageSharpTexture>(EngineEmbeddedAssets.SkyboxFrontID);
+            var back = !_back.HasValue ? _back.Get(ad) : ad.LoadAsset<ImageSharpTexture>(EngineEmbeddedAssets.SkyboxBackID);
+            var left = !_left.HasValue ? _left.Get(ad) : ad.LoadAsset<ImageSharpTexture>(EngineEmbeddedAssets.SkyboxLeftID);
+            var right = !_right.HasValue ? _right.Get(ad) : ad.LoadAsset<ImageSharpTexture>(EngineEmbeddedAssets.SkyboxRightID);
+            var top = !_top.HasValue ? _top.Get(ad) : ad.LoadAsset<ImageSharpTexture>(EngineEmbeddedAssets.SkyboxTopID);
+            var bottom = !_bottom.HasValue ? _bottom.Get(ad) : ad.LoadAsset<ImageSharpTexture>(EngineEmbeddedAssets.SkyboxBottomID);
 
             using (var frontPin = front.Pixels.Pin())
             using (var backPin = back.Pixels.Pin())
@@ -181,7 +181,7 @@ namespace Engine.Graphics
             return false;
         }
 
-        public RefOrImmediate<ImageProcessorTexture> Front
+        public RefOrImmediate<ImageSharpTexture> Front
         {
             get { return _front; }
             set
@@ -194,7 +194,7 @@ namespace Engine.Graphics
             }
         }
 
-        public RefOrImmediate<ImageProcessorTexture> Back
+        public RefOrImmediate<ImageSharpTexture> Back
         {
             get { return _back; }
             set
@@ -207,7 +207,7 @@ namespace Engine.Graphics
             }
         }
 
-        public RefOrImmediate<ImageProcessorTexture> Left
+        public RefOrImmediate<ImageSharpTexture> Left
         {
             get { return _left; }
             set
@@ -220,7 +220,7 @@ namespace Engine.Graphics
             }
         }
 
-        public RefOrImmediate<ImageProcessorTexture> Right
+        public RefOrImmediate<ImageSharpTexture> Right
         {
             get { return _right; }
             set
@@ -233,7 +233,7 @@ namespace Engine.Graphics
             }
         }
 
-        public RefOrImmediate<ImageProcessorTexture> Bottom
+        public RefOrImmediate<ImageSharpTexture> Bottom
         {
             get { return _bottom; }
             set
@@ -246,7 +246,7 @@ namespace Engine.Graphics
             }
         }
 
-        public RefOrImmediate<ImageProcessorTexture> Top
+        public RefOrImmediate<ImageSharpTexture> Top
         {
             get { return _top; }
             set

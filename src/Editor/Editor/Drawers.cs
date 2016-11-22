@@ -79,7 +79,7 @@ namespace Engine.Editor
             { typeof(byte), new FuncDrawer<byte>(GenericDrawFuncs.DrawByte) },
             { typeof(string), new FuncDrawer<string>(GenericDrawFuncs.DrawString, GenericDrawFuncs.NewString) },
             { typeof(bool), new FuncDrawer<bool>(GenericDrawFuncs.DrawBool) },
-            { typeof(ImageProcessorTexture), new TextureDrawer() },
+            { typeof(ImageSharpTexture), new TextureDrawer() },
             { typeof(RgbaFloat), new FuncDrawer<RgbaFloat>(GenericDrawFuncs.DrawRgbaFloat) },
             { typeof(Vector2), new FuncDrawer<Vector2>(GenericDrawFuncs.DrawVector2) },
             { typeof(Vector3), new FuncDrawer<Vector3>(GenericDrawFuncs.DrawVector3) },
