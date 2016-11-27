@@ -217,6 +217,7 @@ namespace Engine.Graphics
                 _regularPassMaterial.UseTexture(0, _textureBinding);
             }
 
+            var previousRS = rc.RasterizerState;
             if (Wireframe)
             {
                 rc.SetRasterizerState(s_wireframeRS);
@@ -231,6 +232,7 @@ namespace Engine.Graphics
             }
 
             rc.DrawIndexedPrimitives(_indexCount, 0);
+            rc.SetRasterizerState(previousRS);
             if (pipelineStage == "AlphaBlend")
             {
                 rc.SetBlendState(rc.OverrideBlend);
