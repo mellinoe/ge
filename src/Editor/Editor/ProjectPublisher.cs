@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Engine.Editor
 {
@@ -49,7 +52,45 @@ namespace Engine.Editor
             EditorUtility.ForceMoveFile(launcherExePath, projectNamedLauncher);
             EditorUtility.ForceMoveFile(launcherDllPath, launcherDllPath.Replace(LauncherName, projectContext.ProjectManifest.Name));
 
+#if !DEBUG
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                TryChangeSubsystemLink(projectNamedLauncher, "windows");
+            }
+#endif
+
             EditorUtility.ShowFileInExplorer(projectNamedLauncher);
+        }
+
+        private void TryChangeSubsystemLink(string launcherExePath, string subsystem)
+        {
+            string vsInstallDir = GetLatestVSInstallDir();
+            if (vsInstallDir != null)
+            {
+                string editbinPath = Path.Combine(vsInstallDir, "VC", "bin", "editbin.exe");
+                if (File.Exists(editbinPath))
+                {
+                    string args = $"/subsystem:{subsystem} {launcherExePath}";
+                    Process.Start(editbinPath, args);
+                }
+            }
+        }
+
+        private string GetLatestVSInstallDir()
+        {
+            string path = GetVSInstallDir("14.0") ?? GetVSInstallDir("15.0");
+            return path;
+        }
+
+        private string GetVSInstallDir(string version)
+        {
+            string installationPath = null;
+            installationPath = (string)Registry.GetValue(
+               $"HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\{version}\\",
+                "InstallDir",
+                null);
+            var di = new DirectoryInfo(installationPath);
+            return di.Parent.Parent.FullName;
         }
     }
 }
