@@ -21,10 +21,12 @@ namespace Engine.Physics
 
         public Space Space { get; }
         public int LayerCount => _collisionGroups.GetLayerCount();
+        public int GetLayerByName(string name) => _collisionGroups.GetLayerByName(name);
 
         public PhysicsSystem(PhysicsLayersDescription layers)
         {
             _collisionGroups = new PhysicsCollisionGroups(layers);
+            CollisionRules.CollisionRuleCalculator = CustomCollisionRuleCalculator;
             _looper = new ParallelLooper();
             for (int g = 0; g < Environment.ProcessorCount - 1; g++)
             {
@@ -64,6 +66,19 @@ namespace Engine.Physics
         protected override void OnNewSceneLoadedCore()
         {
             Space.ForceUpdater.Gravity = s_defaultGravity;
+        }
+
+        private CollisionRule CustomCollisionRuleCalculator(ICollisionRulesOwner aOwner, ICollisionRulesOwner bOwner)
+        {
+            CollisionRules a = aOwner.CollisionRules;
+            CollisionRules b = bOwner.CollisionRules;
+            CollisionRule groupRule = CollisionRules.GetGroupCollisionRuleDefault(a, b);
+            if (groupRule == CollisionRule.NoBroadPhase)
+            {
+                return groupRule;
+            }
+
+            return CollisionRules.GetCollisionRuleDefault(aOwner, bOwner);
         }
 
         private void FlushAdditionsAndRemovals()

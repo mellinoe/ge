@@ -64,17 +64,17 @@ namespace Engine.Physics
             LayerCollisionRules[layer2] = layerCollisionRule2;
         }
 
-        private uint SetBit(uint bits, int index, bool value)
+        public int GetLayerByName(string name)
         {
-            uint mask = 1U << index;
-            if (value)
+            for (int i = 0; i < LayerNames.Count; i++)
             {
-                return bits | mask;
+                if (LayerNames[i] == name)
+                {
+                    return i;
+                }
             }
-            else
-            {
-                return bits & ~mask;
-            }
+
+            throw new InvalidOperationException("There was no physics layer with the name " + name);
         }
 
         public void AddLayer(string name)
@@ -87,6 +87,19 @@ namespace Engine.Physics
         {
             LayerNames.RemoveAt(LayerNames.Count - 1);
             LayerCollisionRules.RemoveAt(LayerCollisionRules.Count - 1);
+        }
+
+        private uint SetBit(uint bits, int index, bool value)
+        {
+            uint mask = 1U << index;
+            if (value)
+            {
+                return bits | mask;
+            }
+            else
+            {
+                return bits & ~mask;
+            }
         }
 
         private bool IsBitSet(uint layerRule, int bit)
@@ -141,6 +154,11 @@ namespace Engine.Physics
             }
 
             return _collisionGroupsByLayer[layer];
+        }
+
+        public int GetLayerByName(string name)
+        {
+            return _layers.GetLayerByName(name);
         }
     }
 }
