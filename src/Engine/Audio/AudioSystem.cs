@@ -37,7 +37,6 @@ namespace Engine.Audio
                 source = _engine.ResourceFactory.CreateAudioSource();
                 source.Position = new Vector3();
                 source.PositionKind = AudioPositionKind.ListenerRelative;
-                Console.WriteLine("Creating new source.");
             }
             else
             {

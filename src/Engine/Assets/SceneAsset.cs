@@ -20,7 +20,6 @@ namespace Engine.Assets
 
             Task.WaitAll(GameObjects.Select((sgo) => Task.Run(() =>
             {
-                Console.WriteLine("Adding GO " + sgo.Name);
                 GameObject go = new GameObject(sgo.Name);
                 go.Transform.LocalPosition = sgo.Transform.LocalPosition;
                 go.Transform.LocalRotation = sgo.Transform.LocalRotation;

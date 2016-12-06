@@ -172,7 +172,6 @@ namespace Engine.Audio.XAudio
                 _sourceVoice.Dispose();
                 WaveFormat waveFormat = new WaveFormat(_xa2Buffer.Frequency, GetChannelCount(_xa2Buffer.Format));
                 _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio:2.0f, enableCallbackEvents: true);
-                _sourceVoice.BufferEnd += (ptr) => Console.WriteLine("finished processing.");
                 _sourceVoice.SetVolume(volume);
                 _emitter.ChannelAzimuths = new[] { 0.0f };
                 _dspSettings = new DspSettings(_channelCount, 2);
