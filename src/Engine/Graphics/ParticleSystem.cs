@@ -10,6 +10,7 @@ using System;
 using Engine.Behaviors;
 using System.Runtime.InteropServices;
 using System.Linq;
+using Veldrid.Collections;
 
 namespace Engine.Graphics
 {
@@ -20,9 +21,9 @@ namespace Engine.Graphics
         private readonly Random _random = new Random();
 
         // Actual CPU-side vertex buffer data.
-        private RawList<InstanceData> _instanceData;
+        private NativeList<InstanceData> _instanceData;
         // Housekeeping info for particles.
-        private RawList<ParticleStateInternal> _particleStates;
+        private NativeList<ParticleStateInternal> _particleStates;
 
         private Vector3 _currentMinParticleOffset;
         private Vector3 _currentMaxParticleOffset;
@@ -54,21 +55,21 @@ namespace Engine.Graphics
                 new MaterialVertexInputElement("in_size", VertexSemanticType.TextureCoordinate, VertexElementFormat.Float1, VertexElementInputClass.PerInstance, 1));
         private static readonly MaterialInputs<MaterialGlobalInputElement> s_globalInputs =
             new MaterialInputs<MaterialGlobalInputElement>(
-                    new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
-                    new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
-                    new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo"));
+                new MaterialGlobalInputElement("ProjectionMatrixBuffer", MaterialInputType.Matrix4x4, "ProjectionMatrix"),
+                new MaterialGlobalInputElement("ViewMatrixBuffer", MaterialInputType.Matrix4x4, "ViewMatrix"),
+                new MaterialGlobalInputElement("CameraInfoBuffer", MaterialInputType.Custom, "CameraInfo"));
         private static readonly MaterialInputs<MaterialPerObjectInputElement> s_perObjectInputs =
             new MaterialInputs<MaterialPerObjectInputElement>(
-                    new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 64),
-                    new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, ParticleSystemGlobalProperties.SizeInBytes));
+                new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, 64),
+                new MaterialPerObjectInputElement("ParticlePropertiesBuffer", MaterialInputType.Custom, ParticleSystemGlobalProperties.SizeInBytes));
         private static readonly MaterialTextureInputs s_textureInputs =
             new MaterialTextureInputs(new ManualTextureInput("SurfaceTexture"), new ManualTextureInput("DepthTexture"));
 
         public ParticleSystem()
         {
             _providers = new ConstantBufferDataProvider[] { _worldProvider, _particleProperties };
-            _instanceData = new RawList<InstanceData>();
-            _particleStates = new RawList<ParticleStateInternal>();
+            _instanceData = new NativeList<InstanceData>();
+            _particleStates = new NativeList<ParticleStateInternal>();
         }
 
         public ParticleSimulationSpace SimulationSpace { get; set; } = ParticleSimulationSpace.Local;
@@ -182,9 +183,9 @@ namespace Engine.Graphics
             }
 
             _cameraDistanceComparer.UpdateCameraPosition();
-            Array.Sort(_instanceData.Elements, _particleStates.Elements, 0, _instanceData.Count, _cameraDistanceComparer);
+            NativeList.Sort(_instanceData, _particleStates, 0, _instanceData.Count, _cameraDistanceComparer);
 
-            _instanceDataVB.SetVertexData(new ArraySegment<InstanceData>(_instanceData.Elements, 0, _instanceData.Count), InstanceData.VertexDescriptor, 0);
+            _instanceDataVB.SetVertexData(_instanceData.Data, InstanceData.VertexDescriptor, (int)_instanceData.Count);
             _worldProvider.Data = SimulationSpace == ParticleSimulationSpace.Local ? Transform.GetWorldMatrix() : Matrix4x4.Identity;
             rc.SetVertexBuffer(_instanceDataVB);
             rc.SetIndexBuffer(_ib);
@@ -194,7 +195,7 @@ namespace Engine.Graphics
             rc.SetTexture(1, _gs.StandardStageDepthView);
             rc.SetBlendState(rc.AlphaBlend);
             rc.DepthStencilState = _depthStencilState;
-            rc.DrawInstancedPrimitives(1, _instanceData.Count, PrimitiveTopology.PointList);
+            rc.DrawInstancedPrimitives(1, (int)_instanceData.Count, PrimitiveTopology.PointList);
             rc.SetBlendState(rc.OverrideBlend);
             rc.DepthStencilState = rc.DefaultDepthStencilState;
         }
@@ -220,7 +221,7 @@ namespace Engine.Graphics
 
         public override void Update(float deltaSeconds)
         {
-            if (!_initialized)
+            if (!_initialized || _instanceData.IsDisposed)
             {
                 return;
             }
@@ -234,7 +235,7 @@ namespace Engine.Graphics
 
             _currentMinParticleOffset = new Vector3(float.MaxValue);
             _currentMaxParticleOffset = new Vector3(float.MinValue);
-            for (int i = 0; i < _instanceData.Count; i++)
+            for (uint i = 0; i < _instanceData.Count; i++)
             {
                 float age = _particleStates[i].Age;
                 if (age >= ParticleLifetime)
@@ -245,26 +246,24 @@ namespace Engine.Graphics
                 }
                 else
                 {
-                    _particleStates.Elements[i].Age += deltaSeconds;
+                    _particleStates[i].Age += deltaSeconds;
 
                     float alpha = 1f;
                     if (AlphaFade)
                     {
                         alpha = 1f - (age / ParticleLifetime);
                     }
-                    _instanceData.Elements[i].Alpha = alpha;
+                    _instanceData[i].Alpha = alpha;
 
                     if (Gravity != 0f)
                     {
-                        _particleStates.Elements[i].Velocity += Vector3.UnitY * -10f * deltaSeconds * Gravity;
+                        _particleStates[i].Velocity += Vector3.UnitY * -10f * deltaSeconds * Gravity;
                     }
 
-                    Vector3 offset = _instanceData.Elements[i].Offset;
-                    offset += _particleStates[i].Velocity * deltaSeconds;
-                    _instanceData.Elements[i].Offset = offset;
+                    _instanceData[i].Offset += _particleStates[i].Velocity * deltaSeconds;
 
-                    _currentMinParticleOffset = Vector3.Min(_currentMinParticleOffset, _instanceData.Elements[i].Offset);
-                    _currentMaxParticleOffset = Vector3.Max(_currentMaxParticleOffset, _instanceData.Elements[i].Offset);
+                    _currentMinParticleOffset = Vector3.Min(_currentMinParticleOffset, _instanceData[i].Offset);
+                    _currentMaxParticleOffset = Vector3.Max(_currentMaxParticleOffset, _instanceData[i].Offset);
                 }
             }
 
@@ -317,7 +316,7 @@ namespace Engine.Graphics
             _particleStates.Add(new ParticleStateInternal() { Velocity = initialVelocity });
         }
 
-        public int GetParticleCount() => _instanceData.Count;
+        public uint GetParticleCount() => _instanceData.Count;
 
         public ParticleState GetParticle(int index)
         {
@@ -339,12 +338,12 @@ namespace Engine.Graphics
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            _instanceData.Elements[index].Offset = state.Offset;
-            _instanceData.Elements[index].Alpha = state.Alpha;
-            _instanceData.Elements[index].Size = state.Size;
+            _instanceData[index].Offset = state.Offset;
+            _instanceData[index].Alpha = state.Alpha;
+            _instanceData[index].Size = state.Size;
 
-            _particleStates.Elements[index].Velocity = state.Velocity;
-            _particleStates.Elements[index].Age = state.Age;
+            _particleStates[index].Velocity = state.Velocity;
+            _particleStates[index].Age = state.Age;
         }
 
         public void ModifyAllParticles(ParticleModifier modifier)
@@ -430,6 +429,8 @@ namespace Engine.Graphics
             _instanceDataVB?.Dispose();
             _ib?.Dispose();
             _textureBinding?.Dispose();
+            _instanceData.Dispose();
+            _particleStates.Dispose();
         }
 
         // Vertex buffer per-instance data.
