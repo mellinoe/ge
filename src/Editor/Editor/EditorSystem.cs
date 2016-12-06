@@ -167,7 +167,16 @@ namespace Engine.Editor
                         ?? EditorPreferences.Instance.GetLastOpenedScene(_projectContext.ProjectRootPath);
                     if (!string.IsNullOrEmpty(latestScene))
                     {
-                        LoadScene(latestScene);
+                        try
+                        {
+                            LoadScene(latestScene);
+                        }
+                        catch
+                        {
+                            StatusBarText("[!] An error was encountered when loading " + latestScene, RgbaFloat.Red);
+                            EditorPreferences.Instance.SetLatestScene(_projectContext.ProjectRootPath, string.Empty);
+                            CloseScene();
+                        }
                     }
                 }
             }
@@ -876,9 +885,7 @@ namespace Engine.Editor
                     }
                     if (ImGui.MenuItem("Close Scene", string.Empty, false, _currentScene != null))
                     {
-                        StopSimulation();
-                        DestroyNonEditorGameObjects();
-                        _currentScenePath = string.Empty;
+                        CloseScene();
                     }
                     ImGui.Separator();
                     if (ImGui.BeginMenu("Publish", _projectContext != null))
@@ -1164,6 +1171,13 @@ namespace Engine.Editor
             }
         }
 
+        private void CloseScene()
+        {
+            StopSimulation();
+            DestroyNonEditorGameObjects();
+            _currentScenePath = string.Empty;
+        }
+
         private SerializedPrefab CreateGameObjectPrefab(GameObject go, out string assetPath)
         {
             List<GameObject> allChildren = new List<GameObject>();
@@ -1236,6 +1250,7 @@ namespace Engine.Editor
                 EditorPreferences.Instance.LastOpenedProjectRoot = rootPathOrManifest;
                 var loadedProjectManifest = _as.ProjectDatabase.LoadAsset<ProjectManifest>(rootPathOrManifest);
                 _as.ProjectAssetRootPath = Path.Combine(loadedProjectRoot, loadedProjectManifest.AssetRoot);
+                ClearProjectComponents();
                 _projectContext = new ProjectContext(loadedProjectRoot, loadedProjectManifest, rootPathOrManifest);
                 DiscoverProjectComponents();
                 _physics.SetPhysicsLayerRules(loadedProjectManifest.PhysicsLayers);
