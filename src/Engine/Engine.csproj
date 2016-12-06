@@ -87,6 +87,8 @@
     <Compile Include="Graphics\TriangleIndices.cs" />
     <Compile Include="Graphics\UpscaleStage.cs" />
     <Compile Include="GUI\FilePicker.cs" />
+    <Compile Include="NativeList.cs" />
+    <Compile Include="NativeSortHelper.cs" />
     <Compile Include="Physics\Conversions.cs" />
     <Compile Include="Physics\MeshCollider.cs" />
     <Compile Include="Physics\PhysicsLayerRules.cs" />
@@ -95,6 +97,7 @@
     <Compile Include="ProjectSystem\EngineLoadContext.cs" />
     <Compile Include="ProjectSystem\EngineSerializationBinder.cs" />
     <Compile Include="ProjectSystem\ProjectManifest.cs" />
+    <Compile Include="RawListExtensions.cs" />
     <Compile Include="RefOrImmediate`1.cs" />
     <Compile Include="Graphics\ShadowMapPreview.cs" />
     <Compile Include="Graphics\ShadowMapStage.cs" />
