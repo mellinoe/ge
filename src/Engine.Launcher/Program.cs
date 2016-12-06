@@ -56,10 +56,10 @@ namespace Engine
 
             Game game = new Game();
 
-            OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? (OpenTKWindow)new DedicatedThreadWindow() : new SameThreadWindow();
+            OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.BorderlessFullScreen)
+                : new SameThreadWindow(960, 540, WindowState.BorderlessFullScreen);
             window.Title = "ge.Main";
-            window.WindowState = WindowState.BorderlessFullScreen;
-            window.Visible = true;
             GraphicsSystem gs = new GraphicsSystem(window, renderQuality:1f, preferOpenGL: launchOptions.PreferOpenGL);
             game.SystemRegistry.Register(gs);
             window.Closed += game.Exit;
@@ -67,7 +67,7 @@ namespace Engine
             AssemblyLoadSystem als = new AssemblyLoadSystem();
             als.LoadFromProjectManifest(projectManifest, AppContext.BaseDirectory);
             game.SystemRegistry.Register(als);
-            game.LimitFrameRate = true;
+            game.LimitFrameRate = false;
 
             InputSystem inputSystem = new InputSystem(window);
             inputSystem.RegisterCallback((input) =>
