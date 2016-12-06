@@ -23,9 +23,9 @@ namespace Engine
             _systems.Add(typeof(T), system);
         }
 
-        public IReadOnlyCollection<KeyValuePair<Type, GameSystem>> GetSystems()
+        public Dictionary<Type, GameSystem>.Enumerator GetSystemsEnumerator()
         {
-            return _systems;
+            return _systems.GetEnumerator();
         }
     }
 }

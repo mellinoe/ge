@@ -94,8 +94,10 @@ namespace Engine
             MouseDelta = CurrentSnapshot.MousePosition - _previousSnapshotMousePosition;
             _previousSnapshotMousePosition = CurrentSnapshot.MousePosition;
 
-            foreach (var ke in snapshot.KeyEvents)
+            IReadOnlyList<KeyEvent> keyEvents = snapshot.KeyEvents;
+            for (int i = 0; i < keyEvents.Count; i++)
             {
+                KeyEvent ke = keyEvents[i];
                 if (ke.Down)
                 {
                     KeyDown(ke.Key);
@@ -105,8 +107,10 @@ namespace Engine
                     KeyUp(ke.Key);
                 }
             }
-            foreach (var me in snapshot.MouseEvents)
+            IReadOnlyList<MouseEvent> mouseEvents = snapshot.MouseEvents;
+            for (int i = 0; i < mouseEvents.Count; i++)
             {
+                MouseEvent me = mouseEvents[i];
                 if (me.Down)
                 {
                     MouseDown(me.MouseButton);

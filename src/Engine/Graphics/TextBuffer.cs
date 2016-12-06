@@ -22,6 +22,9 @@ namespace Engine.Graphics
         private DepthStencilState _dss;
         private DynamicDataProvider<Matrix4x4> _screenOrthoProjection = new DynamicDataProvider<Matrix4x4>();
         private ConstantBufferDataProvider[] _providers = new ConstantBufferDataProvider[3];
+        private TextLayout _textLayout;
+        private TextFormat _textFormat;
+        private BEPUutilities.DataStructures.RawList<TextVertex> _textVertices = new BEPUutilities.DataStructures.RawList<TextVertex>(100);
 
         public Vector2 Size { get; private set; }
 
@@ -32,6 +35,9 @@ namespace Engine.Graphics
             _ib = _rc.ResourceFactory.CreateIndexBuffer(600, false);
             _material = CreateMaterial(_rc);
             _dss = _rc.ResourceFactory.CreateDepthStencilState(false, DepthComparison.LessEqual);
+
+            _textLayout = new TextLayout();
+            _textFormat = new TextFormat();
         }
 
         public unsafe void Append(TextAnalyzer analyzer, FontFace font, string text, float fontSize, int atlasWidth, RectangleF drawRect)
@@ -51,21 +57,17 @@ namespace Engine.Graphics
                 return;
             }
 
-            var layout = new TextLayout();
-            var format = new TextFormat
-            {
-                Font = font,
-                Size = fontSize,
-            };
+            _textLayout.Stuff.Clear();
+            _textFormat.Font = font;
+            _textFormat.Size = fontSize;
 
-            analyzer.AppendText(text, format);
-            analyzer.PerformLayout(drawRect.X, drawRect.Y, drawRect.Width, drawRect.Height, layout);
+            analyzer.AppendText(text, _textFormat);
+            analyzer.PerformLayout(drawRect.X, drawRect.Y, drawRect.Width, drawRect.Height, _textLayout);
 
             Vector2 min = new Vector2(float.MaxValue);
             Vector2 max = new Vector2(float.MinValue);
-            TextVertex[] memBlock = new TextVertex[text.Length * 4];
-            int index = 0;
-            foreach (var thing in layout.Stuff)
+            _textVertices.Clear();
+            foreach (var thing in _textLayout.Stuff)
             {
                 var width = thing.Width;
                 var height = thing.Height;
@@ -77,17 +79,18 @@ namespace Engine.Graphics
                     min = Vector2.Min(min, origin);
                     max = Vector2.Max(max, localMax);
                 }
-                memBlock[index++] = new TextVertex(origin + new Vector2(0, height), new Vector2(region.X, region.Y + region.W), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(width, height), new Vector2(region.X + region.Z, region.Y + region.W), color);
-                memBlock[index++] = new TextVertex(origin + new Vector2(width, 0), new Vector2(region.X + region.Z, region.Y), color);
-                memBlock[index++] = new TextVertex(origin, new Vector2(region.X, region.Y), color);
+                _textVertices.Add(new TextVertex(origin + new Vector2(0, height), new Vector2(region.X, region.Y + region.W), color));
+                _textVertices.Add(new TextVertex(origin + new Vector2(width, height), new Vector2(region.X + region.Z, region.Y + region.W), color));
+                _textVertices.Add(new TextVertex(origin + new Vector2(width, 0), new Vector2(region.X + region.Z, region.Y), color));
+                _textVertices.Add(new TextVertex(origin, new Vector2(region.X, region.Y), color));
                 _characterCount++;
             }
 
             Size = new Vector2(max.X - min.X, max.Y - min.Y);
 
             _vb?.Dispose();
-            _vb = _rc.ResourceFactory.CreateVertexBuffer(memBlock, new VertexDescriptor(TextVertex.SizeInBytes, 3), false);
+            _vb = _rc.ResourceFactory.CreateVertexBuffer(TextVertex.SizeInBytes * _textVertices.Count, false);
+            _vb.SetVertexData(_textVertices.GetArraySegment(), new VertexDescriptor(TextVertex.SizeInBytes, 3), 0);
             EnsureIndexCapacity(_characterCount);
         }
 

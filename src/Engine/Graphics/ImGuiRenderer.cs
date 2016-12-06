@@ -173,13 +173,17 @@ namespace Engine.Graphics
 
             ImGui.GetIO().MouseWheel = delta;
 
-            foreach (char c in snapshot.KeyCharPresses)
+            IReadOnlyList<char> keyCharPresses = snapshot.KeyCharPresses;
+            for (int i = 0; i < keyCharPresses.Count; i++)
             {
+                char c = keyCharPresses[i];
                 ImGui.AddInputCharacter(c);
             }
 
-            foreach (var keyEvent in snapshot.KeyEvents)
+            IReadOnlyList<KeyEvent> keyEvents = snapshot.KeyEvents;
+            for (int i = 0; i < keyEvents.Count; i++)
             {
+                KeyEvent keyEvent = keyEvents[i];
                 io.KeysDown[(int)keyEvent.Key] = keyEvent.Down;
                 if (keyEvent.Key == Key.ControlLeft)
                 {

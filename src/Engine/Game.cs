@@ -83,8 +83,10 @@ namespace Engine
 
                 FlushDeletedObjects();
 
-                foreach (var kvp in SystemRegistry.GetSystems())
+                var systemEnumerator = SystemRegistry.GetSystemsEnumerator();
+                while (systemEnumerator.MoveNext())
                 {
+                    var kvp = systemEnumerator.Current;
                     GameSystem system = kvp.Value;
                     float deltaSeconds = (float)deltaMilliseconds / 1000.0f;
                     system.Update(deltaSeconds * _timeSystem.TimeScale);
@@ -94,9 +96,11 @@ namespace Engine
 
         public void NewSceneLoaded()
         {
-            foreach (var typeAndSystem in SystemRegistry.GetSystems())
+            var systemEnumerator = SystemRegistry.GetSystemsEnumerator();
+            while (systemEnumerator.MoveNext())
             {
-                typeAndSystem.Value.OnNewSceneLoaded();
+                var kvp = systemEnumerator.Current;
+                kvp.Value.OnNewSceneLoaded();
             }
         }
 

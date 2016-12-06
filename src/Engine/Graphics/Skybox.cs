@@ -153,7 +153,7 @@ namespace Engine.Graphics
 
         public IEnumerable<string> GetStagesParticipated()
         {
-            yield return "Standard";
+            return s_stages;
         }
 
         public void Render(RenderContext rc, string pipelineStage)
@@ -302,6 +302,9 @@ namespace Engine.Graphics
             16,17,18, 16,18,19,
             20,21,22, 20,22,23,
         };
+
+        private static readonly string[] s_stages = { "Standard" };
+
         private DepthStencilState _depthStencilState;
         private bool _initialized;
     }
