@@ -58,7 +58,7 @@ namespace Engine
                 }
                 else
                 {
-                    return _physicsEntity.Position;
+                    return GetInterpolatedPosition();
                 }
             }
             set
@@ -79,6 +79,11 @@ namespace Engine
             }
         }
 
+        private Vector3 GetInterpolatedPosition()
+        {
+            return _physicsEntity.BufferedStates.InterpolatedStates.Position;
+        }
+
         public Vector3 LocalPosition
         {
             get
@@ -95,7 +100,7 @@ namespace Engine
                         Matrix4x4.Invert(Parent.GetWorldMatrix(), out invWorld);
                     }
 
-                    return Vector3.Transform(_physicsEntity.Position, invWorld);
+                    return Vector3.Transform(GetInterpolatedPosition(), invWorld);
 
                 }
             }
@@ -150,7 +155,7 @@ namespace Engine
                 }
                 else
                 {
-                    return _physicsEntity.Orientation;
+                    return _physicsEntity.BufferedStates.InterpolatedStates.Orientation;
                 }
             }
             set
@@ -185,7 +190,7 @@ namespace Engine
                 else
                 {
                     Quaternion parentRot = Parent != null ? Parent.Rotation : Quaternion.Identity;
-                    return Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.Orientation);
+                    return Quaternion.Concatenate(Quaternion.Inverse(parentRot), _physicsEntity.BufferedStates.InterpolatedStates.Orientation);
                 }
             }
             set
@@ -326,11 +331,11 @@ namespace Engine
             Quaternion oldRot;
             if (_physicsEntity != null)
             {
-                Quaternion localRotation = Quaternion.Concatenate(Quaternion.Inverse(oldParentRot), _physicsEntity.Orientation);
+                Quaternion localRotation = Quaternion.Concatenate(Quaternion.Inverse(oldParentRot), _physicsEntity.BufferedStates.InterpolatedStates.Orientation);
                 oldRot = Quaternion.Concatenate(oldParentRot, localRotation);
                 Quaternion diff = Quaternion.Concatenate(Quaternion.Inverse(oldParentRot), newParentRot);
-                _physicsEntity.Orientation = Quaternion.Concatenate(_physicsEntity.Orientation, diff);
-                Vector3 basisDirection = Vector3.Transform(_physicsEntity.Position - _parent.Position, Quaternion.Inverse(oldRot));
+                _physicsEntity.Orientation = Quaternion.Concatenate(_physicsEntity.BufferedStates.InterpolatedStates.Orientation, diff);
+                Vector3 basisDirection = Vector3.Transform(GetInterpolatedPosition() - _parent.Position, Quaternion.Inverse(oldRot));
                 float distance = basisDirection.Length();
                 Vector3 newDirection = Vector3.Transform(basisDirection, newParentRot);
                 if (newDirection != Vector3.Zero)
@@ -356,8 +361,8 @@ namespace Engine
             {
                 Vector3 parentScale = Parent != null ? Parent.Scale : Vector3.One;
                 return Matrix4x4.CreateScale(_localScale * parentScale)
-                * Matrix4x4.CreateFromQuaternion(_physicsEntity.Orientation)
-                * Matrix4x4.CreateTranslation(_physicsEntity.Position);
+                * Matrix4x4.CreateFromQuaternion(_physicsEntity.BufferedStates.InterpolatedStates.Orientation)
+                * Matrix4x4.CreateTranslation(GetInterpolatedPosition());
             }
 
             Matrix4x4 mat = Matrix4x4.CreateScale(_localScale)
@@ -398,12 +403,12 @@ namespace Engine
 
         public Vector3 GetLocalOrPhysicsEntityPosition()
         {
-            return (_physicsEntity != null) ? _physicsEntity.Position : _localPosition;
+            return (_physicsEntity != null) ? GetInterpolatedPosition() : _localPosition;
         }
 
         public Quaternion GetLocalOrPhysicsEntityRotation()
         {
-            return (_physicsEntity != null) ? _physicsEntity.Orientation : _localRotation;
+            return (_physicsEntity != null) ? _physicsEntity.BufferedStates.InterpolatedStates.Orientation : _localRotation;
         }
 
         protected override void Attached(SystemRegistry registry)

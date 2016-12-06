@@ -35,6 +35,8 @@ namespace Engine.Physics
 
             Space = new Space(_looper);
             Space.ForceUpdater.Gravity = s_defaultGravity;
+            Space.BufferedStates.Enabled = true;
+            Space.BufferedStates.InterpolatedStates.Enabled = true;
         }
 
         public CollisionGroup GetCollisionGroup(int layer)
