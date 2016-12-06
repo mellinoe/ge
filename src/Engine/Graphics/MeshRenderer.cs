@@ -34,6 +34,10 @@ namespace Engine.Graphics
         private bool _isTransparent;
         private bool _initialized;
 
+        private TriangleIndices[] _triIndices;
+        private int[] _meshIndices;
+        private Vector3[] _meshVertexPositions;
+
         private GraphicsSystem _gs;
         private AssetDatabase _ad;
 
@@ -48,6 +52,9 @@ namespace Engine.Graphics
                 {
                     RecreateModel();
                 }
+
+                _meshIndices = null;
+                _meshVertexPositions = null;
             }
         }
         public RefOrImmediate<TextureData> Texture
@@ -241,7 +248,7 @@ namespace Engine.Graphics
 
         private unsafe void SortTransparentTriangles()
         {
-            int[] indices = _mesh.GetIndices();
+            int[] indices = GetMeshIndices();
 
             if (_triIndices == null || _triIndices.Length < indices.Length / 3)
             {
@@ -254,7 +261,7 @@ namespace Engine.Graphics
 
             _triangleComparer.WorldMatrix = Transform.GetWorldMatrix();
             _triangleComparer.CameraPosition = _gs.MainCamera.Transform.Position;
-            _triangleComparer.Positions = _mesh.GetVertexPositions();
+            _triangleComparer.Positions = GetMeshVertexPositions();
 
             Array.Sort(_triIndices, _triangleComparer);
 
@@ -262,6 +269,16 @@ namespace Engine.Graphics
             {
                 _ib.SetIndices(new IntPtr(indicesPtr), IndexFormat.UInt32, sizeof(uint), indices.Length);
             }
+        }
+
+        private int[] GetMeshIndices()
+        {
+            return _meshIndices ?? (_meshIndices = _mesh.GetIndices());
+        }
+
+        private Vector3[] GetMeshVertexPositions()
+        {
+            return _meshVertexPositions ?? (_meshVertexPositions = _mesh.GetVertexPositions());
         }
 
         private class TriangleComparer : IComparer<TriangleIndices>
@@ -539,6 +556,5 @@ namespace Engine.Graphics
             {
                 new MaterialPerObjectInputElement("WorldMatrixBuffer", MaterialInputType.Matrix4x4, sizeof(Matrix4x4))
             });
-        private TriangleIndices[] _triIndices;
     }
 }
