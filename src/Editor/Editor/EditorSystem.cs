@@ -1339,7 +1339,7 @@ namespace Engine.Editor
             ClearSelection();
             StopSimulation();
             _sceneCam = null;
-            _sls.LoadScene(loadedAsset);
+            _sls.LoadScene(loadedAsset, false);
             RefreshCameras();
 
             EditorPreferences.Instance.SetLatestScene(_projectContext.ProjectRootPath, path);

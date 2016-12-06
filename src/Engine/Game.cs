@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -15,6 +16,7 @@ namespace Engine
         private Stopwatch _sw;
         private long _previousFrameTicks;
         private readonly TimeControlSystem _timeSystem;
+        private ConcurrentQueue<Action> _endOfFrameActions = new ConcurrentQueue<Action>();
 
         public SystemRegistry SystemRegistry { get; } = new SystemRegistry();
 
@@ -91,6 +93,16 @@ namespace Engine
                     float deltaSeconds = (float)deltaMilliseconds / 1000.0f;
                     system.Update(deltaSeconds * _timeSystem.TimeScale);
                 }
+
+                RunEndOfFrameActions();
+            }
+        }
+
+        private void RunEndOfFrameActions()
+        {
+            while (_endOfFrameActions.TryDequeue(out Action a))
+            {
+                a();
             }
         }
 
@@ -102,6 +114,11 @@ namespace Engine
                 var kvp = systemEnumerator.Current;
                 kvp.Value.OnNewSceneLoaded();
             }
+        }
+
+        public void QueueEndOfFrameAction(Action a)
+        {
+            _endOfFrameActions.Enqueue(a);
         }
 
         public void Exit()

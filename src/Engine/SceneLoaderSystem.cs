@@ -1,14 +1,15 @@
 ﻿using System;
 using Engine.Assets;
+using Engine.Behaviors;
 
 namespace Engine
 {
     public class SceneLoaderSystem : GameSystem
     {
         protected readonly GameObjectQuerySystem _goqs;
+        private readonly Game _game;
 
         private SceneAsset _loadedScene;
-        private readonly Game _game;
 
         public event Action BeforeSceneLoaded;
         public event Action AfterSceneLoaded;
@@ -21,7 +22,22 @@ namespace Engine
             _goqs = goqs;
         }
 
-        public void LoadScene(SceneAsset asset)
+        public void LoadScene(SceneAsset asset, bool delayTilEndOfFrame = true)
+        {
+            if (delayTilEndOfFrame)
+            {
+                _game.QueueEndOfFrameAction(() =>
+                {
+                    CoreLoadScene(asset);
+                });
+            }
+            else
+            {
+                CoreLoadScene(asset);
+            }
+        }
+
+        private void CoreLoadScene(SceneAsset asset)
         {
             BeforeSceneLoaded?.Invoke();
             ClearCurrentSceneGameObjects();
