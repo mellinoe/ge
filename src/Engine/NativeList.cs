@@ -274,13 +274,13 @@ namespace Veldrid.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ThrowIfDisposed()
         {
-#if !VALIDATE
+#if VALIDATE
             if (_dataPtr == null)
             {
                 throw new ObjectDisposedException(nameof(Data));
             }
 #else
-                Debug.Assert(_dataPtr != null, "NativeList is disposed.");
+            Debug.Assert(_dataPtr != null, "NativeList is disposed.");
 #endif
         }
 
@@ -291,7 +291,11 @@ namespace Veldrid.Collections
             _dataPtr = null;
         }
 
-        public Enumerator GetEnumerator() => new Enumerator(_dataPtr, _count);
+        public Enumerator GetEnumerator()
+        {
+            ThrowIfDisposed();
+            return new Enumerator(_dataPtr, _count);
+        }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
