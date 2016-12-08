@@ -1337,9 +1337,10 @@ namespace Engine.Editor
             _currentScene.UpdateAsset(_as.ProjectDatabase.DefaultSerializer, loadedAsset);
 
             ClearSelection();
+            bool wasPlaying = _playState == PlayState.Playing;
             StopSimulation();
             _sceneCam = null;
-            _sls.LoadScene(loadedAsset, false);
+            _sls.LoadScene(loadedAsset, delayTilEndOfFrame: wasPlaying);
             RefreshCameras();
 
             EditorPreferences.Instance.SetLatestScene(_projectContext.ProjectRootPath, path);
