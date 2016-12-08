@@ -5,17 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Veldrid.Assets;
 
 namespace Engine.Audio
 {
     public class AudioSystem : GameSystem
     {
+        private const uint InitialFreeSources = 2;
+
         private readonly AudioEngine _engine;
         private readonly Dictionary<WaveFile, AudioBuffer> _buffers = new Dictionary<WaveFile, AudioBuffer>();
 
-        private List<AudioSource> _activeSoundSources = new List<AudioSource>();
-        private List<AudioSource> _freeSoundSources = new List<AudioSource>();
+        private readonly List<AudioSource> _activeSoundSources = new List<AudioSource>();
+        private readonly List<AudioSource> _freeSoundSources;
         private AudioListener _listener;
 
         public AudioEngine Engine => _engine;
@@ -27,6 +28,12 @@ namespace Engine.Audio
             source = _engine.ResourceFactory.CreateAudioSource();
             source.Position = new Vector3();
             source.PositionKind = AudioPositionKind.ListenerRelative;
+
+            _freeSoundSources = new List<AudioSource>();
+            for (uint i = 0; i < InitialFreeSources; i++)
+            {
+                _freeSoundSources.Add(CreateNewFreeAudioSource());
+            }
         }
 
         private AudioSource GetFreeSource()
@@ -34,9 +41,7 @@ namespace Engine.Audio
             AudioSource source;
             if (_freeSoundSources.Count == 0)
             {
-                source = _engine.ResourceFactory.CreateAudioSource();
-                source.Position = new Vector3();
-                source.PositionKind = AudioPositionKind.ListenerRelative;
+                source = CreateNewFreeAudioSource();
             }
             else
             {
@@ -44,6 +49,14 @@ namespace Engine.Audio
                 _freeSoundSources.RemoveAt(_freeSoundSources.Count - 1);
             }
 
+            return source;
+        }
+
+        private AudioSource CreateNewFreeAudioSource()
+        {
+            AudioSource source = _engine.ResourceFactory.CreateAudioSource();
+            source.Position = new Vector3();
+            source.PositionKind = AudioPositionKind.ListenerRelative;
             return source;
         }
 
