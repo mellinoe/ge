@@ -115,7 +115,7 @@ namespace Engine.Graphics
             return RenderOrderKey.Create(_textBuffer.GetMaterialID());
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
             return CommonStages.Overlay;
         }

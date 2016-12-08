@@ -181,7 +181,7 @@ namespace Engine.Graphics
             return _initialized ? RenderOrderKey.Create(Vector3.Distance(Transform.Position, cameraPosition), _regularPassMaterial.GetHashCode()) : new RenderOrderKey();
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
             return _isTransparent ? s_transparentStages : s_opaqueStages;
         }

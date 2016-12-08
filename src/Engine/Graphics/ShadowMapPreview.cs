@@ -63,9 +63,9 @@ namespace Engine.Graphics
             return new RenderOrderKey();
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
-            yield return "Overlay";
+            return CommonStages.Standard;
         }
 
         public void Render(RenderContext rc, string pipelineStage)

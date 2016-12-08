@@ -105,7 +105,7 @@ namespace Engine.Graphics
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
             return CommonStages.Overlay;
         }

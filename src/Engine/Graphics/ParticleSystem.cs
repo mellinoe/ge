@@ -159,7 +159,7 @@ namespace Engine.Graphics
             return _initialized ? RenderOrderKey.Create(Vector3.Distance(viewPosition, Transform.Position), _material.GetHashCode()) : new RenderOrderKey();
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
             return s_stages;
         }

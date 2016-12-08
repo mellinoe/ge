@@ -151,7 +151,7 @@ namespace Engine.Graphics
             return new RenderOrderKey(ulong.MaxValue - 1);
         }
 
-        public IEnumerable<string> GetStagesParticipated()
+        public IList<string> GetStagesParticipated()
         {
             return s_stages;
         }
