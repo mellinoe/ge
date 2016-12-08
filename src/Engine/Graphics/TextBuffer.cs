@@ -88,8 +88,11 @@ namespace Engine.Graphics
 
             Size = new Vector2(max.X - min.X, max.Y - min.Y);
 
-            _vb?.Dispose();
-            _vb = _rc.ResourceFactory.CreateVertexBuffer(TextVertex.SizeInBytes * _textVertices.Count, false);
+            if (_vb == null)
+            {
+                _vb = _rc.ResourceFactory.CreateVertexBuffer(TextVertex.SizeInBytes * _textVertices.Count, false);
+            }
+
             _vb.SetVertexData(_textVertices.GetArraySegment(), new VertexDescriptor(TextVertex.SizeInBytes, 3), 0);
             EnsureIndexCapacity(_characterCount);
         }
