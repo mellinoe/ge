@@ -11,6 +11,8 @@ namespace Engine.Physics
 {
     public class PhysicsSystem : GameSystem
     {
+        private const float MaxFrameUpdateTime = 30f / 60f;
+
         private static readonly Vector3 s_defaultGravity = new Vector3(0, -9.81f, 0);
 
         private PhysicsCollisionGroups _collisionGroups;
@@ -52,6 +54,8 @@ namespace Engine.Physics
         protected override void UpdateCore(float deltaSeconds)
         {
             FlushAdditionsAndRemovals();
+
+            deltaSeconds = Math.Min(deltaSeconds, MaxFrameUpdateTime);
             Space.Update(deltaSeconds);
         }
 

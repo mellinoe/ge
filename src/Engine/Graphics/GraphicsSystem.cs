@@ -54,6 +54,7 @@ namespace Engine.Graphics
         private ManualWireframeRenderer _freeShapeRenderer;
         private bool _freezeLineDrawing;
         private readonly int _mainThreadID;
+        private readonly RayCastFilter<RenderItem> _rayCastFilterFunc;
 
         public ImGuiRenderer ImGuiRenderer { get; private set; }
 
@@ -126,6 +127,7 @@ namespace Engine.Graphics
 
             _mainThreadID = Environment.CurrentManagedThreadId;
             _taskScheduler = new GraphicsSystemTaskScheduler(_mainThreadID);
+            _rayCastFilterFunc = RayCastFilter;
         }
 
         public void SetViewFrustum(ref BoundingFrustum frustum)
@@ -324,7 +326,7 @@ namespace Engine.Graphics
         public int RayCast(Ray ray, List<RayCastHit<RenderItem>> hits)
         {
             hits.Clear();
-            return _visiblityManager.Octree.RayCast(ray, hits, RayCastFilter);
+            return _visiblityManager.Octree.RayCast(ray, hits, _rayCastFilterFunc);
         }
 
         public void DrawLine(Vector3 start, Vector3 end)

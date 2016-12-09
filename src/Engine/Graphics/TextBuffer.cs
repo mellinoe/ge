@@ -45,11 +45,6 @@ namespace Engine.Graphics
             Append(analyzer, font, text, fontSize, atlasWidth, drawRect, RgbaByte.White);
         }
 
-        public uint GetMaterialID()
-        {
-            return _material != null ? (uint)_material.GetHashCode() : 0;
-        }
-
         public unsafe void Append(TextAnalyzer analyzer, FontFace font, string text, float fontSize, int atlasWidth, RectangleF drawRect, RgbaByte color)
         {
             if (string.IsNullOrEmpty(text))
@@ -63,7 +58,37 @@ namespace Engine.Graphics
 
             analyzer.AppendText(text, _textFormat);
             analyzer.PerformLayout(drawRect.X, drawRect.Y, drawRect.Width, drawRect.Height, _textLayout);
+            PerformLayoutAndUpdateDeviceBuffers(atlasWidth, color);
+        }
 
+        public uint GetMaterialID()
+        {
+            return _material != null ? (uint)_material.GetHashCode() : 0;
+        }
+
+        public unsafe void Append(TextAnalyzer analyzer, FontFace font, CharBuffer charBuffer, float fontSize, int atlasWidth, RectangleF drawRect)
+        {
+            Append(analyzer, font, charBuffer, fontSize, atlasWidth, drawRect, RgbaByte.White);
+        }
+
+        public unsafe void Append(TextAnalyzer analyzer, FontFace font, CharBuffer charBuffer, float fontSize, int atlasWidth, RectangleF drawRect, RgbaByte color)
+        {
+            if (charBuffer.Count == 0)
+            {
+                return;
+            }
+
+            _textLayout.Stuff.Clear();
+            _textFormat.Font = font;
+            _textFormat.Size = fontSize;
+
+            analyzer.AppendText(charBuffer.Buffer, 0, (int)charBuffer.Count, _textFormat);
+            analyzer.PerformLayout(drawRect.X, drawRect.Y, drawRect.Width, drawRect.Height, _textLayout);
+            PerformLayoutAndUpdateDeviceBuffers(atlasWidth, color);
+        }
+
+        private void PerformLayoutAndUpdateDeviceBuffers(int atlasWidth, RgbaByte color)
+        {
             Vector2 min = new Vector2(float.MaxValue);
             Vector2 max = new Vector2(float.MinValue);
             _textVertices.Clear();

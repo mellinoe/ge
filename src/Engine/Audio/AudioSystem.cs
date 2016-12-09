@@ -24,10 +24,6 @@ namespace Engine.Audio
         public AudioSystem(AudioEngineOptions options)
         {
             _engine = CreateDefaultAudioEngine(options);
-            AudioSource source = GetFreeSource();
-            source = _engine.ResourceFactory.CreateAudioSource();
-            source.Position = new Vector3();
-            source.PositionKind = AudioPositionKind.ListenerRelative;
 
             _freeSoundSources = new List<AudioSource>();
             for (uint i = 0; i < InitialFreeSources; i++)

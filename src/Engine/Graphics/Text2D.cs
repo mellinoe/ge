@@ -23,7 +23,7 @@ namespace Engine.Graphics
         private TextAnalyzer _textAnalyzer;
         private TextureAtlas _textureAtlas;
 
-        private string _text;
+        private CharBuffer _text = new CharBuffer(20);
         private bool _textChanged;
         private bool _fontChanged;
         private AssetRef<FontFace> _fontRef;
@@ -31,17 +31,32 @@ namespace Engine.Graphics
         private FontFace _font;
         private bool _initialized;
 
-        public string Text
+        public void ClearText() => _text.Clear();
+
+        public void Append(string s) => Append(s, 0, (uint)s.Length);
+        public void Append(string s, uint start, uint count)
         {
-            get { return _text; }
-            set
-            {
-                if (_text != value)
-                {
-                    _text = value;
-                    _textChanged = true;
-                }
-            }
+            _text.Append(s, start, count);
+            _textChanged = true;
+        }
+
+        public void Append(char[] chars, uint start, uint count)
+        {
+            _text.Append(chars, start, count);
+            _textChanged = true;
+        }
+
+        public void Append(char value)
+        {
+            _text.Append(value);
+            _textChanged = true;
+        }
+
+        public void Append(uint value) => Append(value, 0);
+        public void Append(uint value, uint zeroPadDigits)
+        {
+            _text.Append(value, zeroPadDigits);
+            _textChanged = true;
         }
 
         public AssetRef<FontFace> Font
