@@ -77,7 +77,7 @@ namespace Engine.Graphics
 
             _mesh = _meshRef.Get(_ad);
             _vb = _mesh.CreateVertexBuffer(_gs.Context.ResourceFactory);
-            _ib = _mesh.CreateIndexBuffer(_gs.Context.ResourceFactory, out _indexCount);
+            CreateIndexBuffer(_isTransparent);
             _centeredBoundingSphere = _mesh.GetBoundingSphere();
             _centeredBoundingBox = _mesh.GetBoundingBox();
         }
@@ -142,12 +142,22 @@ namespace Engine.Graphics
 
         private void MakeTransparent()
         {
+            Debug.Assert(!_isTransparent);
             _isTransparent = true;
+            if (_ib != null)
+            {
+                CreateIndexBuffer(wasTransparent: false);
+            }
         }
 
         private void MakeOpaque()
         {
+            Debug.Assert(_isTransparent);
             _isTransparent = false;
+            if (_ib != null)
+            {
+                CreateIndexBuffer(wasTransparent: true);
+            }
         }
 
         public Matrix4x4 RenderOffset { get; set; } = Matrix4x4.Identity;
@@ -307,7 +317,10 @@ namespace Engine.Graphics
             _mesh = Mesh.Get(_ad);
             _centeredBoundingSphere = _mesh.GetBoundingSphere();
             _centeredBoundingBox = _mesh.GetBoundingBox();
-            InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
+            _gs.ExecuteOnMainThread(() =>
+            {
+                InitializeContextObjects(_gs.Context, _gs.MaterialCache, _gs.BufferCache);
+            });
         }
 
         protected override void Removed(SystemRegistry registry)
@@ -334,10 +347,8 @@ namespace Engine.Graphics
             Debug.Assert(_deviceTexture == null);
             Debug.Assert(_textureBinding == null);
 
-            _vb = await bufferCache.GetVertexBufferAsync(_mesh);
-            var ibAndCount = await bufferCache.GetIndexBufferAndCountAsync(_mesh);
-            _ib = ibAndCount.Buffer;
-            _indexCount = ibAndCount.IndexCount;
+            _vb = bufferCache.GetVertexBuffer(_mesh);
+            CreateIndexBuffer(wasTransparent: false);
 
             if (s_regularGlobalInputs == null)
             {
@@ -354,7 +365,7 @@ namespace Engine.Graphics
                     });
             }
 
-            _regularPassMaterial = await materialCache.GetMaterialAsync(
+            _regularPassMaterial = materialCache.GetMaterial(
                 context,
                 RegularPassVertexShaderSource,
                 RegularPassFragmentShaderSource,
@@ -363,7 +374,7 @@ namespace Engine.Graphics
                 s_perObjectInputs,
                 s_textureInputs);
 
-            _regularPassTransparentMaterial = await materialCache.GetMaterialAsync(
+            _regularPassTransparentMaterial = materialCache.GetMaterial(
                 context,
                 RegularPassTransparentVertexShaderSource,
                 RegularPassTransparentFragmentShaderSource,
@@ -390,7 +401,7 @@ namespace Engine.Graphics
                     });
             }
 
-            _shadowPassMaterial = await materialCache.GetMaterialAsync(
+            _shadowPassMaterial = materialCache.GetMaterial(
                 context,
                 ShadowMapPassVertexShaderSource,
                 ShadowMapPassFragmentShaderSource,
@@ -401,14 +412,38 @@ namespace Engine.Graphics
 
             if (s_wireframeRS == null)
             {
-                s_wireframeRS = await _gs.ExecuteOnMainThread(() => factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true));
+                s_wireframeRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Wireframe, true, true);
             }
             if (s_noCullRS == null)
             {
-                s_noCullRS = await _gs.ExecuteOnMainThread(() => factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true));
+                s_noCullRS = factory.CreateRasterizerState(FaceCullingMode.None, TriangleFillMode.Solid, true, true);
             }
 
             _initialized = true;
+        }
+
+        private void CreateIndexBuffer(bool wasTransparent)
+        {
+            var factory = _gs.Context.ResourceFactory;
+            var bufferCache = _gs.BufferCache;
+
+            if (wasTransparent) // Transparent meshes do not use shared index buffers.
+            {
+                _ib?.Dispose();
+            }
+
+            if (_isTransparent)
+            {
+                int[] indices = GetMeshIndices();
+                _ib = factory.CreateIndexBuffer(indices, true);
+                _indexCount = indices.Length;
+            }
+            else
+            {
+                var ibAndCount = bufferCache.GetIndexBufferAndCount(_mesh);
+                _ib = ibAndCount.Buffer;
+                _indexCount = ibAndCount.IndexCount;
+            }
         }
 
         private Matrix4x4 CalculateInverseTranspose(Matrix4x4 m)
@@ -422,6 +457,10 @@ namespace Engine.Graphics
         {
             _deviceTexture?.Dispose();
             _textureBinding?.Dispose();
+            if (_isTransparent)
+            {
+                _ib?.Dispose();
+            }
         }
 
         public bool Cull(ref BoundingFrustum visibleFrustum)
