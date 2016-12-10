@@ -1096,6 +1096,13 @@ namespace Engine.Editor
                 }
             }
 
+            if (_selectedObjects.Any() && _input.GetKeyDown(Key.C) && _input.GetKey(Key.ShiftLeft) && _input.GetKey(Key.ControlLeft))
+            {
+                GameObject source = _selectedObjects.First();
+                CloneGameObject(source, source.Transform.Parent);
+                _focusNameField = true;
+            }
+
             if (_playState == PlayState.Stopped && !string.IsNullOrEmpty(_currentScenePath) && _input.GetKeyDown(Key.S) && (_input.GetKey(Key.ControlLeft) || _input.GetKey(Key.ControlRight)))
             {
                 SaveCurrentScene(_currentScenePath);
