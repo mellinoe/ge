@@ -365,6 +365,12 @@ namespace Engine.Editor
                 c = SetValueActionCommand.New<bool>(val => mr.DontCullBackFace = val, mr.DontCullBackFace, dcbf);
             }
 
+            bool castShadows = mr.CastShadows;
+            if (ImGui.Checkbox("Cast Shadows", ref castShadows))
+            {
+                c = SetValueActionCommand.New<bool>(val => mr.CastShadows = val, mr.CastShadows, castShadows);
+            }
+
             if (!mr.Mesh.HasValue)
             {
                 AssetRef<MeshData> assetRef = mr.Mesh.GetRef();

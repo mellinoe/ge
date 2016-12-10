@@ -12,8 +12,10 @@ namespace Engine.Graphics
 {
     public class MeshRenderer : Component, BoundsRenderItem
     {
-        private static readonly string[] s_opaqueStages = { "ShadowMap", "Standard" };
+        private static readonly string[] s_opaqueStages = { "Standard" };
+        private static readonly string[] s_opaqueWithShadowStages = { "ShadowMap", "Standard" };
         private static readonly string[] s_transparentStages = { "AlphaBlend" };
+        private static readonly string[] s_transparentWithShadowStages = { "ShadowMap", "AlphaBlend" };
 
         private readonly DynamicDataProvider<Matrix4x4> _worldProvider;
         private readonly DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
@@ -33,6 +35,7 @@ namespace Engine.Graphics
         private readonly TriangleComparer _triangleComparer = new TriangleComparer();
         private bool _isTransparent;
         private bool _initialized;
+        private bool _castShadows = true;
 
         private TriangleIndices[] _triIndices;
         private int[] _meshIndices;
@@ -140,6 +143,12 @@ namespace Engine.Graphics
             }
         }
 
+        public bool CastShadows
+        {
+            get { return _castShadows; }
+            set { _castShadows = value; }
+        }
+
         private void MakeTransparent()
         {
             Debug.Assert(!_isTransparent);
@@ -193,7 +202,29 @@ namespace Engine.Graphics
 
         public IList<string> GetStagesParticipated()
         {
-            return _isTransparent ? s_transparentStages : s_opaqueStages;
+            if (_isTransparent)
+            {
+                if (_castShadows)
+                {
+                    return s_transparentWithShadowStages;
+                }
+                else
+                {
+                    return s_transparentStages;
+                }
+            }
+            else
+            {
+                if (_castShadows)
+                {
+                    return s_opaqueWithShadowStages;
+                }
+                else
+                {
+                    return s_opaqueStages;
+                }
+
+            }
         }
 
         public void Render(RenderContext rc, string pipelineStage)
