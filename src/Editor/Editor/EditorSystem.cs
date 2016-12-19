@@ -730,6 +730,7 @@ namespace Engine.Editor
         private readonly List<ColliderShapeRenderer> _cachedColliderRenderers = new List<ColliderShapeRenderer>();
         private readonly Dictionary<GameObject, ColliderShapeRenderer> _colliderRenderers = new Dictionary<GameObject, ColliderShapeRenderer>();
         private bool _uniformScaleTool = true;
+        private float _numPadMoveSensitivity = 0.5f;
 
         private void DrawProjectAssets()
         {
@@ -957,7 +958,7 @@ namespace Engine.Editor
                     }
                     if (ImGui.MenuItem("Create Empty Parent", _selectedObjects.Any()))
                     {
-                        Vector3 position = MathUtil.SumAll(_selectedObjects.Select(go => go.Transform.Position)) / _selectedObjects.Count;
+                        Vector3 position = GetSelectionCenter();
                         var newParent = CreateEmptyGameObject();
                         newParent.Transform.Position = position;
                         Command c = new RawCommand(() =>
@@ -988,7 +989,7 @@ namespace Engine.Editor
                     {
                         foreach (var selected in _selectedObjects.Where(go => go.Transform.Parent != null))
                         {
-                            selected.Transform.Parent = null;
+                            selected.Transform.Parent = selected.Transform.Parent.Parent;
                         }
                     }
                     if (ImGui.MenuItem("Select Parenting Target", _selectedObjects.Count == 1))
@@ -1108,6 +1109,11 @@ namespace Engine.Editor
                 SaveCurrentScene(_currentScenePath);
             }
 
+            if (_selectedObjects.Any() && !ImGui.IsAnyItemHovered())
+            {
+                HandleNumPadMovement();
+            }
+
             if (openPopup != null)
             {
                 ImGui.OpenPopup($"###{openPopup}");
@@ -1181,6 +1187,58 @@ namespace Engine.Editor
                 }
 
                 ImGui.EndPopup();
+            }
+        }
+
+        private Vector3 GetSelectionCenter()
+        {
+            return MathUtil.SumAll(_selectedObjects.Select(go => go.Transform.Position)) / _selectedObjects.Count;
+        }
+
+        private void HandleNumPadMovement()
+        {
+            if (_input.GetKeyDown(Key.Keypad5))
+            {
+                Vector3 center = GetSelectionCenter();
+                MoveCameraTo(center);
+            }
+
+            var keyPresses = _input.CurrentSnapshot.KeyCharPresses;
+            Vector3 direction = Vector3.Zero;
+            if (_input.GetKey(Key.Keypad8) && keyPresses.Contains('8'))
+            {
+                direction = -Vector3.UnitZ;
+            }
+            if (_input.GetKey(Key.Keypad4) && keyPresses.Contains('4'))
+            {
+                direction = -Vector3.UnitX;
+            }
+            if (_input.GetKey(Key.Keypad6) && keyPresses.Contains('6'))
+            {
+                direction = Vector3.UnitX;
+            }
+            if (_input.GetKey(Key.Keypad2) && keyPresses.Contains('2'))
+            {
+                direction = Vector3.UnitZ;
+            }
+            if (_input.GetKey(Key.Keypad7) && keyPresses.Contains('7'))
+            {
+                direction = -Vector3.UnitY;
+            }
+            if (_input.GetKey(Key.Keypad9) && keyPresses.Contains('9'))
+            {
+                direction = Vector3.UnitY;
+            }
+
+            if (direction != Vector3.Zero)
+            {
+                Command c = new CompoundCommand(
+                    _selectedObjects.Select(go => SetValueActionCommand.New<Vector3>(
+                        v => go.Transform.Position = v,
+                        go.Transform.Position,
+                        go.Transform.Position + direction * _numPadMoveSensitivity)).ToArray());
+
+                _undoRedo.CommitCommand(c);
             }
         }
 
@@ -1532,7 +1590,7 @@ namespace Engine.Editor
             {
                 ClearSelection();
                 SelectObject(go);
-                MoveCameraTo(go.Transform);
+                MoveCameraTo(go.Transform.Position);
             }
             if (ImGui.MenuItem("Enabled", string.Empty, go.Enabled, true))
             {
@@ -1550,9 +1608,9 @@ namespace Engine.Editor
             ImGui.EndPopup();
         }
 
-        private void MoveCameraTo(Transform t)
+        private void MoveCameraTo(Vector3 position)
         {
-            _editorCameraGO.Transform.Position = t.Position - _editorCameraGO.Transform.Forward * 5.0f;
+            _editorCameraGO.Transform.Position = position - _editorCameraGO.Transform.Forward * 5.0f;
         }
 
         private void DeleteGameObjects(IEnumerable<GameObject> gos)
