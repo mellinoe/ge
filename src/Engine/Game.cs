@@ -114,6 +114,8 @@ namespace Engine
                 var kvp = systemEnumerator.Current;
                 kvp.Value.OnNewSceneLoaded();
             }
+
+            ResetDeltaTime();
         }
 
         public void QueueEndOfFrameAction(Action a)
