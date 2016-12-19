@@ -122,7 +122,7 @@ namespace Engine.Graphics
         {
             get
             {
-                if (_instanceData.Count > 0)
+                if (_instanceData.Count > 1)
                 {
                     Vector3 min = _currentMinParticleOffset;
                     Vector3 max = _currentMaxParticleOffset;
@@ -267,7 +267,24 @@ namespace Engine.Graphics
                 }
             }
 
+            EnsureMinMaxRange();
             _gs.NotifyBoundsChanged(this);
+        }
+
+        private void EnsureMinMaxRange()
+        {
+            EnsureRange(ref _currentMinParticleOffset.X, ref _currentMaxParticleOffset.X, 0.1f);
+            EnsureRange(ref _currentMinParticleOffset.Y, ref _currentMaxParticleOffset.Y, 0.1f);
+            EnsureRange(ref _currentMinParticleOffset.Z, ref _currentMaxParticleOffset.Z, 0.1f);
+        }
+
+        private void EnsureRange(ref float min, ref float max, float range)
+        {
+            if (Math.Abs(max - min) < range)
+            {
+                min -= (range / 2);
+                max += (range / 2);
+            }
         }
 
         public void SpawnParticle()
