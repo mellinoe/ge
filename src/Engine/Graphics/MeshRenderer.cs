@@ -330,11 +330,26 @@ namespace Engine.Graphics
 
             public int Compare(TriangleIndices x, TriangleIndices y)
             {
-                Vector3 xPosition = Vector3.Transform((Positions[x.I0] + Positions[x.I1] + Positions[x.I2]) / 3, WorldMatrix);
-                Vector3 yPosition = Vector3.Transform((Positions[y.I0] + Positions[y.I1] + Positions[y.I2]) / 3, WorldMatrix);
+                // Another SIMD bug. These intermediate results need to be pulled into local variables
+                //  in order to avoid bad SIMD codegen ultimately resulting in invalid comparer results.
+                Vector3 cameraPositionLocal = CameraPosition;
 
-                float xDistance = Vector3.DistanceSquared(xPosition, CameraPosition);
-                float yDistance = Vector3.DistanceSquared(yPosition, CameraPosition);
+                Vector3 posX0 = Positions[x.I0];
+                Vector3 posX1 = Positions[x.I1];
+                Vector3 posX2 = Positions[x.I2];
+                Vector3 xSum = (posX0 + posX1 + posX2);
+                Vector3 xAvg = xSum / 3;
+                Vector3 xPosition = Vector3.Transform(xAvg, WorldMatrix);
+
+                Vector3 posY0 = Positions[y.I0];
+                Vector3 posY1 = Positions[y.I1];
+                Vector3 posY2 = Positions[y.I2];
+                Vector3 ySum = (posY0 + posY1 + posY2);
+                Vector3 yAvg = ySum / 3;
+                Vector3 yPosition = Vector3.Transform(yAvg, WorldMatrix);
+
+                float xDistance = Vector3.DistanceSquared(xPosition, cameraPositionLocal);
+                float yDistance = Vector3.DistanceSquared(yPosition, cameraPositionLocal);
 
                 return -xDistance.CompareTo(yDistance);
             }
