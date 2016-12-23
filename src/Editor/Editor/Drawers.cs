@@ -412,6 +412,7 @@ namespace Engine.Editor
             T[] arr = (T[])obj;
             int length = arr.Length;
             bool newArray = false;
+            bool arrayModified = false;
 
             if (ImGui.TreeNode($"{label}[{length}]###{label}"))
             {
@@ -471,6 +472,7 @@ namespace Engine.Editor
                     if (changed || drawer.TypeDrawn.GetTypeInfo().IsValueType)
                     {
                         arr[i] = (T)element;
+                        arrayModified = true;
                     }
                 }
 
@@ -487,7 +489,7 @@ namespace Engine.Editor
                 return true;
             }
 
-            return false;
+            return arrayModified;
         }
 
         private void ShiftArrayDown(T[] arr, int start)
