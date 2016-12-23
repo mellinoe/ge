@@ -1068,7 +1068,8 @@ namespace Engine.Editor
                     ImGui.EndMenu();
                 }
 
-                if (_gs.Context.Window.WindowState == WindowState.FullScreen)
+                WindowState currentWindowState = _gs.Context.Window.WindowState;
+                if (currentWindowState == WindowState.FullScreen || currentWindowState == WindowState.BorderlessFullScreen)
                 {
                     float xStart = ImGui.GetWindowWidth() - ImGui.GetLastItemRectMax().X - 6;
                     ImGui.SameLine(0, xStart);

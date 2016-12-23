@@ -82,13 +82,19 @@ namespace Engine.Graphics
 
         public ShaderTextureBinding StandardStageDepthView => _upscaleDepthView;
 
-        public GraphicsSystem(OpenTKWindow window, float renderQuality = 1f, bool preferOpenGL = false)
+        public GraphicsSystem(OpenTKWindow window, GraphicsPreferencesProvider preferences)
+            : this(window, preferences.RenderQuality, preferences.BackEndPreference)
+        { }
+
+        public GraphicsSystem(OpenTKWindow window, float renderQuality = 1f, GraphicsBackEndPreference backEndPreference = GraphicsBackEndPreference.None)
         {
             if (window == null)
             {
                 throw new ArgumentNullException(nameof(window));
             }
 
+            bool preferOpenGL = backEndPreference == GraphicsBackEndPreference.OpenGL || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            Console.WriteLine("Prefer OpenGL ? " + preferOpenGL);
             _window = window;
             Context = CreatePlatformDefaultContext(window, preferOpenGL);
             Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));

@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Veldrid.Assets;
 using Veldrid.Platform;
@@ -56,17 +57,29 @@ namespace Engine
 
             Game game = new Game();
 
+            AssemblyLoadSystem als = new AssemblyLoadSystem();
+            als.LoadFromProjectManifest(projectManifest, AppContext.BaseDirectory);
+            game.SystemRegistry.Register(als);
+
+            GraphicsPreferencesProvider graphicsProvider;
+            string graphicsProviderName = projectManifest.GraphicsPreferencesProviderTypeName;
+            if (graphicsProviderName != null)
+            {
+                graphicsProvider = GetProvider(als, graphicsProviderName);
+            }
+            else
+            {
+                graphicsProvider = new DefaultGraphicsPreferencesProvider();
+            }
+
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.BorderlessFullScreen)
                 : new SameThreadWindow(960, 540, WindowState.BorderlessFullScreen);
             window.Title = "ge.Main";
-            GraphicsSystem gs = new GraphicsSystem(window, renderQuality:1f, preferOpenGL: launchOptions.PreferOpenGL);
+            GraphicsSystem gs = new GraphicsSystem(window, graphicsProvider);
             game.SystemRegistry.Register(gs);
             window.Closed += game.Exit;
 
-            AssemblyLoadSystem als = new AssemblyLoadSystem();
-            als.LoadFromProjectManifest(projectManifest, AppContext.BaseDirectory);
-            game.SystemRegistry.Register(als);
             game.LimitFrameRate = false;
 
             InputSystem inputSystem = new InputSystem(window);
@@ -134,9 +147,68 @@ namespace Engine
             scene = assetSystem.Database.LoadAsset<SceneAsset>(mainSceneID);
             scene.GenerateGameObjects();
 
+            RunStartupFunctions(projectManifest, als, game);
+
             game.RunMainLoop();
 
             return 0;
+        }
+
+        private static GraphicsPreferencesProvider GetProvider(AssemblyLoadSystem als, string graphicsProviderName)
+        {
+            Type t;
+            if (!TryGetType(als, graphicsProviderName, out t))
+            {
+                throw new InvalidOperationException("Couldn't load the graphics provider specified in project manifest: " + graphicsProviderName);
+            }
+
+            PropertyInfo instanceGetter = t.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+            if (instanceGetter == null)
+            {
+                throw new InvalidOperationException("Invalid graphics provider. Must have a public static Instance method.");
+            }
+
+            return (GraphicsPreferencesProvider)instanceGetter.GetGetMethod().Invoke(null, null);
+        }
+
+        private static void RunStartupFunctions(ProjectManifest projectManifest, AssemblyLoadSystem als, Game game)
+        {
+            foreach (var function in projectManifest.GameStartupFunctions)
+            {
+                Type t;
+                if (!als.TryGetType(function.TypeName, out t))
+                {
+                    t = Type.GetType(function.TypeName);
+                    if (t == null)
+                    {
+                        throw new InvalidOperationException("Invalid type name listed in project manifest's startup functions: " + function.TypeName);
+                    }
+                }
+
+                MethodInfo mi = t.GetMethod(function.MethodName);
+                if (mi == null)
+                {
+                    throw new InvalidOperationException("Invalid method name listed in startup function for type " + function.TypeName + ". Function name = " + function.MethodName);
+                }
+
+                var parameters = mi.GetParameters();
+                if (parameters.Length != 1 || parameters[0].ParameterType != typeof(Game))
+                {
+                    throw new InvalidOperationException("Startup function must be a static method accepting one parameter of type Engine.Game");
+                }
+
+                mi.Invoke(null, new[] { game });
+            }
+        }
+
+        public static bool TryGetType(AssemblyLoadSystem als, string typeName, out Type type)
+        {
+            if (!als.TryGetType(typeName, out type))
+            {
+                type = Type.GetType(typeName);
+            }
+
+            return type != null;
         }
     }
 }

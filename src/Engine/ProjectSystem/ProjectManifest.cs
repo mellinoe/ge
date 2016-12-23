@@ -12,9 +12,17 @@ namespace Engine.ProjectSystem
         public List<string> ManagedAssemblies { get; set; } = new List<string>();
         public AssetRef<SceneAsset> OpeningScene { get; set; }
         public PhysicsLayersDescription PhysicsLayers { get; set; }
+        public List<StartupFunction> GameStartupFunctions { get; set; } = new List<StartupFunction>();
+        public string GraphicsPreferencesProviderTypeName { get; set; }
 
         public ProjectManifest()
         {
         }
+    }
+
+    public class StartupFunction
+    {
+        public string TypeName { get; set; } = string.Empty;
+        public string MethodName { get; set; } = string.Empty;
     }
 }

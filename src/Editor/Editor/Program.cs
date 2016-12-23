@@ -26,7 +26,8 @@ namespace Engine.Editor
                 : new SameThreadWindow(960, 540, WindowState.Maximized);
             window.Title = "ge.Editor";
             Game game = new Game();
-            GraphicsSystem gs = new GraphicsSystem(window, prefs.RenderQuality, commandLineOptions.PreferOpenGL);
+            GraphicsBackEndPreference backEndPref = commandLineOptions.PreferOpenGL ? GraphicsBackEndPreference.OpenGL : GraphicsBackEndPreference.None;
+            GraphicsSystem gs = new GraphicsSystem(window, prefs.RenderQuality, backEndPref);
             gs.Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(Program).GetTypeInfo().Assembly));
             game.SystemRegistry.Register(gs);
             game.LimitFrameRate = false;

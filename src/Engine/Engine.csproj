@@ -71,6 +71,7 @@
     <Compile Include="GameSystem.cs" />
     <Compile Include="Graphics\CommonStages.cs" />
     <Compile Include="Graphics\DirectionalLight.cs" />
+    <Compile Include="Graphics\GraphicsPreferencesProvider.cs" />
     <Compile Include="Graphics\GraphicsSystem.cs" />
     <Compile Include="Graphics\MaterialInfo.cs" />
     <Compile Include="Graphics\MeshRenderer.cs" />
