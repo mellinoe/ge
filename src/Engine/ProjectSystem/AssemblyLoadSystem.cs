@@ -7,6 +7,7 @@ namespace Engine.ProjectSystem
 {
     public class AssemblyLoadSystem : GameSystem
     {
+        private Assembly[] _loadedAssemblies;
         private EngineLoadContext _loadContext = new EngineLoadContext();
         public EngineSerializationBinder Binder { get; } = new EngineSerializationBinder();
 
@@ -14,6 +15,7 @@ namespace Engine.ProjectSystem
         {
             _loadContext = new EngineLoadContext();
             Binder.ClearAssemblies();
+            _loadedAssemblies = Array.Empty<Assembly>();
         }
 
         public IEnumerable<Assembly> LoadFromProjectManifest(ProjectManifest manifest, string rootPath)
@@ -34,6 +36,7 @@ namespace Engine.ProjectSystem
                 }
             }
 
+            _loadedAssemblies = assemblies.ToArray();
             return assemblies;
         }
 
@@ -42,6 +45,21 @@ namespace Engine.ProjectSystem
             string tempPath = Path.GetTempFileName();
             File.Copy(path, tempPath, true);
             return _loadContext.LoadFromAssemblyPath(tempPath);
+        }
+
+        public bool TryGetType(string typeName, out Type t)
+        {
+            foreach (var assm in _loadedAssemblies)
+            {
+                t = assm.GetType(typeName);
+                if (t != null)
+                {
+                    return true;
+                }
+            }
+
+            t = null;
+            return false;
         }
 
         protected override void UpdateCore(float deltaSeconds)
