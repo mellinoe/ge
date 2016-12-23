@@ -72,9 +72,10 @@ namespace Engine
                 graphicsProvider = new DefaultGraphicsPreferencesProvider();
             }
 
+            var desiredInitialState = GraphicsPreferencesUtil.MapPreferencesState(graphicsProvider.WindowStatePreference);
             OpenTKWindow window = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, WindowState.BorderlessFullScreen)
-                : new SameThreadWindow(960, 540, WindowState.BorderlessFullScreen);
+                ? (OpenTKWindow)new DedicatedThreadWindow(960, 540, desiredInitialState)
+                : new SameThreadWindow(960, 540, desiredInitialState);
             window.Title = "ge.Main";
             GraphicsSystem gs = new GraphicsSystem(window, graphicsProvider);
             game.SystemRegistry.Register(gs);
