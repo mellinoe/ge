@@ -63,12 +63,12 @@ namespace Engine.Graphics
 
         protected override void Removed(SystemRegistry registry)
         {
-            _vb.Dispose();
-            _ib.Dispose();
-            _material.Dispose();
-            _rasterizerState.Dispose();
-            _cubemapBinding.Dispose();
-            _cubemapBinding.BoundTexture.Dispose();
+            _vb?.Dispose();
+            _ib?.Dispose();
+            _material?.Dispose();
+            _rasterizerState?.Dispose();
+            _cubemapBinding?.Dispose();
+            _cubemapBinding?.BoundTexture?.Dispose();
         }
 
         protected override void OnEnabled()
