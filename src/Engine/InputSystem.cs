@@ -45,6 +45,8 @@ namespace Engine
         public InputSystem(Window window)
         {
             _window = window;
+            window.FocusGained += WindowFocusGained;
+            window.FocusLost += WindowFocusLost;
         }
 
         /// <summary>
@@ -63,6 +65,29 @@ namespace Engine
             {
                 callback(this);
             }
+        }
+
+        public void WindowFocusLost()
+        {
+            ClearState();
+        }
+
+        public void WindowFocusGained()
+        {
+            ClearState();
+        }
+
+        protected override void OnNewSceneLoadedCore()
+        {
+            ClearState();
+        }
+
+        private void ClearState()
+        {
+            _currentlyPressedKeys.Clear();
+            _newKeysThisFrame.Clear();
+            _currentlyPressedMouseButtons.Clear();
+            _newMouseButtonsThisFrame.Clear();
         }
 
         public bool GetKey(Veldrid.Platform.Key Key)
