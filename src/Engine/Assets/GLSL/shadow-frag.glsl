@@ -123,7 +123,7 @@ void main()
     float diffuseFactor = dot(normalize(out_normal), L);
 
     float cosTheta = clamp(diffuseFactor, 0, 1);
-    float bias = 0.0015 * tan(acos(cosTheta));
+    float bias = 0.0005 * tan(acos(cosTheta));
     bias = clamp(bias, 0, 0.01);
     projCoords.z -= bias;
 
