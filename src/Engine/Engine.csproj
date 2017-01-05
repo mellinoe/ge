@@ -17,6 +17,7 @@
     <Compile Include="Assets\CompoundAssetDatabase.cs" />
     <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
     <Compile Include="Assets\EngineEmbeddedAssets.cs" />
+    <Compile Include="CrashLogHelper.cs" />
     <Compile Include="Graphics\ColliderShapeRenderer.cs" />
     <Compile Include="Graphics\FarToNearIndexComparer.cs" />
     <Compile Include="Graphics\FontFaceLoader.cs" />

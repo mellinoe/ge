@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -64,6 +65,23 @@ namespace Engine
         }
 
         public void RunMainLoop()
+        {
+            try
+            {
+                RunMainLoopCore();
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+            }
+        }
+
+        private void LogException(Exception e)
+        {
+            CrashLogHelper.LogUnhandledException(e, this);
+        }
+
+        private void RunMainLoopCore()
         {
             _running = true;
 
