@@ -19,8 +19,8 @@ in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
 
-out vec3 out_normal;
-out vec2 out_texCoord;
+out vec3 fsin_normal;
+out vec2 fsin_texCoord;
 
 void main()
 {
@@ -32,6 +32,6 @@ void main()
 	w *= reciprScaleOnscreen;
 
 	gl_Position = projection * (view * (world * vec4(position * w, 1)));
-	out_normal = normal;
-    out_texCoord = texCoord;
+	fsin_normal = normal;
+    fsin_texCoord = texCoord;
 }

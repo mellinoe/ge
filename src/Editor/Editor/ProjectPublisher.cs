@@ -11,6 +11,7 @@ namespace Engine.Editor
     {
         private readonly string _publishItemsRoot;
         private const string LauncherName = "Engine.Launcher";
+        private static string ExeSuffix => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "exe" : string.Empty;
 
         public string[] PublishTargets { get; set; }
 
@@ -45,7 +46,7 @@ namespace Engine.Editor
             }
             File.Copy(manifestFile, manifestFile.Replace(projectContext.ProjectRootPath, outputDir), overwrite: true);
 
-            string launcherExePath = Path.Combine(outputDir, LauncherName + ".exe");
+            string launcherExePath = Path.Combine(outputDir, LauncherName + ExeSuffix);
             string launcherDllPath = Path.Combine(outputDir, LauncherName + ".dll");
 
             string projectNamedLauncher = launcherExePath.Replace(LauncherName, projectContext.ProjectManifest.Name);

@@ -14,28 +14,50 @@ namespace Engine.Assets
 
         public SerializedGameObject[] GameObjects { get; set; }
 
-        public void GenerateGameObjects()
+        public void GenerateGameObjects(bool parallel = false)
         {
             ConcurrentDictionary<ulong, GameObject> idToGO = new ConcurrentDictionary<ulong, GameObject>();
 
-            Task.WaitAll(GameObjects.Select((sgo) => Task.Run(() =>
+            if (parallel)
             {
-                GameObject go = new GameObject(sgo.Name);
-                go.Transform.LocalPosition = sgo.Transform.LocalPosition;
-                go.Transform.LocalRotation = sgo.Transform.LocalRotation;
-                go.Transform.LocalScale = sgo.Transform.LocalScale;
-
-                foreach (var component in sgo.Components)
+                Task.WaitAll(GameObjects.Select((sgo) => Task.Run(() =>
                 {
-                    go.AddComponent(component);
-                }
+                    GameObject go = new GameObject(sgo.Name);
+                    go.Transform.LocalPosition = sgo.Transform.LocalPosition;
+                    go.Transform.LocalRotation = sgo.Transform.LocalRotation;
+                    go.Transform.LocalScale = sgo.Transform.LocalScale;
 
-                if (!idToGO.TryAdd(sgo.ID, go))
+                    foreach (var component in sgo.Components)
+                    {
+                        go.AddComponent(component);
+                    }
+
+                    if (!idToGO.TryAdd(sgo.ID, go))
+                    {
+                        throw new InvalidOperationException("Multiple objects with the same ID were detected. ID = " + sgo.ID);
+                    }
+                })).ToArray());
+            }
+            else
+            {
+                foreach (var sgo in GameObjects)
                 {
-                    throw new InvalidOperationException("Multiple objects with the same ID were detected. ID = " + sgo.ID);
-                }
-            })).ToArray());
+                    GameObject go = new GameObject(sgo.Name);
+                    go.Transform.LocalPosition = sgo.Transform.LocalPosition;
+                    go.Transform.LocalRotation = sgo.Transform.LocalRotation;
+                    go.Transform.LocalScale = sgo.Transform.LocalScale;
 
+                    foreach (var component in sgo.Components)
+                    {
+                        go.AddComponent(component);
+                    }
+
+                    if (!idToGO.TryAdd(sgo.ID, go))
+                    {
+                        throw new InvalidOperationException("Multiple objects with the same ID were detected. ID = " + sgo.ID);
+                    }
+                }
+            }
             foreach (var sgo in GameObjects)
             {
                 ulong parentID = sgo.Transform.ParentID;

@@ -157,7 +157,8 @@ namespace Veldrid.Collections
         public bool Remove(ref T item)
         {
             ThrowIfDisposed();
-            bool result = IndexOf(ref item, out uint index);
+            uint index;
+            bool result = IndexOf(ref item, out index);
             if (result)
             {
                 CoreRemoveAt(index);

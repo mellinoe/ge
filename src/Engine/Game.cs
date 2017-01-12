@@ -66,14 +66,18 @@ namespace Engine
 
         public void RunMainLoop()
         {
+#if RELEASE
             try
             {
+#endif
                 RunMainLoopCore();
+#if RELEASE
             }
             catch (Exception e)
             {
                 LogException(e);
             }
+#endif
         }
 
         private void LogException(Exception e)
@@ -118,7 +122,8 @@ namespace Engine
 
         private void RunEndOfFrameActions()
         {
-            while (_endOfFrameActions.TryDequeue(out Action a))
+            Action a;
+            while (_endOfFrameActions.TryDequeue(out a))
             {
                 a();
             }
