@@ -11,7 +11,10 @@ namespace Engine.Editor
     {
         private readonly string _publishItemsRoot;
         private const string LauncherName = "Engine.Launcher";
-        private static string ExeSuffix => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "exe" : string.Empty;
+        private static string GetExeSuffix(string target)
+        {
+            return target.ToLowerInvariant().Contains("windows") ? ".exe" : string.Empty;
+        }
 
         public string[] PublishTargets { get; set; }
 
@@ -46,7 +49,7 @@ namespace Engine.Editor
             }
             File.Copy(manifestFile, manifestFile.Replace(projectContext.ProjectRootPath, outputDir), overwrite: true);
 
-            string launcherExePath = Path.Combine(outputDir, LauncherName + ExeSuffix);
+            string launcherExePath = Path.Combine(outputDir, LauncherName + GetExeSuffix(target));
             string launcherDllPath = Path.Combine(outputDir, LauncherName + ".dll");
 
             string projectNamedLauncher = launcherExePath.Replace(LauncherName, projectContext.ProjectManifest.Name);
@@ -54,7 +57,7 @@ namespace Engine.Editor
             EditorUtility.ForceMoveFile(launcherDllPath, launcherDllPath.Replace(LauncherName, projectContext.ProjectManifest.Name));
 
 #if !DEBUG
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && target.ToLowerInvariant().Contains("windows"))
             {
                 TryChangeSubsystemLink(projectNamedLauncher, "windows");
             }
