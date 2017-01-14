@@ -355,12 +355,18 @@ namespace Engine.Graphics
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            _instanceData[index].Offset = state.Offset;
-            _instanceData[index].Alpha = state.Alpha;
-            _instanceData[index].Size = state.Size;
+            InstanceData id = new InstanceData(state.Offset, state.Alpha, state.Size);
+            _instanceData[index] = id;
+            // _instanceData[index].Offset = state.Offset;
+            // _instanceData[index].Alpha = state.Alpha;
+            // _instanceData[index].Size = state.Size;
 
-            _particleStates[index].Velocity = state.Velocity;
-            _particleStates[index].Age = state.Age;
+            ParticleStateInternal psi = new ParticleStateInternal();
+            psi.Velocity = state.Velocity;
+            psi.Age = state.Age;
+            _particleStates[index] = psi;
+            // _particleStates[index].Velocity = state.Velocity;
+            // _particleStates[index].Age = state.Age;
         }
 
         public void ModifyAllParticles(ParticleModifier modifier)
