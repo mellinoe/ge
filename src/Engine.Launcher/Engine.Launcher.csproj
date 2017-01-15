@@ -39,13 +39,16 @@
       <Project>{9bfba3a1-21d4-4cbd-b0e1-a4f3ab80fd30}</Project>
       <Name>Engine</Name>
     </ProjectReference>
-    <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\win-x64\cimgui.dll" Condition="'$(OSTarget)' == 'Windows_NT'">
+    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\win-x64\cimgui.dll" Condition="'$(OSTarget)' == 'Windows_NT'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\ubuntu.14.04-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
+    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\ubuntu.14.04-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(ProjectDir)ext\veldrid\deps\ImGui.NET\osx.10.10-x64\cimgui.dylib" Condition="'$(OSTarget)' == 'OSX'">
+    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\osx.10.10-x64\cimgui.dylib" Condition="'$(OSTarget)' == 'OSX'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(ProjectDir)ext\sdl\libsdl2.dylib" Condition="'$(OSTarget)' == 'OSX'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
