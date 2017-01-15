@@ -520,7 +520,10 @@ namespace Engine.Editor
         protected override void UpdateCore(float deltaSeconds)
         {
             _fta.AddTime(deltaSeconds * 1000.0);
-            _gs.Context.Window.Title = $"ge.Editor " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+            if (_gs.Context.Window.Exists)
+            {
+                _gs.Context.Window.Title = $"ge.Editor " + _fta.CurrentAverageFramesPerSecond.ToString("000.0 fps / ") + _fta.CurrentAverageFrameTime.ToString("#00.00 ms");
+            }
             UpdateUpdateables(deltaSeconds);
             DoFakePhysicsUpdate();
 
@@ -1069,14 +1072,17 @@ namespace Engine.Editor
                     ImGui.EndMenu();
                 }
 
-                WindowState currentWindowState = _gs.Context.Window.WindowState;
-                if (currentWindowState == WindowState.FullScreen || currentWindowState == WindowState.BorderlessFullScreen)
+                if (_gs.Context.Window.Exists)
                 {
-                    float xStart = ImGui.GetWindowWidth() - ImGui.GetLastItemRectMax().X - 6;
-                    ImGui.SameLine(0, xStart);
-                    if (ImGui.Button("X"))
+                    WindowState currentWindowState = _gs.Context.Window.WindowState;
+                    if (currentWindowState == WindowState.FullScreen || currentWindowState == WindowState.BorderlessFullScreen)
                     {
-                        ExitEditor();
+                        float xStart = ImGui.GetWindowWidth() - ImGui.GetLastItemRectMax().X - 6;
+                        ImGui.SameLine(0, xStart);
+                        if (ImGui.Button("X"))
+                        {
+                            ExitEditor();
+                        }
                     }
                 }
 

@@ -94,7 +94,6 @@ namespace Engine.Graphics
             }
 
             bool preferOpenGL = backEndPreference == GraphicsBackEndPreference.OpenGL || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            Console.WriteLine("Prefer OpenGL ? " + preferOpenGL);
             _window = window;
             Context = CreatePlatformDefaultContext(window, preferOpenGL);
             Context.ResourceFactory.AddShaderLoader(new EmbeddedResourceShaderLoader(typeof(GraphicsSystem).GetTypeInfo().Assembly));

@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Engine.Audio.OpenAL
 {
-    public class OpenALEngine : AudioEngine
+    public class OpenALEngine : AudioEngine, System.IDisposable
     {
         private readonly AudioContext _context;
 
@@ -27,6 +27,11 @@ namespace Engine.Audio.OpenAL
             OpenTK.Vector3 f = new OpenTK.Vector3(forward.X, forward.Y, forward.Z);
             OpenTK.Vector3 u = new OpenTK.Vector3(up.X, up.Y, up.Z);
             AL.Listener(ALListenerfv.Orientation, ref f, ref u);
+        }
+
+        public void Dispose()
+        {
+            _context.Dispose();
         }
     }
 }

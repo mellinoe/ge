@@ -118,6 +118,17 @@ namespace Engine
 
                 RunEndOfFrameActions();
             }
+
+            var cleanupEnumerator = SystemRegistry.GetSystemsEnumerator();
+            while (cleanupEnumerator.MoveNext())
+            {
+                var kvp = cleanupEnumerator.Current;
+                GameSystem system = kvp.Value;
+                if (system is IDisposable)
+                {
+                    ((IDisposable)system).Dispose();
+                }
+            }
         }
 
         private void RunEndOfFrameActions()

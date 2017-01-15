@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace Engine.Audio
 {
-    public class AudioSystem : GameSystem
+    public class AudioSystem : GameSystem, IDisposable
     {
         private const uint InitialFreeSources = 2;
 
@@ -158,6 +158,23 @@ namespace Engine.Audio
             source.Position = position;
             source.PositionKind = positionKind;
             _activeSoundSources.Add(source);
+        }
+
+        public void Dispose()
+        {
+            foreach (var source in _activeSoundSources)
+            {
+                source.Dispose();
+            }
+            foreach (var source in _freeSoundSources)
+            {
+                source.Dispose();
+            }
+
+            if (_engine is IDisposable)
+            {
+                ((IDisposable)_engine).Dispose();
+            }
         }
     }
 }

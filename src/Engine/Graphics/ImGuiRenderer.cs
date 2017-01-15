@@ -104,6 +104,8 @@ namespace Engine.Graphics
 
             var deviceTexture = rc.ResourceFactory.CreateTexture(_fontTexture.PixelData, _textureData.Width, _textureData.Height, _textureData.BytesPerPixel, PixelFormat.R8_G8_B8_A8);
             _fontTextureBinding = rc.ResourceFactory.CreateShaderTextureBinding(deviceTexture);
+
+            io.FontAtlas.ClearTexData();
         }
 
         public IList<string> GetStagesParticipated()

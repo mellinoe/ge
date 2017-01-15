@@ -84,6 +84,8 @@ namespace Engine.Editor
 
             game.RunMainLoop();
 
+            window.NativeWindow.Dispose();
+
             EditorPreferences.Instance.Save();
         }
     }

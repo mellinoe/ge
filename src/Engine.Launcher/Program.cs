@@ -31,7 +31,8 @@ namespace Engine
                 {
                     if (manifestName != null)
                     {
-                        throw new InvalidOperationException("Error: Multiple project manifests in this directory: " + currentDir);
+                        Console.WriteLine("Error: Multiple project manifests in this directory: " + currentDir);
+                        return -1;
                     }
 
                     manifestName = file;

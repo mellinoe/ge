@@ -72,7 +72,6 @@ namespace Engine.Editor
                 Directory.CreateDirectory(directory);
             }
             File.WriteAllText(preferencesFile, json);
-            Console.WriteLine($"Saved preferences to {preferencesFile}.");
         }
     }
 
