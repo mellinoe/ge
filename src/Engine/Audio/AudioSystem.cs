@@ -111,6 +111,7 @@ namespace Engine.Audio
             {
                 buffer = _engine.ResourceFactory.CreateAudioBuffer();
                 buffer.BufferData(wave.Data, wave.Format, wave.SizeInBytes, wave.Frequency);
+                _buffers.Add(wave, buffer);
             }
 
             return buffer;
@@ -169,6 +170,10 @@ namespace Engine.Audio
             foreach (var source in _freeSoundSources)
             {
                 source.Dispose();
+            }
+            foreach (var kvp in _buffers)
+            {
+                kvp.Value.Dispose();
             }
 
             if (_engine is IDisposable)

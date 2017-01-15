@@ -37,7 +37,7 @@ namespace Engine.Audio.OpenAL
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             AL.DeleteBuffer(ID);
         }

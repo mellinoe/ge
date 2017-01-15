@@ -51,5 +51,7 @@ namespace Engine.Audio.XAudio
             Frequency = frequency;
             SizeInBytes = sizeInBytes;
         }
+
+        public override void Dispose() { }
     }
 }
