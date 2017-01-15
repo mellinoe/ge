@@ -24,6 +24,7 @@ using Veldrid.Graphics.Direct3D;
 using SharpDX.Direct3D11;
 using SharpFont;
 using Veldrid;
+using System.Runtime.InteropServices;
 
 namespace Engine.Editor
 {
@@ -1382,7 +1383,8 @@ namespace Engine.Editor
         {
             Window window = _gs.Context.Window;
             WindowState state = window.WindowState;
-            window.WindowState = state != WindowState.BorderlessFullScreen ? WindowState.BorderlessFullScreen : WindowState.Normal;
+            WindowState maximizedState = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? WindowState.BorderlessFullScreen : WindowState.FullScreen; 
+            window.WindowState = state != maximizedState ? maximizedState : WindowState.Normal;
         }
 
         private void ExitEditor()
