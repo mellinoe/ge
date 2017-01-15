@@ -14,6 +14,8 @@ namespace Engine.Behaviors
         private readonly List<Behavior> _newStarts = new List<Behavior>();
         private Boolean _needsFlushing;
 
+        private const uint MaxAllowedFlushRecursion = 1;
+
         public IEnumerable<IUpdateable> Updateables => _updateables;
 
         public BehaviorUpdateSystem(SystemRegistry sr)
@@ -39,6 +41,17 @@ namespace Engine.Behaviors
 
         public void FlushNewAndRemovedUpdateables()
         {
+            int recursion = 0;
+            while (CoreFlushNewAndRemovedUpdateables() && recursion < MaxAllowedFlushRecursion)
+            {
+                recursion += 1;
+            }
+        }
+
+        // Returns true when items were flushed. False if nothing was done.
+        private bool CoreFlushNewAndRemovedUpdateables()
+        {
+            bool flushedAnything = false;
             _newStarts.Clear();
 
             IUpdateable updateable;
@@ -50,6 +63,8 @@ namespace Engine.Behaviors
                 {
                     _newStarts.Add(behavior);
                 }
+
+                flushedAnything = true;
             }
 
             while (_removedUpdateables.TryTake(out updateable))
@@ -60,12 +75,17 @@ namespace Engine.Behaviors
                 {
                     _newStarts.Remove(behavior);
                 }
+
+                flushedAnything = true;
             }
 
             foreach (Behavior behavior in _newStarts)
             {
                 behavior.StartInternal(_registry);
+                flushedAnything = true;
             }
+
+            return flushedAnything;
         }
 
         public void Register(IUpdateable updateable)
