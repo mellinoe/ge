@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using Veldrid.Platform;
+using System.Runtime.InteropServices;
 
 namespace Engine
 {
@@ -30,11 +31,21 @@ namespace Engine
             }
             set
             {
-                Point screenPosition = _window.ClientToScreen(new Point((int)value.X, (int)value.Y));
-                Mouse.SetPosition(screenPosition.X, screenPosition.Y);
-                var cursorState = Mouse.GetCursorState();
-                Point windowPoint = _window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
-                _previousSnapshotMousePosition = new Vector2(windowPoint.X / _window.ScaleFactor.X, windowPoint.Y / _window.ScaleFactor.Y);
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Point screenPosition = _window.ClientToScreen(new Point((int)value.X, (int)value.Y));
+                    Mouse.SetPosition(screenPosition.X, screenPosition.Y);
+                    var cursorState = Mouse.GetCursorState();
+                    Point windowPoint = _window.ScreenToClient(new Point(cursorState.X, cursorState.Y));
+                    _previousSnapshotMousePosition = new Vector2(windowPoint.X / _window.ScaleFactor.X, windowPoint.Y / _window.ScaleFactor.Y);
+                }
+                else
+                {
+                    Point screenPosition = new Point((int)value.X, (int)value.Y);
+                    Mouse.SetPosition(screenPosition.X, screenPosition.Y);
+                    var cursorState = Mouse.GetCursorState();
+                    _previousSnapshotMousePosition = new Vector2(cursorState.X / _window.ScaleFactor.X, cursorState.Y / _window.ScaleFactor.Y);
+                }
             }
         }
 

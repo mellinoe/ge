@@ -165,7 +165,6 @@ namespace Engine.Graphics
                 io.MousePosition = new System.Numerics.Vector2(
                         cursorState.X,
                         cursorState.Y);
-                Console.WriteLine(window.NativeWindow.WindowInfo);
             }
             else
             {
