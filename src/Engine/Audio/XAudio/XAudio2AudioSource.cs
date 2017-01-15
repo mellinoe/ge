@@ -28,7 +28,7 @@ namespace Engine.Audio.XAudio
         {
             _engine = engine;
             WaveFormat waveFormat = new WaveFormat(44000, 16, 1);
-            _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio: 2.0f, enableCallbackEvents: true);
+            _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio: 2.0f);
             _audioBuffer = new SharpDX.XAudio2.AudioBuffer();
             _emitter = new Emitter()
             {
@@ -155,11 +155,6 @@ namespace Engine.Audio.XAudio
             }
         }
 
-        public override void Dispose()
-        {
-            _sourceVoice.Dispose();
-        }
-
         public override void Play(AudioBuffer buffer)
         {
             _xa2Buffer = (XAudio2AudioBuffer)buffer;
@@ -171,7 +166,7 @@ namespace Engine.Audio.XAudio
                 _sourceVoice.DestroyVoice();
                 _sourceVoice.Dispose();
                 WaveFormat waveFormat = new WaveFormat(_xa2Buffer.Frequency, GetChannelCount(_xa2Buffer.Format));
-                _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio:2.0f, enableCallbackEvents: true);
+                _sourceVoice = new SourceVoice(_engine.XAudio2, waveFormat, VoiceFlags.None, maxFrequencyRatio:2.0f);
                 _sourceVoice.SetVolume(volume);
                 _emitter.ChannelAzimuths = new[] { 0.0f };
                 _dspSettings = new DspSettings(_channelCount, 2);
@@ -250,6 +245,13 @@ namespace Engine.Audio.XAudio
                 OrientFront = new RawVector3(0, 0, 1),
                 OrientTop = new RawVector3(0, 1, 0),
             };
+        }
+
+        public override void Dispose()
+        {
+            _engine.ListenerChanged -= OnListenerChanged;
+            _sourceVoice.DestroyVoice();
+            _sourceVoice.Dispose();
         }
     }
 }

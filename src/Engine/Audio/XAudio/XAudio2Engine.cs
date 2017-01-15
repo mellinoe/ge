@@ -26,6 +26,20 @@ namespace Engine.Audio.XAudio
             XAudio2Flags flags = XAudio2Flags.None;
 #endif
             XAudio2 = new XAudio2(flags, ProcessorSpecifier.DefaultProcessor);
+#if DEBUG
+            DebugConfiguration debugConfig = new DebugConfiguration();
+            debugConfig.BreakMask = (int)LogType.Warnings;
+            debugConfig.TraceMask = (int)
+                (LogType.Errors | LogType.Warnings | LogType.Information | LogType.Detail | LogType.ApiCalls
+                | LogType.FunctionCalls | LogType.Timing | LogType.Locks | LogType.Memory | LogType.Streaming);
+            debugConfig.LogThreadID = new RawBool(true);
+            debugConfig.LogFileline = new RawBool(true);
+            debugConfig.LogFunctionName = new RawBool(true);
+            debugConfig.LogTiming = new RawBool(true);
+            XAudio2.SetDebugConfiguration(debugConfig, IntPtr.Zero);
+#endif
+            XAudio2.CriticalError += (s, e) => Console.WriteLine("XAudio2: Critical Error. " + e.ToString());
+
             MasteringVoice _masteringVoice = new MasteringVoice(XAudio2);
             X3DAudio = new X3DAudio(SharpDX.Multimedia.Speakers.Stereo);
             ResourceFactory = new XAudio2ResourceFactory(this);
