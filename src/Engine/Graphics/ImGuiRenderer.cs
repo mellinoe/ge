@@ -8,6 +8,7 @@ using System.Numerics;
 using Veldrid;
 using Veldrid.Graphics;
 using Veldrid.Platform;
+using System.Runtime.InteropServices;
 
 using Key = Veldrid.Platform.Key;
 
@@ -148,7 +149,7 @@ namespace Engine.Graphics
             MouseState cursorState = Mouse.GetCursorState();
             MouseState mouseState = Mouse.GetState();
 
-            if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y))
+            if (window.NativeWindow.Bounds.Contains(cursorState.X, cursorState.Y) && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // TODO: This does not take into account viewport coordinates.
                 if (window.Exists)
@@ -158,6 +159,13 @@ namespace Engine.Graphics
                         windowPoint.X / window.ScaleFactor.X,
                         windowPoint.Y / window.ScaleFactor.Y);
                 }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                io.MousePosition = new System.Numerics.Vector2(
+                        cursorState.X,
+                        cursorState.Y);
+                Console.WriteLine(window.NativeWindow.WindowInfo);
             }
             else
             {
