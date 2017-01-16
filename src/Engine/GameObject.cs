@@ -71,13 +71,16 @@ namespace Engine
 
         public void RemoveAll<T>() where T : Component
         {
-            var components = _components[typeof(T)];
-            foreach (Component c in components)
+            IReadOnlyCollection<Component> components;
+            if (_components.TryGetValue(typeof(T), out components))
             {
-                c.InternalRemoved(_registry);
-            }
+                foreach (Component c in components)
+                {
+                    c.InternalRemoved(_registry);
+                }
 
-            _components.Remove(typeof(T));
+                _components.Remove(typeof(T));
+            }
         }
 
         public void RemoveComponent<T>(T component) where T : Component
