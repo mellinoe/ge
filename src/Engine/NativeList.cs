@@ -55,7 +55,7 @@ namespace Veldrid.Collections
             }
         }
 
-        public ref T this[uint index]
+        public T this[uint index]
         {
             get
             {
@@ -68,24 +68,20 @@ namespace Veldrid.Collections
 #else
                 Debug.Assert(index < _count);
 #endif
-                return ref Unsafe.AsRef<T>(_dataPtr + index * s_elementByteSize);
+                return Unsafe.Read<T>(_dataPtr + index * s_elementByteSize);
             }
-        }
-
-        public ref T this[int index]
-        {
-            get
+            set
             {
                 ThrowIfDisposed();
 #if VALIDATE
-                if (index < 0 || index >= _count)
+                if (index >= _count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
                 }
 #else
-                Debug.Assert(index >= 0 && index < _count);
+                Debug.Assert(index < _count);
 #endif
-                return ref Unsafe.AsRef<T>(_dataPtr + index * s_elementByteSize);
+                Unsafe.Write<T>(_dataPtr + index * s_elementByteSize, value);
             }
         }
 

@@ -246,21 +246,29 @@ namespace Engine.Graphics
                 }
                 else
                 {
-                    _particleStates[i].Age += deltaSeconds;
+                    var newP = _particleStates[i];
+                    newP.Age += deltaSeconds;
+                    _particleStates[i] = newP;
 
                     float alpha = 1f;
                     if (AlphaFade)
                     {
                         alpha = 1f - (age / ParticleLifetime);
                     }
-                    _instanceData[i].Alpha = alpha;
+                    var newID = _instanceData[i];
+                    newID.Alpha = alpha;
+                    _instanceData[i] = newID;
 
                     if (Gravity != 0f)
                     {
-                        _particleStates[i].Velocity += Vector3.UnitY * -10f * deltaSeconds * Gravity;
+                        var ps = _particleStates[i];
+                        ps.Velocity += Vector3.UnitY * -10f * deltaSeconds * Gravity;
+                        _particleStates[i] = ps;
                     }
 
-                    _instanceData[i].Offset += _particleStates[i].Velocity * deltaSeconds;
+                    var newID2 = _instanceData[i];
+                    newID2.Offset += _particleStates[i].Velocity * deltaSeconds;
+                    _instanceData[i] = newID2;
 
                     _currentMinParticleOffset = Vector3.Min(_currentMinParticleOffset, _instanceData[i].Offset);
                     _currentMaxParticleOffset = Vector3.Max(_currentMaxParticleOffset, _instanceData[i].Offset);
@@ -342,8 +350,8 @@ namespace Engine.Graphics
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            InstanceData instanceData = _instanceData[index];
-            ParticleStateInternal internalState = _particleStates[index];
+            InstanceData instanceData = _instanceData[(uint)index];
+            ParticleStateInternal internalState = _particleStates[(uint)index];
 
             return new ParticleState(instanceData.Offset, internalState.Velocity, instanceData.Alpha, instanceData.Size, internalState.Age);
         }
@@ -356,7 +364,7 @@ namespace Engine.Graphics
             }
 
             InstanceData id = new InstanceData(state.Offset, state.Alpha, state.Size);
-            _instanceData[index] = id;
+            _instanceData[(uint)index] = id;
             // _instanceData[index].Offset = state.Offset;
             // _instanceData[index].Alpha = state.Alpha;
             // _instanceData[index].Size = state.Size;
@@ -364,7 +372,7 @@ namespace Engine.Graphics
             ParticleStateInternal psi = new ParticleStateInternal();
             psi.Velocity = state.Velocity;
             psi.Age = state.Age;
-            _particleStates[index] = psi;
+            _particleStates[(uint)index] = psi;
             // _particleStates[index].Velocity = state.Velocity;
             // _particleStates[index].Age = state.Age;
         }
