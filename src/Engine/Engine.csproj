@@ -1,128 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <OutputType>Library</OutputType>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <AssemblyName>Engine</AssemblyName>
     <RootNamespace>Engine</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NuGetTargetMoniker>.NETStandard,Version=v1.6</NuGetTargetMoniker>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
     <ProjectGuid>{9BFBA3A1-21D4-4CBD-B0E1-A4F3AB80FD30}</ProjectGuid>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
-  <ItemGroup>
-    <Compile Include="Assets\AssetSystem.cs" />
-    <Compile Include="Assets\CompoundAssetDatabase.cs" />
-    <Compile Include="Assets\EmbeddedAssetDatabase.cs" />
-    <Compile Include="Assets\EngineEmbeddedAssets.cs" />
-    <Compile Include="CrashLogHelper.cs" />
-    <Compile Include="Graphics\ColliderShapeRenderer.cs" />
-    <Compile Include="Graphics\FarToNearIndexComparer.cs" />
-    <Compile Include="Graphics\FontFaceLoader.cs" />
-    <Compile Include="Assets\SceneAsset.cs" />
-    <Compile Include="Assets\SerializedPrefab.cs" />
-    <Compile Include="Audio\AudioBuffer.cs" />
-    <Compile Include="Audio\AudioEngineOptions.cs" />
-    <Compile Include="Audio\AudioSource.cs" />
-    <Compile Include="Audio\BufferAudioFormat.cs" />
-    <Compile Include="Audio\Null\NullAudioBuffer.cs" />
-    <Compile Include="Audio\Null\NullAudioEngine.cs" />
-    <Compile Include="Audio\Null\NullAudioResourceFactory.cs" />
-    <Compile Include="Audio\Null\NullAudioSource.cs" />
-    <Compile Include="Audio\OpenAL\OpenALAudioBuffer.cs" />
-    <Compile Include="Audio\AudioEngine.cs" />
-    <Compile Include="Audio\AudioListener.cs" />
-    <Compile Include="Audio\AudioPositionKind.cs" />
-    <Compile Include="Audio\AudioResourceFactory.cs" />
-    <Compile Include="Audio\AudioSystem.cs" />
-    <Compile Include="Audio\OpenAL\OpenALAudioSource.cs" />
-    <Compile Include="Audio\AudioSourceComponent.cs" />
-    <Compile Include="Audio\OpenAL\OpenALEngine.cs" />
-    <Compile Include="Audio\OpenAL\OpenALResourceFactory.cs" />
-    <Compile Include="Audio\WaveFile.cs" />
-    <Compile Include="Audio\WaveFileLoader.cs" />
-    <Compile Include="Audio\XAudio\XAudio2AudioBuffer.cs" />
-    <Compile Include="Audio\XAudio\XAudio2AudioSource.cs" />
-    <Compile Include="Audio\XAudio\XAudio2Engine.cs" />
-    <Compile Include="Audio\XAudio\XAudio2ResourceFactory.cs" />
-    <Compile Include="Behaviors\BallLauncher.cs" />
-    <Compile Include="Behaviors\Behavior.cs" />
-    <Compile Include="Behaviors\BehaviorUpdateSystem.cs" />
-    <Compile Include="Behaviors\CameraBob.cs" />
-    <Compile Include="Behaviors\DelegateBehavior.cs" />
-    <Compile Include="Behaviors\FpsController.cs" />
-    <Compile Include="Behaviors\FreeFlyMovement.cs" />
-    <Compile Include="Behaviors\IUpdateable.cs" />
-    <Compile Include="Behaviors\ObjectRain.cs" />
-    <Compile Include="Behaviors\TestBehavior.cs" />
-    <Compile Include="Behaviors\TimedDeath.cs" />
-    <Compile Include="Debug\ConsoleCommand.cs" />
-    <Compile Include="Debug\DebugConsole.cs" />
-    <Compile Include="FrameTimeAverager.cs" />
-    <Compile Include="Graphics\BoundsRenderItem.cs" />
-    <Compile Include="Graphics\BufferCache.cs" />
-    <Compile Include="Graphics\Camera.cs" />
-    <Compile Include="Graphics\CommonModels.cs" />
-    <Compile Include="Component.cs" />
-    <Compile Include="Game.cs" />
-    <Compile Include="GameObject.cs" />
-    <Compile Include="GameObjectQuerySystem.cs" />
-    <Compile Include="GameSystem.cs" />
-    <Compile Include="Graphics\CommonStages.cs" />
-    <Compile Include="Graphics\DirectionalLight.cs" />
-    <Compile Include="Graphics\GraphicsPreferencesProvider.cs" />
-    <Compile Include="Graphics\GraphicsSystem.cs" />
-    <Compile Include="Graphics\MaterialInfo.cs" />
-    <Compile Include="Graphics\MeshRenderer.cs" />
-    <Compile Include="Graphics\ImGuiImageHelper.cs" />
-    <Compile Include="Graphics\ImGuiRenderer.cs" />
-    <Compile Include="Graphics\MaterialCache.cs" />
-    <Compile Include="Graphics\CharBuffer.cs" />
-    <Compile Include="Graphics\ParticleSystem.cs" />
-    <Compile Include="Graphics\PointLight.cs" />
-    <Compile Include="Graphics\PointLightInfo.cs" />
-    <Compile Include="Graphics\Skybox.cs" />
-    <Compile Include="Graphics\Text2D.cs" />
-    <Compile Include="Graphics\TextBuffer.cs" />
-    <Compile Include="Graphics\TextureAtlas.cs" />
-    <Compile Include="Graphics\TriangleIndices.cs" />
-    <Compile Include="Graphics\UpscaleStage.cs" />
-    <Compile Include="GUI\FilePicker.cs" />
-    <Compile Include="NativeList.cs" />
-    <Compile Include="NativeSortHelper.cs" />
-    <Compile Include="Physics\Conversions.cs" />
-    <Compile Include="Physics\MeshCollider.cs" />
-    <Compile Include="Physics\PhysicsLayerRules.cs" />
-    <Compile Include="Physics\UpdateMode.cs" />
-    <Compile Include="ProjectSystem\AssemblyLoadSystem.cs" />
-    <Compile Include="ProjectSystem\EngineLoadContext.cs" />
-    <Compile Include="ProjectSystem\EngineSerializationBinder.cs" />
-    <Compile Include="ProjectSystem\ProjectManifest.cs" />
-    <Compile Include="RawListExtensions.cs" />
-    <Compile Include="RefOrImmediate`1.cs" />
-    <Compile Include="Graphics\ShadowMapPreview.cs" />
-    <Compile Include="Graphics\ShadowMapStage.cs" />
-    <Compile Include="Graphics\TintInfo.cs" />
-    <Compile Include="Graphics\WireframeShapeRenderer.cs" />
-    <Compile Include="InputSystem.cs" />
-    <Compile Include="MathUtil.cs" />
-    <Compile Include="Physics\BoxCollider.cs" />
-    <Compile Include="Physics\CharacterController.cs" />
-    <Compile Include="Physics\Collider.cs" />
-    <Compile Include="Physics\CompoundShapeCollider.cs" />
-    <Compile Include="Physics\PhysicsSystem.cs" />
-    <Compile Include="Physics\SphereCollider.cs" />
-    <Compile Include="Prefabs.cs" />
-    <Compile Include="SceneLoaderSystem.cs" />
-    <Compile Include="ScoreSystem.cs" />
-    <Compile Include="SynchronizationHelperSystem.cs" />
-    <Compile Include="SystemRegistry.cs" />
-    <Compile Include="Transform.cs" />
-    <Compile Include="TypeCache.cs" />
-    <Compile Include="VectorExtensions.cs" />
-  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\HLSL\imgui-frag.hlsl" />
     <EmbeddedResource Include="Assets\HLSL\imgui-vertex.hlsl" />
@@ -171,7 +58,6 @@
     <EmbeddedResource Include="Assets\GLSL\shadow-transparent-frag.glsl" />
     <EmbeddedResource Include="Assets\HLSL\shadow-transparent-vertex.hlsl" />
     <EmbeddedResource Include="Assets\GLSL\shadow-transparent-vertex.glsl" />
-    <None Include="project.json" />
     <ProjectReference Include="..\..\ext\imgui.net\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{2665014F-0FEC-4268-8F77-7B029921AB09}</Project>
       <Name>ImGui.NET</Name>
@@ -196,5 +82,20 @@
       <Name>BEPUutilities</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+  <ItemGroup>
+    <PackageReference Include="SharpDX.XAudio2" Version="3.0.2" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
+    <PackageReference Include="System.Collections.Generic.MultiValueDictionary" Version="0.1.0-e160604-1" />
+    <PackageReference Include="System.Console" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+    <PackageReference Include="System.Globalization" Version="4.3.0" />
+    <PackageReference Include="System.Linq" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+  </ItemGroup>
 </Project>

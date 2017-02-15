@@ -1,20 +1,21 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Build;Publish">
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)' == '' And '$(OS)' != 'Windows_NT'">Ubuntu_Debug</Configuration>
-    <Configuration Condition="'$(Configuration)' == ''">Windows_Debug</Configuration>
-    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT'">win7-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(OS)' == 'Unix'">ubuntu.16.04-x64</RuntimeIdentifier>
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;ubuntu.16.04-x64;osx.10.10-x64</RuntimeIdentifiers>
     <ProjectGuid>{AE9BC745-284F-569F-82AA-C43AB9425DF2}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AssemblyName>Editor</AssemblyName>
     <RootNamespace>Engine</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <BaseNuGetRuntimeIdentifier Condition="'$(OSTarget)' == 'Windows_NT'">win7</BaseNuGetRuntimeIdentifier>
-    <NuGetTargetMoniker>.NETCoreApp,Version=v1.0</NuGetTargetMoniker>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="EditorUtility.cs" />
@@ -93,24 +94,42 @@
       <Name>Engine.Launcher</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <Content Include="$(ProjectDir)ext\ImGui.NET\deps\cimgui\win7-x64\cimgui.dll" Condition="'$(OSTarget)' == 'Windows_NT'">
+    <Content Include="$(ProjectDir)ext\ImGui.NET\deps\cimgui\win7-x64\cimgui.dll" Condition="'$(RuntimeIdentifier)' == 'win7-x64'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\ubuntu.14.04-x64\cimgui.so" Condition="'$(OSTarget)' == 'Ubuntu'">
+    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\ubuntu.14.04-x64\cimgui.so" Condition="'$(RuntimeIdentifier)' == 'ubuntu.16.04-x64'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\osx.10.10-x64\cimgui.dylib" Condition="'$(OSTarget)' == 'OSX'">
+    <Content Include="$(ProjectDir)ext\imgui.net\deps\cimgui\osx.10.10-x64\cimgui.dylib" Condition="'$(RuntimeIdentifier)' == 'osx.10.10-x64'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(ProjectDir)ext\sdl\libsdl2.dylib" Condition="'$(OSTarget)' == 'OSX'">
+    <Content Include="$(ProjectDir)ext\sdl\libsdl2.dylib" Condition="'$(RuntimeIdentifier)' == 'osx.10.10-x64'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-vertex.glsl" />
     <EmbeddedResource Include="Editor\Assets\GLSL\unlit-frag.glsl" />
     <EmbeddedResource Include="Editor\Assets\Models\ArrowPointer.obj" />
     <EmbeddedResource Include="Editor\Assets\Models\ArrowPointerThin.obj" />
-    <None Include="project.json" />
   </ItemGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+  <ItemGroup>
+    <PackageReference Include="SharpDX.XAudio2" Version="3.0.2" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
+    <PackageReference Include="System.Collections.Generic.MultiValueDictionary" Version="0.1.0-e160604-1" />
+    <PackageReference Include="System.Console" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+    <PackageReference Include="System.Globalization" Version="4.3.0" />
+    <PackageReference Include="System.Linq" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+    <PackageReference Include="System.CommandLine" Version="0.1.0-e160908-1" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.3.0" />
+    <PackageReference Include="Microsoft.NETCore.DotNetHostPolicy" Version="1.1.0" />
+    <PackageReference Include="Microsoft.NETCore.Runtime.CoreCLR" Version="1.1.0" />
+  </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)Editor.targets" />
 </Project>

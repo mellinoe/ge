@@ -1544,7 +1544,7 @@ namespace Engine.Editor
             ImGui.PushStyleColor(ColorTarget.Text, color);
             if (t.Children.Count > 0)
             {
-                ImGui.SetNextTreeNodeOpened(true, SetCondition.FirstUseEver);
+                ImGui.SetNextTreeNodeOpen(true, SetCondition.FirstUseEver);
                 bool opened = ImGui.TreeNode($"##{t.GameObject.ID}");
                 if (_newSelectedObject == t.GameObject)
                 {

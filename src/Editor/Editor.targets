@@ -4,22 +4,22 @@
   
   <Target Name="CopyProjectPublishItems" AfterTargets="PostPublish">
     <PropertyGroup>
-      <ProjectPublishItemsRoot>$(OutputPath)/PublishItems</ProjectPublishItemsRoot>
+      <ProjectPublishItemsRoot>$(OutputPath)/$(RuntimeIdentifier)/publish</ProjectPublishItemsRoot>
       <LauncherProjectName>Engine.Launcher</LauncherProjectName>
     </PropertyGroup>
 
-    <Message Text="Copying Project Publish Assets from $(BinDir)$(OSTarget).$(Platform).$(OptimizationGroup)/$(LauncherProjectName) into $(ProjectPublishItemsRoot)"  />
+    <Message Text="Copying Project Publish Assets from $$(BinDir)\$(Configuration)\$(LauncherProjectName)\netcoreapp1.1\$(RuntimeIdentifier)\publish\ into $(ProjectPublishItemsRoot)"  />
 
     <ItemGroup>
-      <LauncherItems Include="$(BinDir)$(OSTarget).$(Platform).$(OptimizationGroup)/$(LauncherProjectName)/*" />
+      <LauncherItems Include="$(BinDir)\$(Configuration)\$(LauncherProjectName)\netcoreapp1.1\$(RuntimeIdentifier)\publish\*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(LauncherItems)" DestinationFolder="$(ProjectPublishItemsRoot)/$(OSTarget).$(Platform)" />
+    <Copy SourceFiles="@(LauncherItems)" DestinationFolder="$(ProjectPublishItemsRoot)/PublishItems/$(RuntimeIdentifier)" />
   </Target>
 
   <Target Name="PublishSdkItems" AfterTargets="PostPublish">
     <PropertyGroup>
-      <SdkOutputPath>$(BinDir)EditorSDK</SdkOutputPath>
+      <SdkOutputPath>$(BinDir)\EditorSDK</SdkOutputPath>
     </PropertyGroup>
 
     <ItemGroup>

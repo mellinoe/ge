@@ -13,7 +13,7 @@ namespace Engine.Editor
         private const string LauncherName = "Engine.Launcher";
         private static string GetExeSuffix(string target)
         {
-            return target.ToLowerInvariant().Contains("windows") ? ".exe" : string.Empty;
+            return target.ToLowerInvariant().Contains("win") ? ".exe" : string.Empty;
         }
 
         public string[] PublishTargets { get; set; }
