@@ -7,6 +7,8 @@ namespace Engine.Behaviors
     public class FreeFlyMovement : Behavior
     {
         private InputSystem _input { get; set; }
+        public float StartingYaw { get; set; }
+        public float StartingPitch { get; set; }
 
         private float _previousMouseX;
         private float _previousMouseY;
@@ -21,6 +23,8 @@ namespace Engine.Behaviors
         protected override void Start(SystemRegistry registry)
         {
             _input = registry.GetSystem<InputSystem>();
+            _currentYaw = StartingYaw;
+            _currentPitch = StartingPitch;
         }
 
         public override void Update(float deltaSeconds)

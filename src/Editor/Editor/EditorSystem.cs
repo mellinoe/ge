@@ -142,7 +142,8 @@ namespace Engine.Editor
             _sceneCam = _gs.MainCamera;
             _editorCamera = new Camera()
             {
-                FarPlaneDistance = 200
+                NearPlaneDistance = 2,
+                FarPlaneDistance = 250
             };
             _editorCameraGO.AddComponent(_editorCamera);
             _editorCameraGO.AddComponent(new EditorCameraMovement());
@@ -1014,7 +1015,15 @@ namespace Engine.Editor
                             }
                         }
                     }
-
+                    if (ImGui.MenuItem("Create sponza"))
+                    {
+                        string rootSponzaPath = "Models/SponzaAtrium";
+                        ObjMatImporter.GenerateGameObjectsFromFile(
+                            _as.Database,
+                            Path.Combine(rootSponzaPath, "sponza.obj"),
+                            Path.Combine(rootSponzaPath, "sponza.mtl"),
+                            rootSponzaPath);
+                    }
                     ImGui.EndMenu();
                 }
                 if (ImGui.BeginMenu("Project"))
