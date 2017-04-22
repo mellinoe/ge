@@ -38,7 +38,7 @@ namespace Engine.Graphics
         private bool _castShadows = true;
 
         private TriangleIndices[] _triIndices;
-        private int[] _meshIndices;
+        private ushort[] _meshIndices;
         private Vector3[] _meshVertexPositions;
 
         private GraphicsSystem _gs;
@@ -289,7 +289,7 @@ namespace Engine.Graphics
 
         private unsafe void SortTransparentTriangles()
         {
-            int[] indices = GetMeshIndices();
+            ushort[] indices = GetMeshIndices();
 
             if (_triIndices == null || _triIndices.Length < indices.Length / 3)
             {
@@ -312,7 +312,7 @@ namespace Engine.Graphics
             }
         }
 
-        private int[] GetMeshIndices()
+        private ushort[] GetMeshIndices()
         {
             return _meshIndices ?? (_meshIndices = _mesh.GetIndices());
         }
@@ -480,8 +480,8 @@ namespace Engine.Graphics
 
             if (_isTransparent)
             {
-                int[] indices = GetMeshIndices();
-                _ib = factory.CreateIndexBuffer(indices, true);
+                ushort[] indices = GetMeshIndices();
+                _ib = factory.CreateIndexBuffer(indices, IndexFormat.UInt16, true);
                 _indexCount = indices.Length;
             }
             else

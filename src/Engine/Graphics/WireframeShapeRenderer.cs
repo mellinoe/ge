@@ -23,7 +23,7 @@ namespace Engine.Graphics
         private RasterizerState _wireframeState;
 
         protected List<VertexPositionNormalTexture> _vertices = new List<VertexPositionNormalTexture>();
-        protected List<int> _indices = new List<int>();
+        protected List<ushort> _indices = new List<ushort>();
         private DynamicDataProvider<Matrix4x4> _worldProvider;
         private DependantDataProvider<Matrix4x4> _inverseTransposeWorldProvider;
         private ConstantBufferDataProvider[] _perObjectProviders;
@@ -133,7 +133,7 @@ namespace Engine.Graphics
                         0,
                         IntPtr.Zero));
                 _ib = factory.CreateIndexBuffer(sizeof(int) * _indices.Count, false);
-                _ib.SetIndices(_indices.ToArray());
+                _ib.SetIndices(_indices.ToArray(), IndexFormat.UInt16);
             }
         }
 
@@ -159,9 +159,9 @@ namespace Engine.Graphics
             AddVerticesAndIndices(_octree.CurrentRoot, _vertices, _indices);
         }
 
-        private void AddVerticesAndIndices(OctreeNode<T> octree, List<VertexPositionNormalTexture> vertices, List<int> indices)
+        private void AddVerticesAndIndices(OctreeNode<T> octree, List<VertexPositionNormalTexture> vertices, List<ushort> indices)
         {
-            int baseIndex = vertices.Count;
+            ushort baseIndex = (ushort)vertices.Count;
             var bounds = octree.Bounds;
 
             vertices.Add(new VertexPositionNormalTexture(new Vector3(bounds.Min.X, bounds.Min.Y, bounds.Min.Z), Vector3.Zero, Vector2.Zero));
@@ -173,57 +173,57 @@ namespace Engine.Graphics
             vertices.Add(new VertexPositionNormalTexture(new Vector3(bounds.Max.X, bounds.Max.Y, bounds.Max.Z), Vector3.Zero, Vector2.Zero));
             vertices.Add(new VertexPositionNormalTexture(new Vector3(bounds.Max.X, bounds.Min.Y, bounds.Max.Z), Vector3.Zero, Vector2.Zero));
 
-            indices.Add(baseIndex + 0);
-            indices.Add(baseIndex + 1);
-            indices.Add(baseIndex + 0);
-            indices.Add(baseIndex + 1);
-            indices.Add(baseIndex + 2);
-            indices.Add(baseIndex + 1);
-            indices.Add(baseIndex + 2);
-            indices.Add(baseIndex + 3);
-            indices.Add(baseIndex + 2);
-            indices.Add(baseIndex + 0);
-            indices.Add(baseIndex + 3);
-            indices.Add(baseIndex + 0);
+            indices.Add((ushort)(baseIndex + 0));
+            indices.Add((ushort)(baseIndex + 1));
+            indices.Add((ushort)(baseIndex + 0));
+            indices.Add((ushort)(baseIndex + 1));
+            indices.Add((ushort)(baseIndex + 2));
+            indices.Add((ushort)(baseIndex + 1));
+            indices.Add((ushort)(baseIndex + 2));
+            indices.Add((ushort)(baseIndex + 3));
+            indices.Add((ushort)(baseIndex + 2));
+            indices.Add((ushort)(baseIndex + 0));
+            indices.Add((ushort)(baseIndex + 3));
+            indices.Add((ushort)(baseIndex + 0));
 
-            indices.Add(baseIndex + 4);
-            indices.Add(baseIndex + 5);
-            indices.Add(baseIndex + 4);
-            indices.Add(baseIndex + 5);
-            indices.Add(baseIndex + 1);
-            indices.Add(baseIndex + 5);
-            indices.Add(baseIndex + 1);
-            indices.Add(baseIndex + 0);
-            indices.Add(baseIndex + 1);
-            indices.Add(baseIndex + 4);
-            indices.Add(baseIndex + 0);
-            indices.Add(baseIndex + 4);
+            indices.Add((ushort)(baseIndex + 4));
+            indices.Add((ushort)(baseIndex + 5));
+            indices.Add((ushort)(baseIndex + 4));
+            indices.Add((ushort)(baseIndex + 5));
+            indices.Add((ushort)(baseIndex + 1));
+            indices.Add((ushort)(baseIndex + 5));
+            indices.Add((ushort)(baseIndex + 1));
+            indices.Add((ushort)(baseIndex + 0));
+            indices.Add((ushort)(baseIndex + 1));
+            indices.Add((ushort)(baseIndex + 4));
+            indices.Add((ushort)(baseIndex + 0));
+            indices.Add((ushort)(baseIndex + 4));
 
-            indices.Add(baseIndex + 7);
-            indices.Add(baseIndex + 6);
-            indices.Add(baseIndex + 7);
-            indices.Add(baseIndex + 6);
-            indices.Add(baseIndex + 5);
-            indices.Add(baseIndex + 6);
-            indices.Add(baseIndex + 5);
-            indices.Add(baseIndex + 4);
-            indices.Add(baseIndex + 5);
-            indices.Add(baseIndex + 7);
-            indices.Add(baseIndex + 4);
-            indices.Add(baseIndex + 7);
+            indices.Add((ushort)(baseIndex + 7));
+            indices.Add((ushort)(baseIndex + 6));
+            indices.Add((ushort)(baseIndex + 7));
+            indices.Add((ushort)(baseIndex + 6));
+            indices.Add((ushort)(baseIndex + 5));
+            indices.Add((ushort)(baseIndex + 6));
+            indices.Add((ushort)(baseIndex + 5));
+            indices.Add((ushort)(baseIndex + 4));
+            indices.Add((ushort)(baseIndex + 5));
+            indices.Add((ushort)(baseIndex + 7));
+            indices.Add((ushort)(baseIndex + 4));
+            indices.Add((ushort)(baseIndex + 7));
 
-            indices.Add(baseIndex + 3);
-            indices.Add(baseIndex + 2);
-            indices.Add(baseIndex + 3);
-            indices.Add(baseIndex + 2);
-            indices.Add(baseIndex + 6);
-            indices.Add(baseIndex + 2);
-            indices.Add(baseIndex + 6);
-            indices.Add(baseIndex + 7);
-            indices.Add(baseIndex + 6);
-            indices.Add(baseIndex + 3);
-            indices.Add(baseIndex + 7);
-            indices.Add(baseIndex + 3);
+            indices.Add((ushort)(baseIndex + 3));
+            indices.Add((ushort)(baseIndex + 2));
+            indices.Add((ushort)(baseIndex + 3));
+            indices.Add((ushort)(baseIndex + 2));
+            indices.Add((ushort)(baseIndex + 6));
+            indices.Add((ushort)(baseIndex + 2));
+            indices.Add((ushort)(baseIndex + 6));
+            indices.Add((ushort)(baseIndex + 7));
+            indices.Add((ushort)(baseIndex + 6));
+            indices.Add((ushort)(baseIndex + 3));
+            indices.Add((ushort)(baseIndex + 7));
+            indices.Add((ushort)(baseIndex + 3));
 
             foreach (var child in octree.Children)
             {
@@ -268,45 +268,45 @@ namespace Engine.Graphics
             _vertices.Add(new VertexPositionNormalTexture(corners.FarBottomRight, Vector3.Zero, Vector2.Zero));
             _vertices.Add(new VertexPositionNormalTexture(corners.FarBottomLeft, Vector3.Zero, Vector2.Zero));
 
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 3);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 3);
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 3);
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 3));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 3));
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 3));
 
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 7);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 7);
-            _indices.Add(baseIndex + 3);
-            _indices.Add(baseIndex + 7);
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 7));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 7));
+            _indices.Add((ushort)(baseIndex + 3));
+            _indices.Add((ushort)(baseIndex + 7));
 
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 7);
-            _indices.Add(baseIndex + 6);
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 7));
+            _indices.Add((ushort)(baseIndex + 6));
 
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 2);
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 2));
         }
     }
 
@@ -347,45 +347,45 @@ namespace Engine.Graphics
             _vertices.Add(new VertexPositionNormalTexture(new Vector3(max.X, max.Y, max.Z), Vector3.Zero, Vector2.Zero));
             _vertices.Add(new VertexPositionNormalTexture(new Vector3(max.X, min.Y, max.Z), Vector3.Zero, Vector2.Zero));
 
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 3);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 3);
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 3);
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 3));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 3));
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 3));
 
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 7);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 7);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 7);
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 7));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 7));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 7));
 
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 4);
-            _indices.Add(baseIndex + 0);
-            _indices.Add(baseIndex + 1);
-            _indices.Add(baseIndex + 5);
-            _indices.Add(baseIndex + 1);
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 4));
+            _indices.Add((ushort)(baseIndex + 0));
+            _indices.Add((ushort)(baseIndex + 1));
+            _indices.Add((ushort)(baseIndex + 5));
+            _indices.Add((ushort)(baseIndex + 1));
 
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 6);
-            _indices.Add(baseIndex + 2);
-            _indices.Add(baseIndex + 3);
-            _indices.Add(baseIndex + 7);
-            _indices.Add(baseIndex + 3);
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 6));
+            _indices.Add((ushort)(baseIndex + 2));
+            _indices.Add((ushort)(baseIndex + 3));
+            _indices.Add((ushort)(baseIndex + 7));
+            _indices.Add((ushort)(baseIndex + 3));
         }
     }
 
@@ -447,7 +447,7 @@ namespace Engine.Graphics
         }
 
         public List<VertexPositionNormalTexture> Vertices { get; private set; } = new List<VertexPositionNormalTexture>();
-        public List<int> Indices { get; private set; } = new List<int>();
+        public List<ushort> Indices { get; private set; } = new List<ushort>();
 
         public void Clear()
         {

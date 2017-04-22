@@ -4,7 +4,7 @@
   
   <Target Name="CopyProjectPublishItems" AfterTargets="PostPublish">
     <PropertyGroup>
-      <ProjectPublishItemsRoot>$(OutputPath)/$(RuntimeIdentifier)/publish</ProjectPublishItemsRoot>
+      <ProjectPublishItemsRoot>$(OutputPath)/publish</ProjectPublishItemsRoot>
       <LauncherProjectName>Engine.Launcher</LauncherProjectName>
     </PropertyGroup>
 
@@ -14,6 +14,7 @@
       <LauncherItems Include="$(BinDir)\$(Configuration)\$(LauncherProjectName)\netcoreapp1.1\$(RuntimeIdentifier)\publish\*" />
     </ItemGroup>
 
+    <Copy SourceFiles="@(LauncherItems)" DestinationFolder="$(OutputPath)/PublishItems/$(RuntimeIdentifier)" />
     <Copy SourceFiles="@(LauncherItems)" DestinationFolder="$(ProjectPublishItemsRoot)/PublishItems/$(RuntimeIdentifier)" />
   </Target>
 

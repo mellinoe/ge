@@ -5,11 +5,11 @@ namespace Engine.Graphics
     [DebuggerDisplay("{DebuggerDisplayString,nq}")]
     public struct TriangleIndices
     {
-        public readonly int I0;
-        public readonly int I1;
-        public readonly int I2;
+        public readonly ushort I0;
+        public readonly ushort I1;
+        public readonly ushort I2;
 
-        public TriangleIndices(int i0, int i1, int i2)
+        public TriangleIndices(ushort i0, ushort i1, ushort i2)
         {
             I0 = i0;
             I1 = i1;

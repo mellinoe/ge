@@ -86,7 +86,7 @@ namespace Engine.Graphics
             if (meshData != null)
             {
                 Vector3[] positions = meshData.GetVertexPositions();
-                int[] indices = meshData.GetIndices();
+                ushort[] indices = meshData.GetIndices();
 
                 foreach (Vector3 position in positions)
                 {

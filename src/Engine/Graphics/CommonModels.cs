@@ -16,7 +16,7 @@ namespace Engine.Graphics
             new VertexPositionNormalTexture(new Vector3(-0.5f, 0, 0.5f),    Vector3.UnitY, new Vector2(0, 1))
         };
 
-        public static readonly int[] Indices = new int[]
+        public static readonly ushort[] Indices = new ushort[]
         {
             0, 1, 2,
             0, 2, 3
@@ -62,7 +62,7 @@ namespace Engine.Graphics
             new VertexPositionNormalTexture(new Vector3(-.5f,-.5f,.5f),     new Vector3(0,0,1),     new Vector2(0, 1)),
         };
 
-        public static readonly int[] Indices = new int[]
+        public static readonly ushort[] Indices = new ushort[]
         {
             0,1,2, 0,2,3,
             4,5,6, 4,6,7,
@@ -91,6 +91,6 @@ namespace Engine.Graphics
         }
 
         public static VertexPositionNormalTexture[] Vertices => s_sphereMeshInfo.Vertices;
-        public static int[] Indices => s_sphereMeshInfo.Indices;
+        public static ushort[] Indices => s_sphereMeshInfo.Indices;
     }
 }

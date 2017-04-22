@@ -18,6 +18,6 @@ namespace Engine.Editor
         }
 
         public static VertexPositionNormalTexture[] Vertices => s_arrowMeshInfo.Vertices;
-        public static int[] Indices => s_arrowMeshInfo.Indices;
+        public static ushort[] Indices => s_arrowMeshInfo.Indices;
     }
 }

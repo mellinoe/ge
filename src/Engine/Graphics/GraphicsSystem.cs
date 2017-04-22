@@ -339,9 +339,9 @@ namespace Engine.Graphics
             if (!_freezeLineDrawing)
             {
                 _freeShapeRenderer.Vertices.Add(new VertexPositionNormalTexture(start, Vector3.Zero, Vector2.Zero));
-                int index0 = _freeShapeRenderer.Vertices.Count - 1;
+                ushort index0 = (ushort)(_freeShapeRenderer.Vertices.Count - 1);
                 _freeShapeRenderer.Vertices.Add(new VertexPositionNormalTexture(end, Vector3.Zero, Vector2.Zero));
-                int index1 = _freeShapeRenderer.Vertices.Count - 1;
+                ushort index1 = (ushort)(_freeShapeRenderer.Vertices.Count - 1);
 
                 _freeShapeRenderer.Indices.Add(index0);
                 _freeShapeRenderer.Indices.Add(index1);

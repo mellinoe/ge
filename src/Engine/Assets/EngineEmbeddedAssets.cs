@@ -70,7 +70,7 @@ namespace Engine.Assets
         {
             using (var stream = s_engineAssembly.GetManifestResourceStream(embeddedName))
             {
-                return new ImageSharpTexture(new Image(stream));
+                return new ImageSharpTexture(Image.Load(stream));
             }
         }
     }
