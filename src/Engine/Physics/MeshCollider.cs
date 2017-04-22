@@ -66,7 +66,7 @@ namespace Engine.Physics
         {
             MeshData meshData = Mesh.Get(_as.Database);
             Vector3[] positions = meshData.GetVertexPositions().Select(v => v * Transform.Scale).ToArray();
-            int[] indices = meshData.GetIndices().Cast<int>().ToArray();
+            int[] indices = meshData.GetIndices().Select(u16 => checked((int)u16)).ToArray();
             Vector3 center;
             MobileMeshShape mms = new MobileMeshShape(
                 positions,

@@ -51,7 +51,7 @@ namespace Engine.Graphics
         {
             ResourceFactory factory = rc.ResourceFactory;
             _vb = factory.CreateVertexBuffer(1024, true);
-            _ib = factory.CreateIndexBuffer(1024, true, IndexFormat.UInt32);
+            _ib = factory.CreateIndexBuffer(1024, true, IndexFormat.UInt16);
             _material = CreateWireframeMaterial(rc);
             _texture = _textureData.CreateDeviceTexture(factory);
             _textureBinding = factory.CreateShaderTextureBinding(_texture);

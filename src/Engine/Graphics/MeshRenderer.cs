@@ -308,7 +308,7 @@ namespace Engine.Graphics
 
             fixed (TriangleIndices* indicesPtr = _triIndices)
             {
-                _ib.SetIndices(new IntPtr(indicesPtr), IndexFormat.UInt32, sizeof(uint), indices.Length);
+                _ib.SetIndices(new IntPtr(indicesPtr), IndexFormat.UInt16, sizeof(uint), indices.Length);
             }
         }
 
