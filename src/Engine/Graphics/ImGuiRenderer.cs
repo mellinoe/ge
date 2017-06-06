@@ -251,7 +251,7 @@ namespace Engine.Graphics
 
             for (int i = 0; i < draw_data->CmdListsCount; i++)
             {
-                DrawList* cmd_list = draw_data->CmdLists[i];
+                NativeDrawList* cmd_list = draw_data->CmdLists[i];
 
                 _vertexBuffer.SetVertexData(new IntPtr(cmd_list->VtxBuffer.Data), descriptor, cmd_list->VtxBuffer.Size, vertexOffsetInVertices);
                 _indexBuffer.SetIndices(new IntPtr(cmd_list->IdxBuffer.Data), IndexFormat.UInt16, sizeof(ushort), cmd_list->IdxBuffer.Size, indexOffsetInElements);
@@ -291,7 +291,7 @@ namespace Engine.Graphics
             int idx_offset = 0;
             for (int n = 0; n < draw_data->CmdListsCount; n++)
             {
-                DrawList* cmd_list = draw_data->CmdLists[n];
+                NativeDrawList* cmd_list = draw_data->CmdLists[n];
                 for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
                 {
                     DrawCmd* pcmd = &(((DrawCmd*)cmd_list->CmdBuffer.Data)[cmd_i]);

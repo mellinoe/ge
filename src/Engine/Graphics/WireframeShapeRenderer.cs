@@ -11,7 +11,6 @@ namespace Engine.Graphics
     public abstract class WireframeShapeRenderer : RenderItem, IDisposable
     {
         private readonly RawTextureDataArray<RgbaFloat> _textureData;
-        private readonly MaterialAsset _materialAsset;
 
         private VertexBuffer _vb;
         private IndexBuffer _ib;
