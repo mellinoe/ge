@@ -1,27 +1,32 @@
-# coretemplate
+# Game Engine
 
-This repo provides a barebones template for creating multi-platform applications running on CoreCLR. It links in a small set of build targets which set up a very basic build environment from https://github.com/mellinoe/corebuild.
+This repository contains the source code and base assets for the game engine and editor used to build [Crazy Core](https://github.com/mellinoe/CrazyCore), a simple, open source 3D game. The game engine and editor are both supported on Windows, Linux, and macOS, and are built with .NET Core.
 
-#Requirements
-* Visual Studio 2015 (MSBuild 14.0)
-* Nuget.exe 3.x or equivalent
+See the [Crazy Core](https://github.com/mellinoe/CrazyCore) repository for a more complete view of how the engine can be used.
 
-# Setup/Build instructions
-First, clone the repo recursively (`git clone --recursive https://github.com/mellinoe/coretemplate <path>`)
+## Features
 
-Building in VS is easier and more user-friendly, but not completely necessary.
+### Graphics
+* Full 3D rendering system, with support for Direct3D 11 and OpenGL backends
+* Forward-rendered pipeline with support for real-time directional shadows, particle systems, transparent objects, and a simple immediate-mode GUI.
+* Uses [Veldrid](https://github.com/mellinoe/veldrid) (v1) and [ImGui.NET](https://github.com/mellinoe/ImGui.NET)
 
-## Building in VS
-1. Open src/TestProj.sln
-2. Select your configuration (Windows, Ubuntu, OSX)
-3. Build
-4. Optionally, set a break point and debug the program
+### Physics
+* Real-time 3D physics via BEPU Physics
+* Various configurable physics shapes
+* Customizable 
 
-## Building outside VS
-1. run nuget restore or equivalent to restore the packages for the solution
-2. run msbuild /p:Configuration=Windows_Debug (or other configuration)
+### Audio
+* Positional audio
+* Supports XAudio2 and OpenAL backends
 
-# Build Artifacts
-* The intermediate objects from the build will be placed in ````<root>/bin/obj/<arch>/<platform>_<config>/````
-* The binaries will be placed in ````<root>/bin/<arch>/<platform>_config/````
-* Executable projects' bin/ directories will include a full runtime and all library dependencies, ready to be copied to the target platform and run. If you are building on Windows, you can immediately run the <project>.exe file and launch your program on CoreCLR.
+### Editor
+* Cross-platform editor application
+* 3D scene view with editing widgets
+* Asset management and serialization
+* Live component value editing
+
+### Misc
+* Unity Engine-like component system
+* Plugin system
+* Builds self-contained executable packages for publication per-platform
