@@ -1,5 +1,5 @@
 using Engine.Assets;
-using ImageSharp;
+using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -25,7 +25,7 @@ namespace Engine.Graphics
 
         private static ImageSharpTexture CreateBlankTexture()
         {
-            return new ImageSharpTexture(new Image(1, 1));
+            return new ImageSharpTexture(new Image<Rgba32>(1, 1));
         }
 
         private ConstantBufferDataProvider _perObjectInput;

@@ -21,8 +21,11 @@ namespace Engine.Editor
         public ProjectPublisher()
         {
             _publishItemsRoot = Path.Combine(AppContext.BaseDirectory, "PublishItems");
-            PublishTargets = Directory.EnumerateDirectories(_publishItemsRoot)
-                .Select(d => new DirectoryInfo(d).Name).ToArray();
+            if (Directory.Exists(_publishItemsRoot))
+            {
+                PublishTargets = Directory.EnumerateDirectories(_publishItemsRoot)
+                    .Select(d => new DirectoryInfo(d).Name).ToArray();
+            }
         }
 
         public void PublishProject(ProjectContext projectContext, string target, string outputDir)

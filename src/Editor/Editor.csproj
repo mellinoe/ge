@@ -119,7 +119,8 @@
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
     <PackageReference Include="System.Globalization" Version="4.3.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
+    <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -129,6 +130,7 @@
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.3.0" />
     <PackageReference Include="Microsoft.NETCore.DotNetHostPolicy" Version="1.1.0" />
     <PackageReference Include="Microsoft.NETCore.Runtime.CoreCLR" Version="1.1.0" />
+    <Reference Include="..\..\ext\veldrid\bin\ImageSharp\netstandard1.3\ImageSharp.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)Editor.targets" />
 </Project>
