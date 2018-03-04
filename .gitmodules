@@ -3,7 +3,7 @@
 	url = https://github.com/mellinoe/imgui.net
 [submodule "ext/veldrid"]
 	path = ext/veldrid
-	url = https://github.com/mellinoe/veldrid
+	url = https://github.com/mellinoe/veldrid-legacy
 [submodule "ext/sharpfont"]
 	path = ext/sharpfont
 	url = https://github.com/mellinoe/sharpfont
