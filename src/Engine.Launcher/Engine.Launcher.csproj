@@ -67,6 +67,5 @@
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-    <Reference Include="..\..\ext\veldrid\bin\ImageSharp\netstandard1.3\ImageSharp.dll" />
   </ItemGroup>
 </Project>
