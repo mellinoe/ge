@@ -17,6 +17,7 @@ namespace Engine.Editor
 
         public CommandLineOptions(string[] args)
         {
+            
             ArgumentSyntax.Parse(args, syntax =>
             {
                 syntax.ApplicationName = "Editor";

@@ -62,7 +62,8 @@ namespace Engine.Audio.XAudio
         {
             get
             {
-                return _sourceVoice.Volume;
+                _sourceVoice.GetVolume(out float volume);
+                return volume;
             }
             set
             {
@@ -162,7 +163,7 @@ namespace Engine.Audio.XAudio
             _emitter.ChannelCount = _channelCount;
             if ((_channelCount > 1 && !_stereoState) || (_channelCount == 1 && _stereoState))
             {
-                float volume = _sourceVoice.Volume;
+                _sourceVoice.GetVolume(out float volume);
                 _sourceVoice.DestroyVoice();
                 _sourceVoice.Dispose();
                 WaveFormat waveFormat = new WaveFormat(_xa2Buffer.Frequency, GetChannelCount(_xa2Buffer.Format));

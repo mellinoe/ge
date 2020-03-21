@@ -41,7 +41,7 @@ namespace Engine.Audio.XAudio
             XAudio2.CriticalError += (s, e) => Console.WriteLine("XAudio2: Critical Error. " + e.ToString());
 
             MasteringVoice _masteringVoice = new MasteringVoice(XAudio2);
-            X3DAudio = new X3DAudio(SharpDX.Multimedia.Speakers.Stereo);
+            X3DAudio = new X3DAudio(SharpDX.Multimedia.Speakers.SideLeft | SharpDX.Multimedia.Speakers.SideRight);
             ResourceFactory = new XAudio2ResourceFactory(this);
             _x3dListener = new Listener();
             _x3dListener.OrientFront = new RawVector3(0, 0, 1);
