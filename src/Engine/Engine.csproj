@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <OutputType>Library</OutputType>
     <AssemblyName>Engine</AssemblyName>
     <RootNamespace>Engine</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <PackageTargetFallback>portable-net45+win8+wpa81</PackageTargetFallback>
     <ProjectGuid>{9BFBA3A1-21D4-4CBD-B0E1-A4F3AB80FD30}</ProjectGuid>
   </PropertyGroup>
@@ -82,19 +81,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SharpDX.XAudio2" Version="3.0.2" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
+    <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
     <PackageReference Include="System.Collections.Generic.MultiValueDictionary" Version="0.1.0-e160604-1" />
-    <PackageReference Include="System.Console" Version="4.3.0" />
-    <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
-    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
-    <PackageReference Include="System.Globalization" Version="4.3.0" />
-    <PackageReference Include="System.Linq" Version="4.3.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
-    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="System.Threading" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
 </Project>
